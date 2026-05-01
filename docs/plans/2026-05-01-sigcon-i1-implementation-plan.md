@@ -447,7 +447,7 @@ git commit -m "feat: add SIGCON I1 application services"
 - Create under `sigcon-backend/src/main/java/co/gov/bogota/sed/sigcon/web/controller/`
 - Test under `sigcon-backend/src/test/java/co/gov/bogota/sed/sigcon/web/`
 
-- [ ] **Step 1: Add local-dev security**
+- [x] **Step 1: Add local-dev security**
 
 Create `DevSecurityConfig` active under `local-dev` with HTTP Basic users.
 
@@ -460,11 +460,11 @@ Create `DevSecurityConfig` active under `local-dev` with HTTP Basic users.
 
 Do **not** use short usernames (`admin`, `contratista1`, etc.) — `auth.getName()` in HTTP Basic returns the username literal, and a mismatch with the seeded emails causes `UserSyncInterceptor` to create a duplicate orphan record instead of finding the existing seed row.
 
-- [ ] **Step 2: Add weblogic security**
+- [x] **Step 2: Add weblogic security**
 
 Create JWT resource server config active under `weblogic`, validating Azure AD issuer/JWKS from environment.
 
-- [ ] **Step 3: Add controllers**
+- [x] **Step 3: Add controllers**
 
 Create:
 
@@ -475,13 +475,13 @@ Create:
 
 Expose exactly the endpoints listed in the I1 spec.
 
-- [ ] **Step 4: Add profile/firma endpoint**
+- [x] **Step 4: Add profile/firma endpoint**
 
 `POST /api/usuarios/me/firma` accepts multipart JPG/PNG up to 2MB and rejects other formats with `FORMATO_IMAGEN_INVALIDO`.
 
 For I1, persist the generated file reference in `FIRMA_IMAGEN`. Store files under a configurable local path in `local-dev`; do not implement SharePoint or Oracle BLOB storage in I1.
 
-- [ ] **Step 5: Add MockMvc tests**
+- [x] **Step 5: Add MockMvc tests**
 
 Required tests:
 
@@ -504,7 +504,7 @@ mvn test -Dtest=*ControllerTest,*SecurityTest
 
 Expected: all controller/security tests pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add sigcon-backend/src/main/java/co/gov/bogota/sed/sigcon/config sigcon-backend/src/main/java/co/gov/bogota/sed/sigcon/web sigcon-backend/src/test
