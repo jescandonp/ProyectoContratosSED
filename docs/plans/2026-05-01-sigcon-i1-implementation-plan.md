@@ -586,7 +586,7 @@ git commit -m "feat: bootstrap SIGCON Angular app"
 - Create under `sigcon-angular/src/app/shared/`
 - Test under `sigcon-angular/src/app/**/*.spec.ts`
 
-- [ ] **Step 1: Add TypeScript models**
+- [x] **Step 1: Add TypeScript models**
 
 Create:
 
@@ -599,7 +599,7 @@ Fields must match I1 spec.
 
 Do not create informe, actividad, soporte, PDF, or notificacion TypeScript models in I1. The contract detail view may use an empty reports-history UI model local to the component only.
 
-- [ ] **Step 2: Add API services**
+- [x] **Step 2: Add API services**
 
 Create:
 
@@ -612,7 +612,7 @@ All API calls use relative `/api/...` URLs.
 
 Do not create `informe.service.ts`, `pdf.service.ts`, or `notificacion.service.ts` in I1.
 
-- [ ] **Step 3: Add auth facade**
+- [x] **Step 3: Add auth facade**
 
 Create:
 
@@ -623,7 +623,7 @@ Create:
 
 In local-dev, login stores the chosen dev user session and sends HTTP Basic credentials through an interceptor. In production/weblogic mode, leave MSAL wiring configured but environment driven.
 
-- [ ] **Step 4: Add app shell**
+- [x] **Step 4: Add app shell**
 
 Create:
 
@@ -637,7 +637,7 @@ Sidebar hides Admin navigation unless current user role is `ADMIN`.
 
 Topbar may include a hidden or disabled notification affordance for future I3 visual alignment, but it must not call `/api/notificaciones`, show a badge count, or start polling in I1.
 
-- [ ] **Step 5: Add routes**
+- [x] **Step 5: Add routes**
 
 Routes must match I1 spec:
 
@@ -652,7 +652,7 @@ Routes must match I1 spec:
 - `/admin/usuarios`
 - `/admin/documentos-catalogo`
 
-- [ ] **Step 6: Verify unit tests**
+- [x] **Step 6: Verify unit tests**
 
 Run:
 
@@ -663,7 +663,7 @@ npm test -- --watch=false
 
 Expected: core service/guard tests pass.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```powershell
 git add sigcon-angular/src/app

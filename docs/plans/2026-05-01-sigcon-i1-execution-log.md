@@ -10,6 +10,7 @@
 - Ultimo commit funcional de Task 5: `70e28a7 feat: add SIGCON I1 application services`
 - Ultimo commit funcional de Task 6: `dd76343 feat: add SIGCON I1 backend APIs and security`
 - Ultimo commit funcional de Task 7: `799388e feat: bootstrap SIGCON Angular app`
+- Ultimo commit funcional de Task 8: `0a88904 feat: add SIGCON Angular core shell`
 - Cambio local no versionado conocido: `.claude/` queda fuera de Git por ser configuracion local de Claude.
 
 ## Tareas I1 Completadas
@@ -22,6 +23,7 @@
 | Task 5 - DTOs/services/error contract | Completa | `70e28a7` | `mvn test -Dtest=*ServiceTest`; `mvn test`; `mvn test -DskipTests` pasan |
 | Task 6 - Backend security/controllers | Completa | `dd76343` | `mvn test -Dtest=*SecurityTest`; `mvn test`; `mvn test -DskipTests` pasan |
 | Task 7 - Frontend bootstrap/design system | Completa | `799388e` | `npm install`; `npm run verify:bootstrap`; `npm run build` pasan |
+| Task 8 - Frontend core auth/API/shell | Completa | `0a88904` | `npm test -- --watch=false`; `npm run build` pasan |
 
 ## Task 5 Implementado
 
@@ -154,6 +156,42 @@ Resultados observados:
 - Warning conocido: Tailwind reporta que no detecta utility classes porque Task 7 aun no crea pantallas/componentes con clases; se espera resolver naturalmente en Task 8/9.
 - Warning conocido: `@primeng/themes@20.4.0` aparece como deprecated en npm, pero es la linea compatible con Angular 20 indicada por peers de PrimeNG 20.
 
+## Task 8 Implementado
+
+Archivos principales:
+
+- Modelos I1 en `sigcon-angular/src/app/core/models/`: usuario, contrato, obligacion, documento-catalogo y page.
+- Servicios API I1 en `sigcon-angular/src/app/core/services/`: usuario, contrato, obligacion y documento-catalogo.
+- Auth local-dev en `sigcon-angular/src/app/core/auth/`: `DevSessionService`, `AuthService`, guards e interceptor Basic.
+- Environments en `sigcon-angular/src/environments/`: produccion sin dev session y `local-dev` con dev session.
+- Shell base en `sigcon-angular/src/app/shared/app-shell.component.ts`.
+- Componentes compartidos en `sigcon-angular/src/app/shared/components/`: sidebar, topbar, status-chip y empty-state.
+- Rutas I1 en `sigcon-angular/src/app/app.routes.ts`.
+
+Reglas cubiertas por pruebas:
+
+- Servicios de usuario y contrato usan URLs relativas `/api/...`.
+- Firma usa multipart hacia `/api/usuarios/me/firma`.
+- Sesion local-dev guarda usuarios con email completo compatible con backend seed/security.
+- Interceptor agrega Basic auth solo en requests relativos `/api`.
+- Sidebar oculta navegacion Admin para no-ADMIN y la muestra para ADMIN.
+- Rutas expuestas coinciden con la superficie I1.
+
+Validaciones ejecutadas:
+
+```powershell
+cd sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run build
+Get-ChildItem -Path sigcon-angular\src\app -Recurse -File | Select-String -Pattern "Informe|Soporte|Notificacion|Notificación|Pdf|PDF|/api/informes|/api/notificaciones|informe.service|pdf.service|notificacion.service"
+```
+
+Resultados observados:
+
+- `npm test -- --watch=false`: 10 specs, 0 fallas.
+- `npm run build`: production build success.
+- Busqueda de alcance en `src/app`: sin coincidencias.
+
 ## Decisiones Y Notas Para El Siguiente Modelo
 
 - La inconsistencia de `UsuarioRequest` quedo resuelta en Task 6: ahora incluye `email`, y `UsuarioService` valida duplicados con `EMAIL_DUPLICADO` antes de crear o actualizar usuarios.
@@ -163,17 +201,19 @@ Resultados observados:
 - `SigconBackendApplicationTests` excluye `application.service.*` y `web.controller.*` porque el smoke test no levanta repositorios ni datasource Oracle. Las reglas de servicio/controlador quedan cubiertas por unit tests y MockMvc.
 - Frontend queda en Angular 20 + PrimeNG 20, no PrimeNG 21, por incompatibilidad formal de peer dependencies entre PrimeNG 21 y Angular 20.
 - El wrapper global `npm` de la maquina falla porque resuelve `C:\Users\jmep2\AppData\Roaming\npm\node_modules\npm\bin\npm-cli.js`; usar temporalmente `node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" ...` hasta reparar npm global.
+- Task 8 deja placeholders con `EmptyStateComponent`; las pantallas reales se implementan en Task 9.
+- No se agrego ningun servicio/modelo de informes, soportes, PDF ni notificaciones.
 - Maven corre actualmente con Java 21 en esta maquina, aunque `pom.xml` compila con source/target `1.8`. Falta validar con Oracle JDK 8 real antes del cierre backend.
 
 ## Proximo Punto De Retoma
 
-Continuar con **Task 8: Frontend Core Auth, API Models, And Shell**.
+Continuar con **Task 9: Frontend I1 Screens**.
 
 Antes de avanzar:
 
-1. Leer `docs/plans/2026-05-01-sigcon-i1-implementation-plan.md`, Task 8.
-2. Crear primero pruebas unitarias para modelos/servicios/guards cuando aplique.
-3. Usar solo modelos y servicios I1: usuario, contrato, obligacion y documento-catalogo.
-4. No crear `informe.service.ts`, `pdf.service.ts`, `notificacion.service.ts` ni modelos I2/I3.
-5. Mantener `Prototipo/DESIGN.md` como autoridad visual para shell/topbar/sidebar.
+1. Leer `docs/plans/2026-05-01-sigcon-i1-implementation-plan.md`, Task 9.
+2. Revisar `Prototipo/*/screen.png` y `Prototipo/*/code.html` antes de crear cada pantalla.
+3. Reemplazar placeholders por pantallas I1 reales sin ampliar alcance.
+4. Mantener servicios/modelos I1 existentes; no crear informes, PDF, soportes ni notificaciones.
+5. Ejecutar `npm test -- --watch=false` y `npm run build`.
 6. Registrar en este log los archivos tocados, validaciones, errores y commit resultante.
