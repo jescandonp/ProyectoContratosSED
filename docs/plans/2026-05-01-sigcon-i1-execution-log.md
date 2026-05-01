@@ -9,6 +9,7 @@
 - Remoto: `origin/feat/sigcon-i1`
 - Ultimo commit funcional de Task 5: `70e28a7 feat: add SIGCON I1 application services`
 - Ultimo commit funcional de Task 6: `dd76343 feat: add SIGCON I1 backend APIs and security`
+- Ultimo commit funcional de Task 7: `799388e feat: bootstrap SIGCON Angular app`
 - Cambio local no versionado conocido: `.claude/` queda fuera de Git por ser configuracion local de Claude.
 
 ## Tareas I1 Completadas
@@ -20,7 +21,7 @@
 | Task 4 - Domain model/repositories | Completa | `f137d14` | `DomainModelMappingTest`; entidades y repositorios I1 |
 | Task 5 - DTOs/services/error contract | Completa | `70e28a7` | `mvn test -Dtest=*ServiceTest`; `mvn test`; `mvn test -DskipTests` pasan |
 | Task 6 - Backend security/controllers | Completa | `dd76343` | `mvn test -Dtest=*SecurityTest`; `mvn test`; `mvn test -DskipTests` pasan |
-| Task 7 - Frontend bootstrap/design system | Completa | Pendiente commit | `npm install`; `npm run verify:bootstrap`; `npm run build` pasan |
+| Task 7 - Frontend bootstrap/design system | Completa | `799388e` | `npm install`; `npm run verify:bootstrap`; `npm run build` pasan |
 
 ## Task 5 Implementado
 
