@@ -4,7 +4,7 @@
 
 **Goal:** Build Incremento 1 of SIGCON: local authentication/profile, contract administration, and contractor contract views, without implementing reports, review flow, PDF generation, or notifications.
 
-**Architecture:** Implement a Spring Boot 2.7.18 backend packaged as WAR for Java 8/WebLogic, with Oracle-compatible SQL scripts and a local-dev security profile. Implement an Angular 20 + PrimeNG 21 frontend that follows `Prototipo/DESIGN.md` and consumes the backend APIs through a proxy. Keep `docs/superpowers/CONSTITUTION.md`, `ARCHITECTURE.md`, the PRD, and the I1 spec as the governing sources of truth; implementation changes must trace back to `docs/superpowers/specs/2026-04-30-sigcon-i1-spec.md`.
+**Architecture:** Implement a Spring Boot 2.7.18 backend packaged as WAR for Java 8/WebLogic, with Oracle-compatible SQL scripts and a local-dev security profile. Implement an Angular 20 + PrimeNG 21 frontend that follows `Prototipo/DESIGN.md` and consumes the backend APIs through a proxy. Keep `docs/superpowers/CONSTITUTION.md`, `ARCHITECTURE.md`, the PRD, and the I1 spec as the governing sources of truth; use I2/I3 only as forward-compatibility constraints so I1 does not block the next increments.
 
 **Tech Stack:** Java 8, Spring Boot 2.7.18, Spring Security 5.7, Spring Data JPA, SpringDoc OpenAPI 1.7.0, Oracle JDBC ojdbc8, Maven WAR, Angular 20, PrimeNG 21, TypeScript 5.8, Tailwind CSS 3.4.
 
@@ -15,11 +15,24 @@
 - SDD governance: `docs/superpowers/CONSTITUTION.md`
 - Architecture constraints: `ARCHITECTURE.md`
 - Product scope: `docs/superpowers/specs/2026-04-30-sigcon-prd.md`
-- Technical contract: `docs/superpowers/specs/2026-04-30-sigcon-i1-spec.md`
+- I1 technical contract: `docs/superpowers/specs/2026-04-30-sigcon-i1-spec.md`
+- Forward compatibility references: `docs/superpowers/specs/2026-05-01-sigcon-i2-spec.md` and `docs/superpowers/specs/2026-05-01-sigcon-i3-spec.md`
 - Visual reference: `Prototipo/DESIGN.md` and `Prototipo/*/screen.png`
 - Strict I1 boundary: do not implement report creation, review/approval workflow, PDF generation, or notifications.
 
-Apply this authority order when documents disagree: `CONSTITUTION.md` → `ARCHITECTURE.md` → PRD → I1 spec → this plan → code.
+Apply this authority order when documents disagree: `CONSTITUTION.md` → `ARCHITECTURE.md` → PRD → I1 spec → I2/I3 forward-compatibility notes → this plan → code.
+
+## Forward-Compatibility Gates From I2/I3
+
+I1 must leave these seams ready without implementing later increments:
+
+- Contract detail includes an empty reports-history section and a disabled "Nuevo Informe" action; no `/api/informes` endpoints or Angular informe routes are implemented in I1.
+- `Usuario.firmaImagen` and the firma upload path must be suitable for later PDF signing; I1 only stores JPG/PNG signature references and does not enforce signature presence.
+- File storage for firma must be abstractable/configurable so I2 soportes and I3 PDFs can reuse the same pattern; I1 implements only the local-dev storage path.
+- `DocumentoCatalogo` must remain scoped by `tipoContrato=OPS` and usable by I2 as the catalog for additional report documents.
+- Contract assignments for `contratista`, `revisor`, and `supervisor` are required model relationships for I2 queues and I3 PDF/signature authorization.
+- I1 SQL must not create I2/I3 tables (`SGCN_INFORMES`, `SGCN_ACTIVIDADES`, `SGCN_SOPORTES`, `SGCN_DOCS_ADICIONALES`, `SGCN_OBSERVACIONES`, `SGCN_NOTIFICACIONES`) or PDF metadata columns.
+- Topbar may reserve visual space for a future notifications icon only if it is inert and hidden/disabled; no notifications API, badge count, or polling in I1.
 
 ## File Structure
 
@@ -121,8 +134,9 @@ SIGCON usa Spec-Driven Development (SDD) en nivel Spec-Anchored.
 2. Arquitectura SED: `ARCHITECTURE.md`
 3. PRD: `docs/superpowers/specs/2026-04-30-sigcon-prd.md`
 4. Spec tecnica I1: `docs/superpowers/specs/2026-04-30-sigcon-i1-spec.md`
-5. Plan I1: `docs/superpowers/plans/2026-05-01-sigcon-i1-implementation-plan.md`
-6. Implementacion I1
+5. Specs de referencia futura: `docs/superpowers/specs/2026-05-01-sigcon-i2-spec.md`, `docs/superpowers/specs/2026-05-01-sigcon-i3-spec.md`
+6. Plan I1: `docs/superpowers/plans/2026-05-01-sigcon-i1-implementation-plan.md`
+7. Implementacion I1
 
 ## Alcance I1
 
@@ -141,6 +155,7 @@ Run:
 Test-Path docs\superpowers\CONSTITUTION.md
 Select-String -Path docs\superpowers\CONSTITUTION.md -Pattern "Spec-Anchored|ARCHITECTURE.md|Java runtime: Oracle JDK 8|Incremento 1 excluye|Gates De Calidad"
 Select-String -Path docs\superpowers\plans\2026-05-01-sigcon-i1-implementation-plan.md -Pattern "CONSTITUTION.md|ARCHITECTURE.md|I1 boundary"
+Select-String -Path docs\superpowers\plans\2026-05-01-sigcon-i1-implementation-plan.md -Pattern "Forward-Compatibility Gates|SGCN_INFORMES|Nuevo Informe|firmaImagen"
 ```
 
 Expected: `Test-Path` returns `True`, and every `Select-String` command returns at least one match.
@@ -172,6 +187,8 @@ Include exactly these I1 tables and sequences from the spec:
 - `SGCN_OBLIGACIONES_SEQ`, `SGCN_OBLIGACIONES`
 - `SGCN_DOCS_CATALOGO_SEQ`, `SGCN_DOCS_CATALOGO`
 
+Do not add I2/I3 objects in I1: `SGCN_INFORMES`, `SGCN_ACTIVIDADES`, `SGCN_SOPORTES`, `SGCN_DOCS_ADICIONALES`, `SGCN_OBSERVACIONES`, `SGCN_NOTIFICACIONES`, `PDF_GENERADO_AT`, or `PDF_HASH`.
+
 Required constraints:
 
 - `CHK_USUARIOS_ROL` allows `CONTRATISTA`, `REVISOR`, `SUPERVISOR`, `ADMIN`
@@ -200,9 +217,10 @@ Run:
 ```powershell
 Select-String -Path db\00_setup.sql -Pattern "SGCN_USUARIOS|SGCN_CONTRATOS|SGCN_OBLIGACIONES|SGCN_DOCS_CATALOGO|CHK_USUARIOS_ROL|CHK_CONTRATOS_ESTADO|TRG_USUARIOS_AUDIT"
 Select-String -Path db\01_datos_prueba.sql -Pattern "admin@educacionbogota.edu.co|OPS-2026-001|Planilla de aportes seguridad social"
+Select-String -Path db\00_setup.sql -Pattern "SGCN_INFORMES|SGCN_ACTIVIDADES|SGCN_SOPORTES|SGCN_NOTIFICACIONES|PDF_HASH"
 ```
 
-Expected: every pattern appears at least once.
+Expected: the first two commands return matches; the third command returns no matches.
 
 - [ ] **Step 4: Commit**
 
@@ -378,6 +396,8 @@ Create services:
 - `ObligacionService`
 - `DocumentoCatalogoService`
 - `CurrentUserService`
+- `DocumentStorageService`
+- `LocalDocumentStorageService`
 
 Required service behavior:
 
@@ -388,6 +408,8 @@ Required service behavior:
 - Duplicate contract number throws conflict.
 - Contractor access to a foreign contract throws access denied.
 - Soft deletes set `activo=false`.
+- `DocumentStorageService` stores firma files in `local-dev` and exposes a stable interface reusable by I2 soportes and I3 PDFs.
+- I1 does not implement soporte, informe, PDF, or notification storage operations.
 
 - [ ] **Step 4: Add standard error response**
 
@@ -472,6 +494,7 @@ Required tests:
 - firma upload accepts PNG/JPG and rejects TXT/PDF
 - `/actuator/health` returns 200 without auth
 - `/swagger-ui.html` and `/api-docs` are public
+- `/api/informes` and `/api/notificaciones` are not exposed in I1
 
 Run:
 
@@ -574,6 +597,8 @@ Create:
 
 Fields must match I1 spec.
 
+Do not create informe, actividad, soporte, PDF, or notificacion TypeScript models in I1. The contract detail view may use an empty reports-history UI model local to the component only.
+
 - [ ] **Step 2: Add API services**
 
 Create:
@@ -584,6 +609,8 @@ Create:
 - `documento-catalogo.service.ts`
 
 All API calls use relative `/api/...` URLs.
+
+Do not create `informe.service.ts`, `pdf.service.ts`, or `notificacion.service.ts` in I1.
 
 - [ ] **Step 3: Add auth facade**
 
@@ -607,6 +634,8 @@ Create:
 - `shared/components/empty-state`
 
 Sidebar hides Admin navigation unless current user role is `ADMIN`.
+
+Topbar may include a hidden or disabled notification affordance for future I3 visual alignment, but it must not call `/api/notificaciones`, show a badge count, or start polling in I1.
 
 - [ ] **Step 5: Add routes**
 
@@ -695,6 +724,8 @@ Required:
 - empty reports history message
 - disabled "Nuevo Informe" button for I1
 
+The empty reports section is a forward-compatibility placeholder for I2. It must not call `/api/informes`, must not navigate to informe routes, and must not show a PDF download action in I1.
+
 - [ ] **Step 5: Admin contract screens**
 
 Implement:
@@ -725,6 +756,8 @@ Required:
 - user table filtered by role where needed
 - document catalog CRUD for `OPS`
 - soft-delete actions call backend delete endpoints
+
+Keep document catalog fields compatible with I2 additional report documents: name, description, required flag, and `tipoContrato=OPS`. Do not add report-specific document upload behavior in I1.
 
 - [ ] **Step 7: Verify build and visual consistency**
 
@@ -805,10 +838,13 @@ Manually run through:
 - contractor cannot access another contractor contract
 - non-admin cannot create contracts
 - profile signature upload accepts JPG/PNG and rejects other files
+- signature upload stores through `DocumentStorageService` local-dev implementation
 - contract list search and pagination work
 - detail screen shows ordered obligations
+- detail screen shows empty reports history and disabled "Nuevo Informe" without informe API calls
 - Admin sidebar hidden for contractor
 - Swagger and health are accessible
+- no I2/I3 endpoints are exposed: `/api/informes`, `/api/notificaciones`, `/api/informes/{id}/pdf`
 
 - [ ] **Step 6: Commit**
 
@@ -829,6 +865,7 @@ git commit -m "docs: document SIGCON I1 local verification"
 | Duplicate contract number returns 409 | Tasks 5, 6, 10 |
 | Contractor cannot access foreign contract detail | Tasks 5, 6, 10 |
 | Signature upload accepts JPG/PNG and rejects other formats | Tasks 6, 9, 10 |
+| Signature storage can be reused by I2/I3 storage flows | Tasks 5, 6, 10 |
 | Swagger UI accessible | Tasks 3, 6, 10 |
 | Health endpoint unauthenticated | Tasks 3, 6, 10 |
 | User sync on first login | Tasks 5, 6, 10 |
@@ -836,10 +873,23 @@ git commit -m "docs: document SIGCON I1 local verification"
 | Contractor does not see Admin section | Tasks 8, 9, 10 |
 | Contract table pagination/search | Tasks 6, 9, 10 |
 | Contract detail shows ordered obligations | Tasks 4, 6, 9, 10 |
+| Contract detail reserves reports history without implementing I2 | Tasks 9, 10 |
 | Contract form validates fields | Tasks 9, 10 |
 | Design tokens and prototype consistency | Tasks 7, 9, 10 |
 | Works in local-dev | Tasks 2-10 |
 | WAR builds for WebLogic | Tasks 3, 10 |
+
+## Forward-Compatibility Traceability
+
+| Future spec dependency | I1 plan response |
+|---|---|
+| I2 needs contract detail reports history | Task 9 creates empty history only; Task 10 verifies no informe API calls |
+| I2 needs storage pattern for soportes | Tasks 5/6 introduce `DocumentStorageService` for firma only |
+| I2 needs document catalog for additional report documents | Tasks 5/9 keep catalog generic by OPS type and required flag |
+| I2 reviewer/supervisor queues depend on assignments | Tasks 4/5/9 preserve contractor, reviewer, supervisor relationships |
+| I3 PDF signing depends on user firma | Tasks 6/9 implement firma upload without enforcing presence |
+| I3 notifications depend on topbar | Task 8 shell can reserve hidden/inert notification area only; no API/service in I1 |
+| I3 PDF download depends on approved reports | Task 9 does not show PDF download until I3 because I1 has no reports/PDF |
 
 ## Execution Handoff
 
