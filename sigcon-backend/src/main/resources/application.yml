@@ -62,9 +62,3 @@ spring:
         jwt:
           issuer-uri: https://login.microsoftonline.com/${AZURE_TENANT_ID}/v2.0
           jwk-set-uri: https://login.microsoftonline.com/${AZURE_TENANT_ID}/discovery/v2.0/keys
-
-springdoc:
-  swagger-ui:
-    enabled: false
-  api-docs:
-    enabled: false
