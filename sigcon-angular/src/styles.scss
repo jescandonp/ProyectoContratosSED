@@ -1,0 +1,25 @@
+@use "./app/shared/design-tokens.scss";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import "primeicons/primeicons.css";
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+  font-family: var(--font-family);
+  font-size: 16px;
+  line-height: 24px;
+}
+
+* {
+  box-sizing: border-box;
+}

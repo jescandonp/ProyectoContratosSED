@@ -39,8 +39,8 @@
 |------------|------------------|-------|
 | Angular | 20.x | Standalone components y strict mode |
 | TypeScript | 5.8.x | Strict mode obligatorio |
-| PrimeNG | 21.x | Libreria primaria de componentes |
-| `@primeng/themes` | 21.x | Tema base Aura con tokens SED |
+| PrimeNG | 20.x | Libreria primaria de componentes compatible con Angular 20 |
+| `@primeng/themes` | 20.x | Tema base Aura con tokens SED |
 | Tailwind CSS | 3.4.x | Utilidades de layout y espaciado |
 | RxJS | 7.8.x | Observables Angular |
 | Angular CDK | 20.x | Overlay, teclado y utilidades |
@@ -81,7 +81,7 @@
 | Tipografia | `Public Sans` |
 | Radio base | `4px` |
 | Densidad | Administrativa, compacta, orientada a gestion |
-| Componentes | PrimeNG 21 antes de controles propios |
+| Componentes | PrimeNG 20 antes de controles propios |
 | Pantallas referencia | `Prototipo/*/screen.png` |
 
 ## Regla De Evolucion

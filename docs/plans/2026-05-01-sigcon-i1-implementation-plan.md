@@ -4,9 +4,9 @@
 
 **Goal:** Build Incremento 1 of SIGCON: local authentication/profile, contract administration, and contractor contract views, without implementing reports, review flow, PDF generation, or notifications.
 
-**Architecture:** Implement a Spring Boot 2.7.18 backend packaged as WAR for Java 8/WebLogic, with Oracle-compatible SQL scripts and a local-dev security profile. Implement an Angular 20 + PrimeNG 21 frontend that follows `Prototipo/DESIGN.md` and consumes the backend APIs through a proxy. Keep `docs/CONSTITUTION.md`, `docs/ARCHITECTURE.md`, the PRD, and the I1 spec as the governing sources of truth; use I2/I3 only as forward-compatibility constraints so I1 does not block the next increments.
+**Architecture:** Implement a Spring Boot 2.7.18 backend packaged as WAR for Java 8/WebLogic, with Oracle-compatible SQL scripts and a local-dev security profile. Implement an Angular 20 + PrimeNG 20 frontend that follows `Prototipo/DESIGN.md` and consumes the backend APIs through a proxy. Keep `docs/CONSTITUTION.md`, `docs/ARCHITECTURE.md`, the PRD, and the I1 spec as the governing sources of truth; use I2/I3 only as forward-compatibility constraints so I1 does not block the next increments.
 
-**Tech Stack:** Java 8, Spring Boot 2.7.18, Spring Security 5.7, Spring Data JPA, SpringDoc OpenAPI 1.7.0, Oracle JDBC ojdbc8, Maven WAR, Angular 20, PrimeNG 21, TypeScript 5.8, Tailwind CSS 3.4.
+**Tech Stack:** Java 8, Spring Boot 2.7.18, Spring Security 5.7, Spring Data JPA, SpringDoc OpenAPI 1.7.0, Oracle JDBC ojdbc8, Maven WAR, Angular 20, PrimeNG 20, TypeScript 5.8, Tailwind CSS 3.4.
 
 ---
 
@@ -135,7 +135,7 @@ Confirm both root documents exist and remain aligned with the current architectu
 Test-Path docs/ARRANQUE.md
 Test-Path docs/TECNOLOGIAS.md
 Select-String -Path docs/ARRANQUE.md -Pattern "pre-implementacion I1|sigcon-backend|sigcon-angular|local-dev|weblogic|Excluye|Swagger"
-Select-String -Path docs/TECNOLOGIAS.md -Pattern "Spring Boot|2.7.18|Angular|20.x|PrimeNG|21.x|SED_SIGCON|SGCN_|sigcon-backend.war"
+Select-String -Path docs/TECNOLOGIAS.md -Pattern "Spring Boot|2.7.18|Angular|20.x|PrimeNG|20.x|SED_SIGCON|SGCN_|sigcon-backend.war"
 ```
 
 Expected: both `Test-Path` commands return `True`, and both `Select-String` commands return matches.
@@ -148,7 +148,7 @@ Run:
 Test-Path docs/CONSTITUTION.md
 Select-String -Path docs/CONSTITUTION.md -Pattern "Spec-Anchored|docs/ARCHITECTURE.md|Java runtime: Oracle JDK 8|Incremento 1 excluye|Gates De Calidad"
 Select-String -Path docs/ARCHITECTURE.md -Pattern "Adaptacion SIGCON|sigcon-backend.war|SED_SIGCON|Prototipo/DESIGN.md"
-Select-String -Path docs/TECNOLOGIAS.md -Pattern "Oracle JDK 8|Spring Boot|2.7.18|Angular|20.x|PrimeNG|21.x"
+Select-String -Path docs/TECNOLOGIAS.md -Pattern "Oracle JDK 8|Spring Boot|2.7.18|Angular|20.x|PrimeNG|20.x"
 Select-String -Path docs/plans/2026-05-01-sigcon-i1-implementation-plan.md -Pattern "docs/CONSTITUTION.md|docs/ARCHITECTURE.md|I1 boundary"
 Select-String -Path docs/plans/2026-05-01-sigcon-i1-implementation-plan.md -Pattern "Forward-Compatibility Gates|SGCN_INFORMES|Nuevo Informe|firmaImagen"
 ```
@@ -523,24 +523,25 @@ git commit -m "feat: add SIGCON I1 backend APIs and security"
 - Create: `sigcon-angular/src/styles.scss`
 - Create: `sigcon-angular/src/app/shared/design-tokens.scss`
 
-- [ ] **Step 1: Create Angular 20 workspace**
+- [x] **Step 1: Create Angular 20 workspace**
 
 Create the Angular app named `sigcon-angular` with standalone components, strict TypeScript, routing, SCSS, and test support.
 
-- [ ] **Step 2: Add dependencies**
+- [x] **Step 2: Add dependencies**
 
 Use:
 
 - `@angular/*` `^20.0.0`
-- `primeng` `^21.0.0`
-- `@primeng/themes` `^21.0.0`
+- `@angular/cdk` `^20.0.3`
+- `primeng` `^20.0.0`
+- `@primeng/themes` `^20.0.0`
 - `primeicons` `^7.0.0`
 - `@azure/msal-angular` `^3.0.0`
 - `@azure/msal-browser` `^3.0.0`
 - `tailwindcss` `^3.4.0`
 - `rxjs` `^7.8.0`
 
-- [ ] **Step 3: Add design tokens**
+- [x] **Step 3: Add design tokens**
 
 Map `Prototipo/DESIGN.md` tokens into CSS variables. Required tokens:
 
@@ -553,11 +554,11 @@ Map `Prototipo/DESIGN.md` tokens into CSS variables. Required tokens:
 - `--font-family: 'Public Sans', 'Inter', sans-serif`
 - PrimeNG primary variables
 
-- [ ] **Step 4: Configure proxy**
+- [x] **Step 4: Configure proxy**
 
 `proxy.conf.json` proxies `/api`, `/api-docs`, `/swagger-ui.html`, and `/actuator` to backend local URL `http://localhost:8080`.
 
-- [ ] **Step 5: Verify frontend installs and builds**
+- [x] **Step 5: Verify frontend installs and builds**
 
 Run:
 
@@ -569,7 +570,7 @@ npm run build
 
 Expected: Angular production build succeeds.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add sigcon-angular

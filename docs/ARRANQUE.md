@@ -53,7 +53,7 @@ Resumen operativo. Ver detalle completo en `docs/TECNOLOGIAS.md`.
 | Backend | Java 8, Spring Boot 2.7.18, Maven, WAR |
 | Servidor | Oracle WebLogic 12.2.1.4.0 |
 | Base de datos | Oracle 19c+, esquema `SED_SIGCON`, prefijo `SGCN_` |
-| Frontend | Angular 20, PrimeNG 21, Tailwind CSS 3.4 |
+| Frontend | Angular 20, PrimeNG 20, Tailwind CSS 3.4 |
 | Auth local | HTTP Basic en perfil `local-dev` |
 | Auth servidor | Azure AD JWT / Office 365 en perfil `weblogic` |
 | WAR | `sigcon-backend.war` |

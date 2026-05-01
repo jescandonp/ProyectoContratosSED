@@ -45,7 +45,7 @@ Frontend:
 
 - Angular 20.
 - TypeScript strict mode.
-- PrimeNG 21.
+- PrimeNG 20.
 - Tailwind CSS 3.4.
 - MSAL Angular/Browser 3.x para Office 365/Azure AD.
 
@@ -73,7 +73,7 @@ Identidad y seguridad:
 
 - `Prototipo/DESIGN.md` gobierna colores, tipografia, densidad y componentes.
 - Las pantallas de `Prototipo/*/screen.png` son referencia visual obligatoria.
-- Usar componentes PrimeNG 21 antes de construir controles propios.
+- Usar componentes PrimeNG 20 antes de construir controles propios.
 - Mantener interfaz institucional, densa, clara y orientada a gestion operativa.
 - No introducir pantallas tipo landing page para flujos administrativos.
 - No introducir estilos visuales que contradigan `Prototipo/DESIGN.md`, aunque aparezcan como ejemplos genericos en documentos de arquitectura reutilizable.

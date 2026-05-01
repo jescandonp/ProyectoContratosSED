@@ -7,7 +7,7 @@
 >
 > **Revisión 3 — 01/05/2026** — Adaptacion SIGCON: coordenadas canonicas, autoridad visual en `Prototipo/DESIGN.md`, limpieza de referencias heredadas de Portal Pagos.
 > **Revisión 2 — 30/04/2026** — Ajustes por Líder de Desarrollo:  
-> Angular 20 + PrimeNG 21 · Auth Office 365 (MSAL) · Swagger siempre activo · WAR para WebLogic 12 · JDK 8 · Docker/nginx/Keycloak omitidos
+> Angular 20 + PrimeNG 20 · Auth Office 365 (MSAL) · Swagger siempre activo · WAR para WebLogic 12 · JDK 8 · Docker/nginx/Keycloak omitidos
 
 ---
 
@@ -18,7 +18,7 @@
 2. [Stack Tecnológico](#2-stack-tecnológico)
 3. [Arquitectura por Capas](#3-arquitectura-por-capas)
 4. [Backend — Spring Boot (WAR / WebLogic)](#4-backend--spring-boot-war--weblogic)
-5. [Frontend — Angular 20 + PrimeNG 21](#5-frontend--angular-20--primeng-21)
+5. [Frontend — Angular 20 + PrimeNG 20](#5-frontend--angular-20--primeng-20)
 6. [Base de Datos — Oracle](#6-base-de-datos--oracle)
 7. [Seguridad y Autenticación — Office 365 / Azure AD](#7-seguridad-y-autenticación--office-365--azure-ad)
 8. [Infraestructura — WebLogic 12](#8-infraestructura--weblogic-12)
@@ -47,7 +47,7 @@ Esta arquitectura se interpreta para SIGCON con las siguientes coordenadas canon
 | Perfil local | `local-dev` |
 | Perfil servidor | `weblogic` |
 
-La autoridad documental se mantiene en `docs/CONSTITUTION.md`. Para UX/UI, la fuente visual primaria es `Prototipo/DESIGN.md`; esta arquitectura define integracion tecnica con Angular 20, PrimeNG 21 y Tailwind, pero no reemplaza los tokens visuales aprobados.
+La autoridad documental se mantiene en `docs/CONSTITUTION.md`. Para UX/UI, la fuente visual primaria es `Prototipo/DESIGN.md`; esta arquitectura define integracion tecnica con Angular 20, PrimeNG 20 y Tailwind, pero no reemplaza los tokens visuales aprobados.
 
 ---
 
@@ -121,7 +121,7 @@ Usuario (navegador)
 |------|-----------|---------|-------|
 | **Frontend** | Angular | 20.x | Standalone components, signals |
 | | TypeScript | 5.8.x | Strict mode |
-| | PrimeNG | 21.x | Componentes UI principales |
+| | PrimeNG | 20.x | Componentes UI principales compatibles con Angular 20 |
 | | Tailwind CSS | 3.4.x | Utilidades layout/espaciado |
 | | RxJS | 7.8.x | Observables |
 | | Angular CDK | 20.x | Overlay, keyboard |
@@ -167,7 +167,7 @@ Usuario (navegador)
 │              Angular 20 SPA (archivos estáticos)                 │
 │  ┌────────────────────────────────────────────────────────────┐  │
 │  │  features/ (lazy loaded)  │  shared/  │  core/             │  │
-│  │  PrimeNG 21 Components    │ Tailwind  │ MSAL Auth          │  │
+│  │  PrimeNG 20 Components    │ Tailwind  │ MSAL Auth          │  │
 │  └────────────────────────────────────────────────────────────┘  │
 └──────────────────────────────┬───────────────────────────────────┘
                                │ HTTPS / Bearer JWT (Azure AD)
@@ -528,7 +528,7 @@ GET  /swagger-ui.html       ← Swagger UI (siempre activo)
 
 ---
 
-## 5. Frontend — Angular 20 + PrimeNG 21
+## 5. Frontend — Angular 20 + PrimeNG 20
 
 ### Estructura de Directorios
 
@@ -597,7 +597,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([])),
     provideAnimationsAsync(),
 
-    // PrimeNG 21 — tema Aura con tokens SED
+    // PrimeNG 20 — tema Aura con tokens SED
     providePrimeNG({
       theme: {
         preset: Aura,
@@ -656,7 +656,7 @@ export const APP_ROUTES: Routes = [
 ];
 ```
 
-### Componentes con PrimeNG 21
+### Componentes con PrimeNG 20
 
 ```typescript
 // features/contratos/contratos-list.component.ts
@@ -1160,7 +1160,7 @@ ProyectoContratosSED/
 │   │       └── weblogic.xml          ← Descriptor WebLogic
 │   └── src/test/...
 ├── sigcon-angular/
-│   ├── package.json                  ← Angular 20, PrimeNG 21, MSAL
+│   ├── package.json                  ← Angular 20, PrimeNG 20, MSAL
 │   ├── angular.json
 │   ├── src/
 │   │   └── environments/
@@ -1305,7 +1305,7 @@ public void avanzarFase(Long id) {
 
 ### Autoridad Visual
 
-`Prototipo/DESIGN.md` gobierna la identidad visual de SIGCON: paleta, tipografia, radios, densidad, espaciado y comportamiento visual de componentes. Esta seccion solo traduce esa referencia a decisiones tecnicas de Angular 20 + PrimeNG 21 + Tailwind CSS.
+`Prototipo/DESIGN.md` gobierna la identidad visual de SIGCON: paleta, tipografia, radios, densidad, espaciado y comportamiento visual de componentes. Esta seccion solo traduce esa referencia a decisiones tecnicas de Angular 20 + PrimeNG 20 + Tailwind CSS.
 
 Reglas canonicas para SIGCON:
 
@@ -1314,7 +1314,7 @@ Reglas canonicas para SIGCON:
 - Interfaz administrativa compacta, con formularios de alta densidad.
 - Cards y paneles con borde neutral de `1px`; no usar sombras pesadas como estilo base.
 - Tablas con zebra stripes y densidad operativa.
-- PrimeNG 21 es la libreria primaria de componentes; los tokens SED se aplican por CSS variables.
+- PrimeNG 20 es la libreria primaria de componentes; los tokens SED se aplican por CSS variables.
 
 ```scss
 // design-tokens.scss
@@ -1339,7 +1339,7 @@ Reglas canonicas para SIGCON:
 }
 ```
 
-### Tema PrimeNG 21 — Tokens SED
+### Tema PrimeNG 20 — Tokens SED
 
 ```typescript
 // Extensión del preset Aura con colores SED (app.config.ts)
@@ -1367,7 +1367,7 @@ providePrimeNG({
 }
 ```
 
-### Uso de PrimeNG 21 por caso
+### Uso de PrimeNG 20 por caso
 
 | Caso de uso | Componente PrimeNG | Import |
 |-------------|-------------------|--------|
@@ -1433,7 +1433,7 @@ ProyectoContratosSED/
 │   └── plans/                     ← Planes y outlines de implementacion
 ├── Prototipo/                ← Design system y pantallas de referencia
 ├── sigcon-backend/           ← Spring Boot API (WAR, JDK 8)
-├── sigcon-angular/           ← Angular 20 SPA + PrimeNG 21
+├── sigcon-angular/           ← Angular 20 SPA + PrimeNG 20
 └── db/                       ← Scripts SQL Oracle
 ```
 
@@ -1496,7 +1496,7 @@ En JPA: `@EnableJpaAuditing` + `@EntityListeners(AuditingEntityListener.class)`.
 
 ### Frontend
 - [ ] Inicializar proyecto **Angular 20** (standalone, strict mode)
-- [ ] Instalar **PrimeNG 21** (`npm install primeng @primeng/themes`)
+- [ ] Instalar **PrimeNG 20** (`npm install primeng @primeng/themes`)
 - [ ] Instalar **MSAL Angular** (`npm install @azure/msal-angular @azure/msal-browser`)
 - [ ] Configurar `providePrimeNG()` con tema Aura y tokens SED
 - [ ] Configurar MSAL con `tenantId`, `clientId` y `apiScopes` de Azure AD
@@ -1510,7 +1510,7 @@ En JPA: `@EnableJpaAuditing` + `@EntityListeners(AuditingEntityListener.class)`.
 - [ ] Crear `AppShellComponent` (sidebar PrimeNG + topbar + router-outlet)
 - [ ] Configurar lazy loading en `app.routes.ts`
 - [ ] Crear `proxy.conf.json` → `/api` a `:8080` (solo desarrollo local)
-- [ ] Usar componentes PrimeNG 21 en lugar de construir desde cero
+- [ ] Usar componentes PrimeNG 20 en lugar de construir desde cero
 
 ### Base de Datos
 - [ ] Crear usuario Oracle con esquema `SED_[MODULO]` (coordinar con DBA)

@@ -20,6 +20,7 @@
 | Task 4 - Domain model/repositories | Completa | `f137d14` | `DomainModelMappingTest`; entidades y repositorios I1 |
 | Task 5 - DTOs/services/error contract | Completa | `70e28a7` | `mvn test -Dtest=*ServiceTest`; `mvn test`; `mvn test -DskipTests` pasan |
 | Task 6 - Backend security/controllers | Completa | `dd76343` | `mvn test -Dtest=*SecurityTest`; `mvn test`; `mvn test -DskipTests` pasan |
+| Task 7 - Frontend bootstrap/design system | Completa | Pendiente commit | `npm install`; `npm run verify:bootstrap`; `npm run build` pasan |
 
 ## Task 5 Implementado
 
@@ -116,6 +117,42 @@ Resultados observados:
 - `mvn test -DskipTests`: build success.
 - Busqueda de alcance en `src/main/java`: sin coincidencias.
 
+## Task 7 Implementado
+
+Archivos principales:
+
+- Workspace Angular en `sigcon-angular/`.
+- Configuracion Angular standalone/routing/SCSS/test en `angular.json`, `tsconfig*.json`, `src/main.ts`, `src/app/app.config.ts`, `src/app/app.routes.ts`, `src/app/app.component.ts`.
+- Dependencias frontend en `sigcon-angular/package.json` y `sigcon-angular/package-lock.json`.
+- Proxy local-dev en `sigcon-angular/proxy.conf.json` para `/api`, `/api-docs`, `/swagger-ui.html` y `/actuator`.
+- Tailwind/PostCSS en `sigcon-angular/tailwind.config.js` y `sigcon-angular/postcss.config.js`.
+- Tokens SED en `sigcon-angular/src/app/shared/design-tokens.scss` importados desde `sigcon-angular/src/styles.scss`.
+- Verificador estructural en `sigcon-angular/scripts/verify-bootstrap.mjs`.
+
+Correccion de coherencia SDD:
+
+- El plan original indicaba Angular 20 + PrimeNG 21.
+- `npm view primeng@21.0.0 peerDependencies --json` confirma que PrimeNG 21 exige Angular 21.
+- `npm view primeng@20.0.0 peerDependencies --json` confirma compatibilidad con Angular 20.
+- Para preservar la decision arquitectonica Angular 20, se ajustaron plan/spec/docs a PrimeNG 20 y `@primeng/themes` 20, agregando `@angular/cdk` 20 como peer requerido.
+
+Validaciones ejecutadas:
+
+```powershell
+cd sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" install
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run verify:bootstrap
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run build
+```
+
+Resultados observados:
+
+- `npm install`: 602 paquetes instalados, 0 vulnerabilidades.
+- `npm run verify:bootstrap`: passed.
+- `npm run build`: production build success.
+- Warning conocido: Tailwind reporta que no detecta utility classes porque Task 7 aun no crea pantallas/componentes con clases; se espera resolver naturalmente en Task 8/9.
+- Warning conocido: `@primeng/themes@20.4.0` aparece como deprecated en npm, pero es la linea compatible con Angular 20 indicada por peers de PrimeNG 20.
+
 ## Decisiones Y Notas Para El Siguiente Modelo
 
 - La inconsistencia de `UsuarioRequest` quedo resuelta en Task 6: ahora incluye `email`, y `UsuarioService` valida duplicados con `EMAIL_DUPLICADO` antes de crear o actualizar usuarios.
@@ -123,16 +160,19 @@ Resultados observados:
 - `LocalDocumentStorageService` implementa solo almacenamiento local de firma. No debe extenderse a soportes, informes ni PDF en I1.
 - `DevSecurityConfig` usa usuarios HTTP Basic con emails completos: `admin@educacionbogota.edu.co`, `juan.escandon@educacionbogota.edu.co`, `revisor1@educacionbogota.edu.co`, `supervisor1@educacionbogota.edu.co`.
 - `SigconBackendApplicationTests` excluye `application.service.*` y `web.controller.*` porque el smoke test no levanta repositorios ni datasource Oracle. Las reglas de servicio/controlador quedan cubiertas por unit tests y MockMvc.
+- Frontend queda en Angular 20 + PrimeNG 20, no PrimeNG 21, por incompatibilidad formal de peer dependencies entre PrimeNG 21 y Angular 20.
+- El wrapper global `npm` de la maquina falla porque resuelve `C:\Users\jmep2\AppData\Roaming\npm\node_modules\npm\bin\npm-cli.js`; usar temporalmente `node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" ...` hasta reparar npm global.
 - Maven corre actualmente con Java 21 en esta maquina, aunque `pom.xml` compila con source/target `1.8`. Falta validar con Oracle JDK 8 real antes del cierre backend.
 
 ## Proximo Punto De Retoma
 
-Continuar con **Task 7: Frontend Bootstrap And Design System**.
+Continuar con **Task 8: Frontend Core Auth, API Models, And Shell**.
 
 Antes de avanzar:
 
-1. Leer `docs/plans/2026-05-01-sigcon-i1-implementation-plan.md`, Task 7.
-2. Confirmar versionado Angular 20 / PrimeNG 21 / Tailwind 3.4 segun plan.
-3. Mantener `Prototipo/DESIGN.md` como autoridad visual.
-4. No implementar flujos I2/I3: informes, revision/aprobacion, PDF ni notificaciones.
-5. Registrar en este log los archivos tocados, validaciones, errores y commit resultante.
+1. Leer `docs/plans/2026-05-01-sigcon-i1-implementation-plan.md`, Task 8.
+2. Crear primero pruebas unitarias para modelos/servicios/guards cuando aplique.
+3. Usar solo modelos y servicios I1: usuario, contrato, obligacion y documento-catalogo.
+4. No crear `informe.service.ts`, `pdf.service.ts`, `notificacion.service.ts` ni modelos I2/I3.
+5. Mantener `Prototipo/DESIGN.md` como autoridad visual para shell/topbar/sidebar.
+6. Registrar en este log los archivos tocados, validaciones, errores y commit resultante.

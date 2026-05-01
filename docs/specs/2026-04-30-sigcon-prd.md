@@ -4,7 +4,7 @@
 > **Versión:** 1.0  
 > **Fecha:** 2026-04-30  
 > **Estado:** Aprobado — listo para descomposición en specs técnicas  
-> **Stack de referencia:** Angular 20 + PrimeNG 21 · Spring Boot 2.7.x WAR (JDK 8) · Oracle 19c · Azure AD / MSAL · WebLogic 12.2.1.4
+> **Stack de referencia:** Angular 20 + PrimeNG 20 · Spring Boot 2.7.x WAR (JDK 8) · Oracle 19c · Azure AD / MSAL · WebLogic 12.2.1.4
 
 ---
 
@@ -462,7 +462,7 @@ Todos los scripts DDL irán en `db/00_setup.sql`. Datos de prueba en `db/01_dato
 
 - Antes de iniciar el Incremento 1, se generará un archivo `DESIGN.md` como prototipo de diseño del sistema mediante el comando `/design-md`
 - Este archivo selecciona una fuente de diseño externa de referencia (design system de marca real) y produce: tokens de color, tipografía, componentes clave y principios UX adaptados al contexto institucional
-- El `DESIGN.md` actúa como guía viva de UX/UI para todos los incrementos: los componentes PrimeNG 21 y los tokens CSS se configuran siguiendo sus lineamientos
+- El `DESIGN.md` actúa como guía viva de UX/UI para todos los incrementos: los componentes PrimeNG 20 y los tokens CSS se configuran siguiendo sus lineamientos
 - La identidad visual institucional SED ("Civic Curator") tiene precedencia:
   - Azul SED: `#094cb2`
   - Dorado institucional: `#7e5700`
