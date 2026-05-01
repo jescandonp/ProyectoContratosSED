@@ -1,6 +1,13 @@
 -- ============================================================
 -- SIGCON I1 — DDL Schema Setup
--- Schema: SED_SIGCON · Table prefix: SGCN_
+-- Schema: SED_SIGCON · Oracle 19c+
+-- ============================================================
+-- PREREQUISITES:
+--   - Connected as SED_SIGCON schema owner
+--   - Oracle 19c+ (uses TIMESTAMP DEFAULT SYSTIMESTAMP syntax)
+-- NOT IDEMPOTENT: Re-running fails with ORA-00955. Use a fresh schema.
+-- EXECUTION ORDER: Run 00_setup.sql before 01_datos_prueba.sql
+-- DO NOT execute in production without DBA review.
 -- ============================================================
 
 -- SGCN_USUARIOS
@@ -56,7 +63,7 @@ CREATE TABLE SGCN_CONTRATOS (
 
 CREATE INDEX IDX_CONTRATOS_CONTRATISTA ON SGCN_CONTRATOS(ID_CONTRATISTA);
 CREATE INDEX IDX_CONTRATOS_SUPERVISOR  ON SGCN_CONTRATOS(ID_SUPERVISOR);
-CREATE INDEX IDX_CONTRATOS_REVISOR    ON SGCN_CONTRATOS(ID_REVISOR);
+CREATE INDEX IDX_CONTRATOS_REVISOR    ON SGCN_CONTRATOS(ID_REVISOR);     -- forward-compat: I2 reviewer queues filter by ID_REVISOR
 CREATE INDEX IDX_CONTRATOS_ESTADO      ON SGCN_CONTRATOS(ESTADO);
 
 CREATE OR REPLACE TRIGGER TRG_CONTRATOS_AUDIT
@@ -106,3 +113,5 @@ CREATE OR REPLACE TRIGGER TRG_DOCS_CATALOGO_AUDIT
 BEFORE UPDATE ON SGCN_DOCS_CATALOGO FOR EACH ROW
 BEGIN :NEW.UPDATED_AT := SYSTIMESTAMP; END;
 /
+
+CREATE INDEX IDX_DOCS_CATALOGO_TIPO ON SGCN_DOCS_CATALOGO(TIPO_CONTRATO);
