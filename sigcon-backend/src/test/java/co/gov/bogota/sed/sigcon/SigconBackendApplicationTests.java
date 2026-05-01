@@ -32,7 +32,7 @@ class SigconBackendApplicationTests {
      *  - JpaAuditingConfig (avoids @EnableJpaAuditing requiring a JPA metamodel)
      * Also excludes all auto-configurations that require a running DB or OAuth2 issuer.
      */
-    @org.springframework.boot.autoconfigure.SpringBootApplication
+    @org.springframework.boot.SpringBootConfiguration
     @EnableAutoConfiguration(exclude = {
         DataSourceAutoConfiguration.class,
         DataSourceTransactionManagerAutoConfiguration.class,

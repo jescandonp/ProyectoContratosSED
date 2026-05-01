@@ -32,8 +32,8 @@ spring:
       on-profile: local-dev
   datasource:
     url: jdbc:oracle:thin:@localhost:1521/XEPDB1
-    username: ${DB_USERNAME:SED_SIGCON}
-    password: ${DB_PASSWORD:Sigcon_2026#}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: oracle.jdbc.OracleDriver
   jpa:
     database-platform: org.hibernate.dialect.Oracle12cDialect
@@ -62,3 +62,9 @@ spring:
         jwt:
           issuer-uri: https://login.microsoftonline.com/${AZURE_TENANT_ID}/v2.0
           jwk-set-uri: https://login.microsoftonline.com/${AZURE_TENANT_ID}/discovery/v2.0/keys
+
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: false
