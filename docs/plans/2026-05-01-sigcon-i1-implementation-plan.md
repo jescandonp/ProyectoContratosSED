@@ -449,12 +449,16 @@ git commit -m "feat: add SIGCON I1 application services"
 
 - [ ] **Step 1: Add local-dev security**
 
-Create `DevSecurityConfig` active under `local-dev` with HTTP Basic users:
+Create `DevSecurityConfig` active under `local-dev` with HTTP Basic users.
 
-- `admin/admin123` role `ADMIN`
-- `contratista1/contratista123` role `CONTRATISTA`
-- `revisor1/revisor123` role `REVISOR`
-- `supervisor1/supervisor123` role `SUPERVISOR`
+**CRITICAL:** usernames must be the full email addresses that match `db/01_datos_prueba.sql`, so the `UserSyncInterceptor` can find each user by `auth.getName()` in `SGCN_USUARIOS`.
+
+- `admin@educacionbogota.edu.co` / `admin123` → role `ADMIN`
+- `juan.escandon@educacionbogota.edu.co` / `contratista123` → role `CONTRATISTA`
+- `revisor1@educacionbogota.edu.co` / `revisor123` → role `REVISOR`
+- `supervisor1@educacionbogota.edu.co` / `supervisor123` → role `SUPERVISOR`
+
+Do **not** use short usernames (`admin`, `contratista1`, etc.) — `auth.getName()` in HTTP Basic returns the username literal, and a mismatch with the seeded emails causes `UserSyncInterceptor` to create a duplicate orphan record instead of finding the existing seed row.
 
 - [ ] **Step 2: Add weblogic security**
 
