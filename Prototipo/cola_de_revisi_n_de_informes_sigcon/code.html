@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error-container": "#93000a",
+                        "surface-container-highest": "#d3e4fe",
+                        "on-tertiary-fixed-variant": "#91022d",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed-variant": "#144296",
+                        "on-background": "#0b1c30",
+                        "primary": "#002869",
+                        "secondary-container": "#feb300",
+                        "on-primary-fixed": "#001947",
+                        "surface-bright": "#f8f9ff",
+                        "surface-tint": "#345baf",
+                        "on-tertiary": "#ffffff",
+                        "primary-container": "#0b3d91",
+                        "secondary-fixed": "#ffdeac",
+                        "tertiary": "#5f001b",
+                        "surface-container-high": "#dce9ff",
+                        "on-secondary-container": "#6a4800",
+                        "tertiary-fixed-dim": "#ffb2b8",
+                        "surface-variant": "#d3e4fe",
+                        "on-tertiary-container": "#ff8d99",
+                        "error-container": "#ffdad6",
+                        "inverse-primary": "#b1c5ff",
+                        "secondary-fixed-dim": "#ffba38",
+                        "on-surface": "#0b1c30",
+                        "on-primary-container": "#8dadff",
+                        "surface-container-low": "#eff4ff",
+                        "surface": "#f8f9ff",
+                        "tertiary-container": "#89002a",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "outline": "#747783",
+                        "on-surface-variant": "#434652",
+                        "on-secondary-fixed-variant": "#604100",
+                        "secondary": "#7e5700",
+                        "primary-fixed-dim": "#b1c5ff",
+                        "on-secondary": "#ffffff",
+                        "background": "#f8f9ff",
+                        "inverse-surface": "#213145",
+                        "tertiary-fixed": "#ffdadb",
+                        "inverse-on-surface": "#eaf1ff",
+                        "on-tertiary-fixed": "#40000f",
+                        "outline-variant": "#c4c6d3",
+                        "on-secondary-fixed": "#281900",
+                        "surface-dim": "#cbdbf5",
+                        "surface-container": "#e5eeff",
+                        "error": "#ba1a1a",
+                        "primary-fixed": "#dae2ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "xl": "40px",
+                        "unit": "4px",
+                        "lg": "24px",
+                        "sm": "8px",
+                        "gutter": "16px",
+                        "md": "16px",
+                        "margin": "32px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Public Sans"],
+                        "body-lg": ["Public Sans"],
+                        "table-data": ["Public Sans"],
+                        "h2": ["Public Sans"],
+                        "body-md": ["Public Sans"],
+                        "h3": ["Public Sans"],
+                        "label-bold": ["Public Sans"],
+                        "h1": ["Public Sans"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "table-data": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                        "h2": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "h3": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "label-bold": ["12px", {"lineHeight": "16px", "fontWeight": "700"}],
+                        "h1": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-surface font-body-md text-on-surface antialiased overflow-hidden">
+<!-- TopAppBar Shell -->
+<header class="flex justify-between items-center h-14 px-6 w-full z-50 sticky top-0 bg-white dark:bg-slate-900 font-['Public_Sans'] text-sm antialiased border-b border-slate-200 dark:border-slate-800 flat no-shadows">
+<div class="flex items-center gap-4">
+<span class="text-xl font-black text-blue-800 dark:text-white tracking-tighter">SIGCON</span>
+<div class="hidden md:flex gap-1 items-center ml-8 h-full">
+<a class="px-3 h-14 flex items-center text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200" href="#">Dashboard</a>
+<a class="px-3 h-14 flex items-center text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200" href="#">Contratos</a>
+<a class="px-3 h-14 flex items-center text-blue-700 dark:text-blue-400 font-bold border-b-2 border-blue-700 transition-all duration-200" href="#">Reportes</a>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<div class="relative flex items-center bg-slate-100 dark:bg-slate-800 rounded px-2 py-1 mr-4">
+<span class="material-symbols-outlined text-slate-500 mr-2" style="font-size: 18px;">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-xs w-48 text-on-surface" placeholder="Buscar..." type="text"/>
+</div>
+<button class="p-2 text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 rounded transition-all duration-200">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 rounded transition-all duration-200">
+<span class="material-symbols-outlined">help</span>
+</button>
+<div class="ml-2 flex items-center gap-2 pl-4 border-l border-slate-200">
+<div class="text-right hidden sm:block">
+<p class="text-[11px] font-bold text-on-surface">DR. MARIO MORENO</p>
+<p class="text-[10px] text-slate-500">Revisor Técnico</p>
+</div>
+<span class="material-symbols-outlined text-blue-700" style="font-size: 32px;">account_circle</span>
+</div>
+</div>
+</header>
+<div class="flex h-[calc(100vh-3.5rem)]">
+<!-- SideNavBar Shell -->
+<nav class="flex flex-col fixed left-0 top-0 h-full z-40 pt-14 w-60 bg-slate-50 dark:bg-slate-950 font-['Public_Sans'] text-[13px] font-medium border-r border-slate-200 dark:border-slate-800 flat no-shadows">
+<div class="p-6 flex flex-col gap-1 overflow-y-auto flex-grow">
+<a class="flex items-center gap-3 px-4 py-2.5 rounded text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-blue-800 transition-transform active:scale-95 duration-100" href="#">
+<span class="material-symbols-outlined">dashboard</span> Dashboard
+                </a>
+<a class="flex items-center gap-3 px-4 py-2.5 rounded text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-blue-800 transition-transform active:scale-95 duration-100" href="#">
+<span class="material-symbols-outlined">description</span> Contratos
+                </a>
+<a class="flex items-center gap-3 px-4 py-2.5 rounded text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-blue-800 transition-transform active:scale-95 duration-100" href="#">
+<span class="material-symbols-outlined">group</span> Contratistas
+                </a>
+<a class="flex items-center gap-3 px-4 py-2.5 rounded text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-blue-800 transition-transform active:scale-95 duration-100" href="#">
+<span class="material-symbols-outlined">assignment_turned_in</span> Obligaciones
+                </a>
+<a class="flex items-center gap-3 px-4 py-2.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-r-4 border-blue-700 font-semibold transition-transform active:scale-95 duration-100" href="#">
+<span class="material-symbols-outlined">analytics</span> Reportes
+                </a>
+</div>
+<div class="p-6 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-1">
+<a class="flex items-center gap-3 px-4 py-2.5 rounded text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-blue-800 transition-transform active:scale-95 duration-100" href="#">
+<span class="material-symbols-outlined">settings</span> Configuración
+                </a>
+<a class="flex items-center gap-3 px-4 py-2.5 rounded text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-blue-800 transition-transform active:scale-95 duration-100" href="#">
+<span class="material-symbols-outlined">logout</span> Cerrar Sesión
+                </a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="ml-60 flex-grow overflow-y-auto p-8 max-w-[1440px] mx-auto w-full">
+<div class="flex flex-col gap-6">
+<!-- Header Section -->
+<header class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<h1 class="font-h1 text-h1 text-primary">Cola de Revisión de Informes</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Supervisión y validación de informes mensuales de ejecución contractual.</p>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center text-[10px] font-bold">JD</div>
+<div class="w-8 h-8 rounded-full border-2 border-white bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-bold">AC</div>
+<div class="w-8 h-8 rounded-full border-2 border-white bg-slate-300 flex items-center justify-center text-[10px] font-bold">+4</div>
+</div>
+<span class="text-xs text-on-surface-variant font-medium">Revisores activos</span>
+</div>
+</header>
+<!-- Status Cards (High Density Quick Info) -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter">
+<div class="bg-white border border-slate-200 p-4 rounded shadow-sm">
+<div class="flex justify-between items-start">
+<span class="text-xs font-label-bold text-on-surface-variant uppercase tracking-wider">Pendientes de Revisión</span>
+<span class="material-symbols-outlined text-blue-700">pending_actions</span>
+</div>
+<p class="text-3xl font-bold text-primary mt-2">24</p>
+<p class="text-[11px] text-on-error-container mt-1 flex items-center">
+<span class="material-symbols-outlined text-[14px] mr-1">priority_high</span> 5 vencen hoy
+                        </p>
+</div>
+<div class="bg-white border border-slate-200 p-4 rounded shadow-sm">
+<div class="flex justify-between items-start">
+<span class="text-xs font-label-bold text-on-surface-variant uppercase tracking-wider">Promedio Respuesta</span>
+<span class="material-symbols-outlined text-secondary">timer</span>
+</div>
+<p class="text-3xl font-bold text-primary mt-2">1.8d</p>
+<p class="text-[11px] text-emerald-600 mt-1 flex items-center">
+<span class="material-symbols-outlined text-[14px] mr-1">trending_down</span> 12% vs mes anterior
+                        </p>
+</div>
+<div class="bg-white border border-slate-200 p-4 rounded shadow-sm">
+<div class="flex justify-between items-start">
+<span class="text-xs font-label-bold text-on-surface-variant uppercase tracking-wider">Enviados (Hoy)</span>
+<span class="material-symbols-outlined text-blue-500">send</span>
+</div>
+<p class="text-3xl font-bold text-primary mt-2">12</p>
+<p class="text-[11px] text-on-surface-variant mt-1">Carga laboral media</p>
+</div>
+<div class="bg-white border border-slate-200 p-4 rounded shadow-sm">
+<div class="flex justify-between items-start">
+<span class="text-xs font-label-bold text-on-surface-variant uppercase tracking-wider">Cumplimiento SLA</span>
+<span class="material-symbols-outlined text-emerald-500">verified_user</span>
+</div>
+<p class="text-3xl font-bold text-primary mt-2">94%</p>
+<div class="w-full bg-slate-100 h-1.5 rounded-full mt-2">
+<div class="bg-emerald-500 h-1.5 rounded-full" style="width: 94%"></div>
+</div>
+</div>
+</div>
+<!-- Filters & Actions Area -->
+<section class="bg-white border border-slate-200 rounded p-4 flex flex-wrap gap-4 items-center justify-between shadow-sm">
+<div class="flex flex-wrap gap-3 items-center">
+<div class="relative group">
+<label class="block text-[10px] font-bold text-on-surface-variant uppercase mb-1 ml-1">Contratista</label>
+<div class="flex items-center border border-slate-200 rounded px-3 h-9 bg-slate-50 focus-within:ring-2 focus-within:ring-blue-700/20 focus-within:border-blue-700 transition-all">
+<span class="material-symbols-outlined text-[18px] text-slate-400 mr-2">person_search</span>
+<input class="bg-transparent border-none p-0 focus:ring-0 text-sm w-48 placeholder:text-slate-400" placeholder="Filtrar por nombre..." type="text"/>
+</div>
+</div>
+<div class="relative group">
+<label class="block text-[10px] font-bold text-on-surface-variant uppercase mb-1 ml-1">Rango de Fecha de Envío</label>
+<div class="flex items-center border border-slate-200 rounded px-3 h-9 bg-slate-50 focus-within:ring-2 focus-within:ring-blue-700/20 focus-within:border-blue-700 transition-all">
+<span class="material-symbols-outlined text-[18px] text-slate-400 mr-2">calendar_today</span>
+<input class="bg-transparent border-none p-0 focus:ring-0 text-sm w-56 placeholder:text-slate-400" placeholder="DD/MM/AAAA - DD/MM/AAAA" type="text"/>
+</div>
+</div>
+<div class="relative group">
+<label class="block text-[10px] font-bold text-on-surface-variant uppercase mb-1 ml-1">Prioridad</label>
+<select class="border border-slate-200 rounded px-3 h-9 bg-slate-50 focus:ring-2 focus:ring-blue-700/20 focus:border-blue-700 text-sm appearance-none pr-8">
+<option>Todas</option>
+<option>Alta</option>
+<option>Media</option>
+<option>Baja</option>
+</select>
+</div>
+</div>
+<div class="flex items-center gap-2 pt-5 md:pt-0">
+<button class="flex items-center gap-2 px-4 h-9 bg-primary text-white font-semibold rounded text-sm hover:bg-primary-container transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]">filter_list</span> Aplicar Filtros
+                        </button>
+<button class="flex items-center gap-2 px-4 h-9 border border-slate-200 text-on-surface font-semibold rounded text-sm hover:bg-slate-50 transition-colors">
+<span class="material-symbols-outlined text-[18px]">download</span> Exportar
+                        </button>
+</div>
+</section>
+<!-- Data Table Container -->
+<div class="bg-white border border-slate-200 rounded shadow-sm overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-slate-100 border-b border-slate-200">
+<th class="px-6 py-3 font-label-bold text-on-surface-variant uppercase tracking-tighter text-[11px] w-12">
+<input class="rounded border-slate-300 text-primary focus:ring-primary" type="checkbox"/>
+</th>
+<th class="px-4 py-3 font-label-bold text-on-surface-variant uppercase tracking-tighter text-[11px]">Contratista</th>
+<th class="px-4 py-3 font-label-bold text-on-surface-variant uppercase tracking-tighter text-[11px]">Número de Contrato</th>
+<th class="px-4 py-3 font-label-bold text-on-surface-variant uppercase tracking-tighter text-[11px]">Periodo del Informe</th>
+<th class="px-4 py-3 font-label-bold text-on-surface-variant uppercase tracking-tighter text-[11px]">Fecha de Envío</th>
+<th class="px-4 py-3 font-label-bold text-on-surface-variant uppercase tracking-tighter text-[11px]">Estado</th>
+<th class="px-6 py-3 font-label-bold text-on-surface-variant uppercase tracking-tighter text-[11px] text-right">Acciones</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100">
+<!-- Row 1 -->
+<tr class="hover:bg-slate-50 transition-colors group">
+<td class="px-6 py-4">
+<input class="rounded border-slate-300 text-primary focus:ring-primary" type="checkbox"/>
+</td>
+<td class="px-4 py-4">
+<div class="flex flex-col">
+<span class="font-bold text-sm text-primary">Carlos Eduardo Ruiz</span>
+<span class="text-[11px] text-on-surface-variant">CC 1.024.556.789</span>
+</div>
+</td>
+<td class="px-4 py-4">
+<span class="font-mono text-xs font-medium text-slate-700 px-2 py-1 bg-slate-100 rounded">SED-CPS-2024-045</span>
+</td>
+<td class="px-4 py-4 text-table-data text-on-surface">Mayo 2024</td>
+<td class="px-4 py-4">
+<div class="flex flex-col">
+<span class="text-sm font-medium">12 Jun 2024</span>
+<span class="text-[11px] text-on-error-container">Vence en 2 días</span>
+</div>
+</td>
+<td class="px-4 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+<span class="w-1.5 h-1.5 rounded-full bg-blue-600 mr-1.5"></span>
+                                            ENVIADO
+                                        </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="px-3 py-1.5 bg-white border border-blue-700 text-blue-700 hover:bg-blue-50 text-xs font-bold rounded transition-all">
+                                            VER DETALLE
+                                        </button>
+</td>
+</tr>
+<!-- Row 2 (Zebra stripe) -->
+<tr class="bg-slate-50/50 hover:bg-slate-100 transition-colors group">
+<td class="px-6 py-4">
+<input class="rounded border-slate-300 text-primary focus:ring-primary" type="checkbox"/>
+</td>
+<td class="px-4 py-4">
+<div class="flex flex-col">
+<span class="font-bold text-sm text-primary">Consorcio Educativo 2024</span>
+<span class="text-[11px] text-on-surface-variant">NIT 900.123.445-0</span>
+</div>
+</td>
+<td class="px-4 py-4">
+<span class="font-mono text-xs font-medium text-slate-700 px-2 py-1 bg-slate-100 rounded">SED-LP-2023-012</span>
+</td>
+<td class="px-4 py-4 text-table-data text-on-surface">Abril - Mayo 2024</td>
+<td class="px-4 py-4">
+<div class="flex flex-col">
+<span class="text-sm font-medium">10 Jun 2024</span>
+<span class="text-[11px] text-on-surface-variant">Recibido 08:45 AM</span>
+</div>
+</td>
+<td class="px-4 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+<span class="w-1.5 h-1.5 rounded-full bg-blue-600 mr-1.5"></span>
+                                            ENVIADO
+                                        </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="px-3 py-1.5 bg-white border border-blue-700 text-blue-700 hover:bg-blue-50 text-xs font-bold rounded transition-all">
+                                            VER DETALLE
+                                        </button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-slate-50 transition-colors group">
+<td class="px-6 py-4">
+<input class="rounded border-slate-300 text-primary focus:ring-primary" type="checkbox"/>
+</td>
+<td class="px-4 py-4">
+<div class="flex flex-col">
+<span class="font-bold text-sm text-primary">Adriana Marcela Torres</span>
+<span class="text-[11px] text-on-surface-variant">CC 52.443.112</span>
+</div>
+</td>
+<td class="px-4 py-4">
+<span class="font-mono text-xs font-medium text-slate-700 px-2 py-1 bg-slate-100 rounded">SED-CPS-2024-112</span>
+</td>
+<td class="px-4 py-4 text-table-data text-on-surface">Mayo 2024</td>
+<td class="px-4 py-4">
+<div class="flex flex-col">
+<span class="text-sm font-medium">14 Jun 2024</span>
+<span class="text-[11px] text-emerald-600 font-medium">Nuevo ingreso</span>
+</div>
+</td>
+<td class="px-4 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+<span class="w-1.5 h-1.5 rounded-full bg-blue-600 mr-1.5"></span>
+                                            ENVIADO
+                                        </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="px-3 py-1.5 bg-white border border-blue-700 text-blue-700 hover:bg-blue-50 text-xs font-bold rounded transition-all">
+                                            VER DETALLE
+                                        </button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="bg-slate-50/50 hover:bg-slate-100 transition-colors group">
+<td class="px-6 py-4">
+<input class="rounded border-slate-300 text-primary focus:ring-primary" type="checkbox"/>
+</td>
+<td class="px-4 py-4">
+<div class="flex flex-col">
+<span class="font-bold text-sm text-primary">Sistemas Integrales Bogotá SAS</span>
+<span class="text-[11px] text-on-surface-variant">NIT 860.003.441-2</span>
+</div>
+</td>
+<td class="px-4 py-4">
+<span class="font-mono text-xs font-medium text-slate-700 px-2 py-1 bg-slate-100 rounded">SED-MC-2024-001</span>
+</td>
+<td class="px-4 py-4 text-table-data text-on-surface">Marzo - Abril 2024</td>
+<td class="px-4 py-4">
+<div class="flex flex-col">
+<span class="text-sm font-medium">05 Jun 2024</span>
+<span class="text-[11px] text-tertiary font-bold">FUERA DE PLAZO</span>
+</div>
+</td>
+<td class="px-4 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+<span class="w-1.5 h-1.5 rounded-full bg-blue-600 mr-1.5"></span>
+                                            ENVIADO
+                                        </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="px-3 py-1.5 bg-white border border-blue-700 text-blue-700 hover:bg-blue-50 text-xs font-bold rounded transition-all">
+                                            VER DETALLE
+                                        </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination Footer -->
+<div class="bg-slate-50 px-6 py-3 border-t border-slate-200 flex items-center justify-between">
+<div class="text-xs text-on-surface-variant">
+                            Mostrando <span class="font-bold">1</span> a <span class="font-bold">10</span> de <span class="font-bold">24</span> informes
+                        </div>
+<div class="flex items-center gap-1">
+<button class="p-1.5 rounded hover:bg-slate-200 text-slate-600 disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined text-[20px]">chevron_left</span>
+</button>
+<button class="w-8 h-8 rounded bg-primary text-white text-xs font-bold shadow-sm">1</button>
+<button class="w-8 h-8 rounded hover:bg-slate-200 text-xs font-medium">2</button>
+<button class="w-8 h-8 rounded hover:bg-slate-200 text-xs font-medium">3</button>
+<span class="px-1">...</span>
+<button class="w-8 h-8 rounded hover:bg-slate-200 text-xs font-medium">6</button>
+<button class="p-1.5 rounded hover:bg-slate-200 text-slate-600">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</button>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-[11px] font-bold text-on-surface-variant uppercase">Filas por página</span>
+<select class="border border-slate-200 bg-white rounded px-2 py-1 text-xs focus:ring-0">
+<option>10</option>
+<option>25</option>
+<option>50</option>
+</select>
+</div>
+</div>
+</div>
+<!-- Footer / Legal Info -->
+<footer class="mt-8 pt-6 border-t border-slate-200 pb-12 flex justify-between items-center text-on-surface-variant">
+<div class="flex items-center gap-4">
+<div class="w-24 opacity-50 grayscale contrast-125" data-alt="Official logo of the Bogota Mayor Office, styled with minimalist and clean institutional lines. The visual composition is professional, monochrome, and integrates seamlessly into a high-density administrative dashboard environment." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB_Iih7CwkorYggy1BPLwvzlsYjFfG2doz7qWPfEnS3Aj4Hfkp95-Ulj5GBtc-wVkW6I8seh3mDZNwsr_jVPcnkRD-MCJA11CzGbA46_K2O-RlOzPgoszzDB1UATTnGjQ0FtM-It8HoRdm7-gzq1geFVePLj3T7CLMJ5WDzJ9eUzys8JFtlfRmTfsLco5HaLzI1t3hG3P28MEwwwi0gUEmRsAu1j6emjC-wzWD9Piu9CDPLo_c5pyIrXu4XzVC4ddeEGsc7aCySa-4'); height: 32px; background-size: contain; background-repeat: no-repeat;"></div>
+<div class="h-8 border-l border-slate-300"></div>
+<p class="text-[10px] uppercase font-bold tracking-widest opacity-60">Secretaría de Educación del Distrito</p>
+</div>
+<p class="text-[11px]">SIGCON v3.4.1 © 2024 - Todos los derechos reservados.</p>
+</footer>
+</div>
+</main>
+</div>
+<!-- Floating Helper (Contextual Context) -->
+<button class="fixed bottom-8 right-8 w-12 h-12 bg-secondary-container text-on-secondary-container rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform z-50">
+<span class="material-symbols-outlined">support_agent</span>
+</button>
+</body></html>

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed-dim": "#b1c5ff",
+                        "surface-tint": "#345baf",
+                        "surface-bright": "#f8f9ff",
+                        "tertiary-container": "#89002a",
+                        "tertiary": "#5f001b",
+                        "surface-container-low": "#eff4ff",
+                        "on-secondary": "#ffffff",
+                        "outline-variant": "#c4c6d3",
+                        "on-secondary-fixed": "#281900",
+                        "secondary-fixed": "#ffdeac",
+                        "secondary-container": "#feb300",
+                        "on-surface": "#0b1c30",
+                        "on-secondary-container": "#6a4800",
+                        "surface-container-high": "#dce9ff",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#91022d",
+                        "on-primary-fixed-variant": "#144296",
+                        "surface-dim": "#cbdbf5",
+                        "on-primary-fixed": "#001947",
+                        "on-tertiary": "#ffffff",
+                        "on-surface-variant": "#434652",
+                        "on-error-container": "#93000a",
+                        "background": "#f8f9ff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-container": "#8dadff",
+                        "surface-variant": "#d3e4fe",
+                        "outline": "#747783",
+                        "surface-container-highest": "#d3e4fe",
+                        "on-secondary-fixed-variant": "#604100",
+                        "primary-container": "#0b3d91",
+                        "error-container": "#ffdad6",
+                        "surface-container": "#e5eeff",
+                        "primary-fixed": "#dae2ff",
+                        "on-tertiary-container": "#ff8d99",
+                        "secondary": "#7e5700",
+                        "inverse-on-surface": "#eaf1ff",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed": "#40000f",
+                        "surface": "#f8f9ff",
+                        "inverse-surface": "#213145",
+                        "inverse-primary": "#b1c5ff",
+                        "secondary-fixed-dim": "#ffba38",
+                        "tertiary-fixed-dim": "#ffb2b8",
+                        "on-error": "#ffffff",
+                        "on-background": "#0b1c30",
+                        "tertiary-fixed": "#ffdadb",
+                        "primary": "#002869"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "lg": "24px",
+                        "xl": "40px",
+                        "sm": "8px",
+                        "gutter": "16px",
+                        "unit": "4px",
+                        "margin": "32px",
+                        "xs": "4px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "h3": ["Public Sans"],
+                        "body-sm": ["Public Sans"],
+                        "label-bold": ["Public Sans"],
+                        "h2": ["Public Sans"],
+                        "body-lg": ["Public Sans"],
+                        "table-data": ["Public Sans"],
+                        "h1": ["Public Sans"],
+                        "body-md": ["Public Sans"]
+                    },
+                    "fontSize": {
+                        "h3": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-bold": ["12px", {"lineHeight": "16px", "fontWeight": "700"}],
+                        "h2": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "table-data": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                        "h1": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Public Sans', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex overflow-hidden">
+<!-- SideNavBar Component -->
+<aside class="flex flex-col h-full py-4 fixed left-0 top-0 z-40 bg-slate-50 dark:bg-slate-950 h-screen w-64 border-r border-slate-200 dark:border-slate-800 font-['Public_Sans'] text-[13px] font-medium">
+<div class="px-6 mb-8">
+<div class="text-lg font-black text-[#0B3D91] dark:text-blue-400 tracking-tight">SIGCON</div>
+<div class="text-[10px] uppercase tracking-widest text-slate-400 mt-1">Administración Educativa</div>
+</div>
+<nav class="flex-1 space-y-1 px-3">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded transition-all duration-200 ease-in-out text-slate-500 dark:text-slate-400 hover:text-[#0B3D91] dark:hover:text-blue-300 hover:bg-slate-100 dark:hover:bg-slate-900/50" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded transition-all duration-200 ease-in-out text-slate-500 dark:text-slate-400 hover:text-[#0B3D91] dark:hover:text-blue-300 hover:bg-slate-100 dark:hover:bg-slate-900/50" href="#">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+<span>Contratos</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded transition-all duration-200 ease-in-out text-slate-500 dark:text-slate-400 hover:text-[#0B3D91] dark:hover:text-blue-300 hover:bg-slate-100 dark:hover:bg-slate-900/50" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span>Contratistas</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded transition-all duration-200 ease-in-out text-slate-500 dark:text-slate-400 hover:text-[#0B3D91] dark:hover:text-blue-300 hover:bg-slate-100 dark:hover:bg-slate-900/50" href="#">
+<span class="material-symbols-outlined" data-icon="assignment">assignment</span>
+<span>Obligaciones</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded transition-all duration-200 ease-in-out text-slate-500 dark:text-slate-400 hover:text-[#0B3D91] dark:hover:text-blue-300 hover:bg-slate-100 dark:hover:bg-slate-900/50" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span>Reportes</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded transition-all duration-200 ease-in-out text-slate-500 dark:text-slate-400 hover:text-[#0B3D91] dark:hover:text-blue-300 hover:bg-slate-100 dark:hover:bg-slate-900/50" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>Configuración</span>
+</a>
+</nav>
+<div class="mt-auto px-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded transition-all duration-200 ease-in-out text-slate-500 dark:text-slate-400 hover:text-error hover:bg-error-container/10" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span>Cerrar Sesión</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 ml-64 flex flex-col h-screen overflow-hidden">
+<!-- TopAppBar Component -->
+<header class="flex justify-between items-center w-full px-6 h-14 sticky top-0 z-50 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 font-['Public_Sans'] text-sm antialiased">
+<div class="flex items-center gap-4">
+<h1 class="text-xl font-bold text-[#0B3D91] dark:text-blue-400 tracking-tight">Centro de Notificaciones</h1>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-full transition-colors relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<div class="h-8 w-px bg-slate-200 dark:bg-slate-800 mx-1"></div>
+<div class="flex items-center gap-3 pl-2">
+<div class="text-right hidden sm:block">
+<div class="text-xs font-bold text-on-background">Juan Pérez</div>
+<div class="text-[10px] text-slate-500">Supervisor Técnico</div>
+</div>
+<span class="material-symbols-outlined text-2xl text-slate-400" data-icon="account_circle">account_circle</span>
+</div>
+</div>
+</header>
+<!-- Content Area -->
+<section class="flex-1 overflow-y-auto p-gutter lg:p-margin bg-background">
+<div class="max-w-4xl mx-auto space-y-6">
+<!-- Welcome Banner with Image -->
+<div class="relative overflow-hidden rounded-xl bg-primary-container text-white p-8 mb-8 shadow-sm">
+<div class="relative z-10 max-w-xl">
+<h2 class="font-h2 text-h2 mb-2 text-white">Gestiona tus avisos</h2>
+<p class="font-body-md text-body-md text-primary-fixed opacity-90">Mantente al día con el estado de tus trámites, contratos y obligaciones administrativas en tiempo real.</p>
+</div>
+<img alt="Banner de fondo" class="absolute right-0 top-0 h-full w-1/2 object-cover mix-blend-overlay opacity-30" data-alt="A clean, professional administrative banner design with subtle abstract shapes and digital data visualizations. The lighting is high-key and bright, representing an efficient government workspace. The color palette features deep blues, soft greys, and crisp white, emphasizing transparency and modern institutional communication. The style is minimalist corporate with a focus on functional clarity and professional reliability." src="https://lh3.googleusercontent.com/aida/ADBb0uhVRMR04f2IM80aWpLHKzpPjWdyYoBNEByYqJ5QN89CamdA2yoJ3PQUNB1voV49CQhYQWhDNHR0Mmhvl9yPZlBz0x_fD7MSQi2AQ2NCdl-0D_XMcpDanJbuAl8eSkmu_dUqV01s_KPRJ_8wwLcAc-ZpashOjuSUHa6Afr137JgrT8z1jYi_jKO84BC4HRNyxK5LYf4kiAaHQDxvUOm-5s6YzuYjyRber4aFXWK4i5bsBOkli9qqdIaETJTrC-1Abga7tBP043K0"/>
+</div>
+<!-- Controls & Filters -->
+<div class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-surface-container-lowest p-md rounded-xl border border-slate-200 shadow-sm">
+<div class="flex items-center gap-2">
+<button class="px-4 py-2 bg-primary-container text-white text-table-data font-bold rounded-lg hover:opacity-90 transition-opacity flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="check_circle">check_circle</span>
+                            Marcar todas como leídas
+                        </button>
+<button class="px-4 py-2 bg-white border border-slate-200 text-slate-600 text-table-data font-medium rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="filter_list">filter_list</span>
+                            Filtrar
+                        </button>
+</div>
+<div class="flex gap-1 p-1 bg-slate-100 rounded-lg">
+<button class="px-4 py-1.5 text-xs font-bold rounded-md bg-white text-primary shadow-sm">Todas</button>
+<button class="px-4 py-1.5 text-xs font-medium rounded-md text-slate-500 hover:text-slate-700">No leídas (3)</button>
+<button class="px-4 py-1.5 text-xs font-medium rounded-md text-slate-500 hover:text-slate-700">Archivadas</button>
+</div>
+</div>
+<!-- Notification List (Bento-style items) -->
+<div class="grid grid-cols-1 gap-4">
+<!-- Today Section -->
+<div class="text-[11px] font-bold text-slate-400 uppercase tracking-widest pt-4 pl-2">Hoy</div>
+<!-- Notification Card 1 (Unread/Success) -->
+<div class="group flex gap-4 p-5 bg-white border-l-4 border-l-primary rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all">
+<div class="w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-full bg-surface-container-high text-[#0B3D91]">
+<span class="material-symbols-outlined text-3xl" data-icon="verified" data-weight="fill" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-label-bold text-body-md text-on-surface font-bold">Tu informe de Octubre ha sido aprobado</h3>
+<span class="text-[12px] text-slate-400 font-medium">Hace 2 horas</span>
+</div>
+<p class="font-body-sm text-slate-600">El departamento de supervisión técnica ha validado satisfactoriamente todas las actividades del mes de octubre. Puedes proceder con la cuenta de cobro.</p>
+<div class="mt-4 flex gap-3">
+<button class="text-xs font-bold text-[#0B3D91] hover:underline">Ver Detalle</button>
+<button class="text-xs font-bold text-slate-400 hover:text-slate-600">Archivar</button>
+</div>
+</div>
+<div class="flex items-center">
+<div class="w-2.5 h-2.5 bg-primary rounded-full"></div>
+</div>
+</div>
+<!-- Notification Card 2 (Contract/Info) -->
+<div class="group flex gap-4 p-5 bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all">
+<div class="w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-full bg-surface-container text-[#0B3D91]">
+<span class="material-symbols-outlined text-3xl" data-icon="description">description</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-label-bold text-body-md text-on-surface font-bold">Nuevo contrato asignado: SED-2024-001</h3>
+<span class="text-[12px] text-slate-400 font-medium">Hace 5 horas</span>
+</div>
+<p class="font-body-sm text-slate-600">Se te ha asignado como interventor para el contrato de suministro tecnológico en sedes rurales. Revisa los anexos técnicos adjuntos.</p>
+<div class="mt-3 inline-flex items-center gap-2 px-2 py-1 bg-slate-100 rounded text-[11px] font-bold text-slate-500 uppercase">
+<span class="material-symbols-outlined text-[14px]" data-icon="attach_file">attach_file</span>
+                                2 Anexos PDF
+                            </div>
+</div>
+</div>
+<!-- Yesterday Section -->
+<div class="text-[11px] font-bold text-slate-400 uppercase tracking-widest pt-4 pl-2">Ayer</div>
+<!-- Notification Card 3 (Warning/Action Required) -->
+<div class="group flex gap-4 p-5 bg-white border-l-4 border-l-secondary rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all">
+<div class="w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-full bg-secondary-fixed text-secondary">
+<span class="material-symbols-outlined text-3xl" data-icon="assignment_late" data-weight="fill" style="font-variation-settings: 'FILL' 1;">assignment_late</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-label-bold text-body-md text-on-surface font-bold">El supervisor ha devuelto tu informe con observaciones</h3>
+<span class="text-[12px] text-slate-400 font-medium">Ayer, 4:15 PM</span>
+</div>
+<p class="font-body-sm text-slate-600">Informe de Ejecución Semanal (Semana 3). Observación: "Falta evidencia fotográfica del avance de obra en el Bloque B".</p>
+<div class="mt-4">
+<button class="px-4 py-1.5 bg-secondary text-white text-[12px] font-bold rounded-md hover:bg-secondary/90">Corregir Informe</button>
+</div>
+</div>
+</div>
+<!-- Notification Card 4 (Update) -->
+<div class="group flex gap-4 p-5 bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all opacity-80">
+<div class="w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-full bg-slate-100 text-slate-400">
+<span class="material-symbols-outlined text-3xl" data-icon="update">update</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-label-bold text-body-md text-on-surface font-bold">Actualización de normativa contractual</h3>
+<span class="text-[12px] text-slate-400 font-medium">Ayer, 9:00 AM</span>
+</div>
+<p class="font-body-sm text-slate-500">Se han actualizado los lineamientos para la presentación de cuentas de cobro digital según la resolución 1024-2024.</p>
+</div>
+</div>
+</div>
+<!-- Footer Stats -->
+<div class="flex justify-center pt-8">
+<p class="text-xs text-slate-400 font-medium">Mostrando 4 de 128 notificaciones archivadas en el último mes.</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Contextual FAB (Only for main flow) -->
+<button class="fixed bottom-8 right-8 w-14 h-14 bg-primary-container text-white rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-transform z-50">
+<span class="material-symbols-outlined text-2xl" data-icon="help_center">help_center</span>
+</button>
+</body></html>

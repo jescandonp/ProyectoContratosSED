@@ -1,0 +1,12 @@
+.idea/
+.vscode/
+target/
+dist/
+node_modules/
+.angular/
+coverage/
+*.log
+*.war
+.env
+.env.*
+!.env.example

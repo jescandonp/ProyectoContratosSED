@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SIGCON - Dashboard del Contratista</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-variant": "#d3e4fe",
+                    "surface-container-highest": "#d3e4fe",
+                    "primary-fixed": "#dae2ff",
+                    "on-tertiary-fixed": "#40000f",
+                    "surface-bright": "#f8f9ff",
+                    "on-primary-fixed-variant": "#144296",
+                    "outline": "#747783",
+                    "on-surface-variant": "#434652",
+                    "background": "#f8f9ff",
+                    "on-tertiary-fixed-variant": "#91022d",
+                    "on-tertiary-container": "#ff8d99",
+                    "surface-dim": "#cbdbf5",
+                    "outline-variant": "#c4c6d3",
+                    "secondary": "#7e5700",
+                    "error-container": "#ffdad6",
+                    "on-secondary-fixed": "#281900",
+                    "on-secondary-container": "#6a4800",
+                    "error": "#ba1a1a",
+                    "primary-container": "#0b3d91",
+                    "tertiary-fixed-dim": "#ffb2b8",
+                    "tertiary-fixed": "#ffdadb",
+                    "on-error": "#ffffff",
+                    "on-secondary-fixed-variant": "#604100",
+                    "primary": "#002869",
+                    "on-surface": "#0b1c30",
+                    "on-error-container": "#93000a",
+                    "inverse-surface": "#213145",
+                    "tertiary": "#5f001b",
+                    "tertiary-container": "#89002a",
+                    "on-primary-container": "#8dadff",
+                    "inverse-primary": "#b1c5ff",
+                    "on-primary": "#ffffff",
+                    "secondary-fixed-dim": "#ffba38",
+                    "inverse-on-surface": "#eaf1ff",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "surface": "#f8f9ff",
+                    "surface-container": "#e5eeff",
+                    "secondary-fixed": "#ffdeac",
+                    "on-background": "#0b1c30",
+                    "on-secondary": "#ffffff",
+                    "surface-container-high": "#dce9ff",
+                    "on-primary-fixed": "#001947",
+                    "surface-tint": "#345baf",
+                    "secondary-container": "#feb300",
+                    "surface-container-low": "#eff4ff",
+                    "primary-fixed-dim": "#b1c5ff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "xl": "40px",
+                    "lg": "24px",
+                    "md": "16px",
+                    "margin": "32px",
+                    "unit": "4px",
+                    "gutter": "16px",
+                    "sm": "8px",
+                    "xs": "4px"
+            },
+            "fontFamily": {
+                    "h1": ["Public Sans"],
+                    "label-bold": ["Public Sans"],
+                    "h3": ["Public Sans"],
+                    "body-md": ["Public Sans"],
+                    "body-sm": ["Public Sans"],
+                    "body-lg": ["Public Sans"],
+                    "h2": ["Public Sans"],
+                    "table-data": ["Public Sans"]
+            },
+            "fontSize": {
+                    "h1": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-bold": ["12px", {"lineHeight": "16px", "fontWeight": "700"}],
+                    "h3": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "h2": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "table-data": ["13px", {"lineHeight": "18px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Public Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-background text-on-surface">
+<!-- TopAppBar -->
+<header class="bg-white dark:bg-slate-900 flex justify-between items-center h-14 px-6 w-full z-50 sticky top-0 border-b border-outline-variant font-['Public_Sans'] text-sm antialiased transition-all">
+<div class="flex items-center gap-4">
+<span class="text-xl font-black text-primary tracking-tighter">SIGCON</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden md:flex items-center bg-surface-container-low rounded-xl px-3 py-1.5 border border-outline-variant">
+<span class="material-symbols-outlined text-outline text-lg">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-sm w-64 px-2" placeholder="Buscar contratos..." type="text"/>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant transition-all">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant transition-all">
+<span class="material-symbols-outlined">help</span>
+</button>
+<div class="flex items-center gap-2 pl-2 ml-2 border-l border-outline-variant">
+<div class="w-8 h-8 rounded-full overflow-hidden border border-primary">
+<img alt="Avatar del usuario" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmXn7xRbxFwGe5etGkbhPT2ILr4DAZ9Wd6am5EemrpSYpyoCyfbFvJENynYmNeX2ubHWY5OIznpFYGHC3fyXCcmOxmetknIYucnlg7hGcEiZvFinDwVydmMe1_VcKFgtevBKy0JzWFlLC7rr7FTihkpLLZeDvzKZRbuvzDSQNkj0vddRQwEFf2PtxbqJOxG0_1DeRJgwGSr5qFuHwhqI8AoLmUihU1lJhefOmUYbsJCZh_RNHhAKksK95wKYWs5VdkWxK_cr9GK4U"/>
+</div>
+<span class="font-semibold text-primary hidden sm:block">Juan Pérez</span>
+</div>
+</div>
+</div>
+</header>
+<div class="flex">
+<!-- SideNavBar -->
+<aside class="bg-surface-container-low flex flex-col fixed left-0 top-0 h-full z-40 pt-14 w-60 border-r border-outline-variant font-['Public_Sans'] transition-all">
+<div class="p-6 flex flex-col items-center border-b border-outline-variant">
+<div class="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mb-2">
+<span class="material-symbols-outlined text-white text-3xl" style="font-variation-settings: 'FILL' 1;">corporate_fare</span>
+</div>
+<h2 class="text-lg font-bold text-primary">SIGCON</h2>
+<span class="text-[11px] uppercase tracking-wider text-outline font-bold">Gestión de Contratos</span>
+</div>
+<nav class="flex-1 py-4 overflow-y-auto">
+<ul class="space-y-1 px-3">
+<li>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-surface-container-high text-primary border-l-4 border-primary font-bold transition-all" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-[13px]">Dashboard</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="text-[13px]">Mis Contratos</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined">assignment_turned_in</span>
+<span class="text-[13px]">Mis Obligaciones</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="text-[13px]">Reportes</span>
+</a>
+</li>
+</ul>
+</nav>
+<div class="p-4 border-t border-outline-variant">
+<ul class="space-y-1">
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined text-lg">settings</span>
+<span class="text-[13px]">Configuración</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded-xl text-error hover:bg-error-container/20 transition-all" href="#">
+<span class="material-symbols-outlined text-lg">logout</span>
+<span class="text-[13px]">Cerrar Sesión</span>
+</a>
+</li>
+</ul>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="ml-60 pt-6 px-10 pb-12 w-full max-w-[1400px]">
+<!-- Header Section -->
+<div class="mb-8">
+<h1 class="font-h1 text-h1 text-primary mb-1">Panel del Contratista</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Bienvenido de nuevo, Juan. Gestiona tus contratos y obligaciones vigentes.</p>
+</div>
+<!-- Bento Grid: Active Contracts -->
+<section class="mb-10">
+<div class="flex justify-between items-end mb-4">
+<h2 class="font-h2 text-h2 text-on-surface">Contratos Activos</h2>
+<a class="text-primary font-bold text-body-sm hover:underline flex items-center gap-1" href="#">
+                    Ver todos <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Contract Card 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
+<div class="flex justify-between items-start mb-4">
+<span class="px-2 py-1 bg-surface-container-high text-primary text-[11px] font-bold rounded uppercase tracking-wider">Vigente</span>
+<span class="text-outline text-[11px] font-bold">ID: 2024-C-458</span>
+</div>
+<h3 class="font-h3 text-h3 text-on-surface mb-2 leading-tight">Servicios Profesionales de Desarrollo Backend</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-4 flex-1">Apoyo técnico en el mantenimiento del módulo de nómina institucional.</p>
+<div class="border-t border-outline-variant pt-4 mt-auto">
+<div class="flex justify-between items-center mb-4">
+<div class="flex flex-col">
+<span class="text-[11px] font-bold text-outline uppercase">Vence en</span>
+<span class="font-bold text-on-surface">45 Días</span>
+</div>
+<div class="flex flex-col text-right">
+<span class="text-[11px] font-bold text-outline uppercase">Ejecución</span>
+<span class="font-bold text-primary">65%</span>
+</div>
+</div>
+<button class="w-full bg-primary text-on-primary py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary-container transition-colors">
+<span class="material-symbols-outlined text-lg">add_circle</span>
+                            Crear Nuevo Informe
+                        </button>
+</div>
+</div>
+<!-- Contract Card 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
+<div class="flex justify-between items-start mb-4">
+<span class="px-2 py-1 bg-surface-container-high text-primary text-[11px] font-bold rounded uppercase tracking-wider">Vigente</span>
+<span class="text-outline text-[11px] font-bold">ID: 2024-C-112</span>
+</div>
+<h3 class="font-h3 text-h3 text-on-surface mb-2 leading-tight">Consultoría de Arquitectura de Sistemas Cloud</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-4 flex-1">Optimización de infraestructura en la nube para el portal SED Bogotá.</p>
+<div class="border-t border-outline-variant pt-4 mt-auto">
+<div class="flex justify-between items-center mb-4">
+<div class="flex flex-col">
+<span class="text-[11px] font-bold text-outline uppercase">Vence en</span>
+<span class="font-bold text-on-surface">120 Días</span>
+</div>
+<div class="flex flex-col text-right">
+<span class="text-[11px] font-bold text-outline uppercase">Ejecución</span>
+<span class="font-bold text-primary">15%</span>
+</div>
+</div>
+<button class="w-full bg-primary text-on-primary py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary-container transition-colors">
+<span class="material-symbols-outlined text-lg">add_circle</span>
+                            Crear Nuevo Informe
+                        </button>
+</div>
+</div>
+<!-- Resumen de Actividad Card -->
+<div class="bg-primary text-on-primary rounded-xl p-6 shadow-sm flex flex-col relative overflow-hidden">
+<div class="relative z-10">
+<h3 class="font-h3 text-h3 mb-6">Resumen de Actividad</h3>
+<div class="space-y-6">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-2xl">pending_actions</span>
+</div>
+<div>
+<span class="text-3xl font-black">02</span>
+<p class="text-[11px] font-bold uppercase opacity-80 tracking-wider">Informes Pendientes</p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-error flex items-center justify-center shadow-lg">
+<span class="material-symbols-outlined text-white text-2xl">error</span>
+</div>
+<div>
+<span class="text-3xl font-black">01</span>
+<p class="text-[11px] font-bold uppercase opacity-80 tracking-wider">Informe Devuelto</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Abstract Decorative Element -->
+<div class="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-3xl"></div>
+</div>
+</div>
+</section>
+<!-- Data Table Section: Recent Reports -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+<div class="px-6 py-5 border-b border-outline-variant flex justify-between items-center">
+<h2 class="font-h3 text-h3 text-primary">Informes Recientes</h2>
+<div class="flex gap-2">
+<button class="px-4 py-2 border border-outline-variant text-body-sm font-bold text-on-surface-variant rounded-xl flex items-center gap-2 hover:bg-surface-container transition-all">
+<span class="material-symbols-outlined text-lg">filter_list</span>
+                        Filtrar
+                    </button>
+<button class="px-4 py-2 border border-outline-variant text-body-sm font-bold text-on-surface-variant rounded-xl flex items-center gap-2 hover:bg-surface-container transition-all">
+<span class="material-symbols-outlined text-lg">file_download</span>
+                        Exportar
+                    </button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left font-table-data text-table-data">
+<thead class="bg-surface-container-low border-b border-outline-variant text-outline uppercase text-[11px] font-bold tracking-wider">
+<tr>
+<th class="px-6 py-4">Código</th>
+<th class="px-6 py-4">Contrato</th>
+<th class="px-6 py-4">Periodo</th>
+<th class="px-6 py-4">Fecha Envío</th>
+<th class="px-6 py-4">Estado</th>
+<th class="px-6 py-4 text-right">Acciones</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<!-- Devuelto Row -->
+<tr class="hover:bg-error-container/10 transition-colors">
+<td class="px-6 py-4 font-bold text-on-surface">INF-458-03</td>
+<td class="px-6 py-4">Backend Support (458)</td>
+<td class="px-6 py-4">Marzo 2024</td>
+<td class="px-6 py-4">05/04/2024</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-error-container text-on-error-container font-bold text-[11px] uppercase tracking-wide">
+<span class="w-1.5 h-1.5 rounded-full bg-error animate-pulse"></span>
+                                    Devuelto
+                                </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-error font-bold flex items-center gap-1 justify-end w-full hover:underline">
+<span class="material-symbols-outlined text-lg">edit</span>
+                                    Corregir
+                                </button>
+</td>
+</tr>
+<!-- Enviado Row -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-6 py-4 font-bold text-on-surface">INF-112-01</td>
+<td class="px-6 py-4">Consultoría Cloud (112)</td>
+<td class="px-6 py-4">Abril 2024</td>
+<td class="px-6 py-4">28/04/2024</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-variant text-primary font-bold text-[11px] uppercase tracking-wide">
+                                    Enviado
+                                </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-primary hover:bg-surface-container p-2 rounded-xl transition-colors">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</td>
+</tr>
+<!-- Aprobado Row -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-6 py-4 font-bold text-on-surface">INF-458-02</td>
+<td class="px-6 py-4">Backend Support (458)</td>
+<td class="px-6 py-4">Febrero 2024</td>
+<td class="px-6 py-4">02/03/2024</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-100 text-green-800 font-bold text-[11px] uppercase tracking-wide">
+                                    Aprobado
+                                </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-primary hover:bg-surface-container p-2 rounded-xl transition-colors">
+<span class="material-symbols-outlined">download</span>
+</button>
+</td>
+</tr>
+<!-- Borrador Row -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-6 py-4 font-bold text-on-surface">INF-112-02</td>
+<td class="px-6 py-4">Consultoría Cloud (112)</td>
+<td class="px-6 py-4">Mayo 2024</td>
+<td class="px-6 py-4">--</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container text-on-surface-variant font-bold text-[11px] uppercase tracking-wide">
+                                    Borrador
+                                </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-primary hover:bg-surface-container p-2 rounded-xl transition-colors">
+<span class="material-symbols-outlined">edit</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="px-6 py-4 bg-surface-container-low border-t border-outline-variant flex items-center justify-between">
+<span class="text-body-sm text-on-surface-variant">Mostrando 1-4 de 12 informes</span>
+<div class="flex gap-2">
+<button class="p-1.5 border border-outline-variant rounded-xl bg-white hover:bg-surface-container disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-lg">chevron_left</span>
+</button>
+<button class="p-1.5 border border-outline-variant rounded-xl bg-white hover:bg-surface-container">
+<span class="material-symbols-outlined text-lg">chevron_right</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Alert Context Card for Returned Report -->
+<div class="mt-8 bg-error-container/30 border-l-4 border-error p-5 rounded-r-xl flex items-start gap-4">
+<span class="material-symbols-outlined text-error text-2xl" style="font-variation-settings: 'FILL' 1;">warning</span>
+<div>
+<h4 class="font-bold text-on-error-container text-lg mb-1">Requiere Atención Inmediata</h4>
+<p class="text-body-md text-on-error-container">Su informe <strong>INF-458-03</strong> fue devuelto por el supervisor con el siguiente comentario: <em>"Faltan evidencias del cumplimiento de la obligación No. 4 relativa a la documentación de la API."</em> Por favor, adjunte los archivos necesarios y vuelva a enviar.</p>
+</div>
+</div>
+</main>
+</div>
+<!-- Mobile Bottom Navigation -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-outline-variant flex justify-around py-3 px-2 z-50">
+<a class="flex flex-col items-center text-primary font-bold" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-[10px] uppercase">Panel</span>
+</a>
+<a class="flex flex-col items-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="text-[10px] uppercase">Contratos</span>
+</a>
+<a class="flex flex-col items-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined">assignment_turned_in</span>
+<span class="text-[10px] uppercase">Tareas</span>
+</a>
+<a class="flex flex-col items-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="text-[10px] uppercase">Perfil</span>
+</a>
+</nav>
+</body></html>

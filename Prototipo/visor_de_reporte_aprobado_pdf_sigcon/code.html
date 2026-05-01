@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-fixed-dim": "#b1c5ff",
+                    "surface-tint": "#345baf",
+                    "surface-bright": "#f8f9ff",
+                    "tertiary-container": "#89002a",
+                    "tertiary": "#5f001b",
+                    "surface-container-low": "#eff4ff",
+                    "on-secondary": "#ffffff",
+                    "outline-variant": "#c4c6d3",
+                    "on-secondary-fixed": "#281900",
+                    "secondary-fixed": "#ffdeac",
+                    "secondary-container": "#feb300",
+                    "on-surface": "#0b1c30",
+                    "on-secondary-container": "#6a4800",
+                    "surface-container-high": "#dce9ff",
+                    "on-primary": "#ffffff",
+                    "on-tertiary-fixed-variant": "#91022d",
+                    "on-primary-fixed-variant": "#144296",
+                    "surface-dim": "#cbdbf5",
+                    "on-primary-fixed": "#001947",
+                    "on-tertiary": "#ffffff",
+                    "on-surface-variant": "#434652",
+                    "on-error-container": "#93000a",
+                    "background": "#f8f9ff",
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary-container": "#8dadff",
+                    "surface-variant": "#d3e4fe",
+                    "outline": "#747783",
+                    "surface-container-highest": "#d3e4fe",
+                    "on-secondary-fixed-variant": "#604100",
+                    "primary-container": "#0b3d91",
+                    "error-container": "#ffdad6",
+                    "surface-container": "#e5eeff",
+                    "primary-fixed": "#dae2ff",
+                    "on-tertiary-container": "#ff8d99",
+                    "secondary": "#7e5700",
+                    "inverse-on-surface": "#eaf1ff",
+                    "error": "#ba1a1a",
+                    "on-tertiary-fixed": "#40000f",
+                    "surface": "#f8f9ff",
+                    "inverse-surface": "#213145",
+                    "inverse-primary": "#b1c5ff",
+                    "secondary-fixed-dim": "#ffba38",
+                    "tertiary-fixed-dim": "#ffb2b8",
+                    "on-error": "#ffffff",
+                    "on-background": "#0b1c30",
+                    "tertiary-fixed": "#ffdadb",
+                    "primary": "#002869"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "lg": "24px",
+                    "xl": "40px",
+                    "sm": "8px",
+                    "gutter": "16px",
+                    "unit": "4px",
+                    "margin": "32px",
+                    "xs": "4px",
+                    "md": "16px"
+            },
+            "fontFamily": {
+                    "h3": ["Public Sans"],
+                    "body-sm": ["Public Sans"],
+                    "label-bold": ["Public Sans"],
+                    "h2": ["Public Sans"],
+                    "body-lg": ["Public Sans"],
+                    "table-data": ["Public Sans"],
+                    "h1": ["Public Sans"],
+                    "body-md": ["Public Sans"]
+            },
+            "fontSize": {
+                    "h3": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-bold": ["12px", {"lineHeight": "16px", "fontWeight": "700"}],
+                    "h2": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "table-data": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "h1": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .paper-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        @media print {
+            .no-print { display: none; }
+            .print-only { display: block; }
+            body { background: white; }
+        }
+    </style>
+</head>
+<body class="bg-surface font-body-md text-on-surface">
+<!-- Top Navigation Anchor -->
+<header class="flex justify-between items-center w-full px-6 h-14 sticky top-0 z-50 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 no-print">
+<div class="flex items-center gap-4">
+<span class="text-xl font-bold text-[#0B3D91] dark:text-blue-400 tracking-tight">SIGCON</span>
+<div class="h-6 w-px bg-slate-300 mx-2"></div>
+<h2 class="text-body-sm font-medium text-slate-500">Visor de Documentos</h2>
+</div>
+<div class="flex items-center gap-3">
+<button class="p-2 hover:bg-slate-50 rounded-full transition-colors">
+<span class="material-symbols-outlined text-slate-600">notifications</span>
+</button>
+<div class="flex items-center gap-2 pl-2">
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-white text-xs font-bold">CM</div>
+<span class="material-symbols-outlined text-slate-600">account_circle</span>
+</div>
+</div>
+</header>
+<div class="flex min-h-[calc(100vh-3.5rem)]">
+<!-- Sidebar Navigation -->
+<aside class="flex flex-col h-full py-4 fixed left-0 top-14 z-40 h-screen w-64 border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 no-print">
+<nav class="flex-1 px-3 space-y-1">
+<div class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-all">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-medium text-[13px]">Dashboard</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 rounded-lg bg-white shadow-sm text-[#0B3D91] border-l-4 border-[#0B3D91] transition-all">
+<span class="material-symbols-outlined">description</span>
+<span class="font-medium text-[13px]">Reportes</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-all">
+<span class="material-symbols-outlined">group</span>
+<span class="font-medium text-[13px]">Contratistas</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-all">
+<span class="material-symbols-outlined">assignment</span>
+<span class="font-medium text-[13px]">Obligaciones</span>
+</div>
+</nav>
+<div class="px-3 mt-auto border-t border-slate-200 pt-4">
+<div class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-all cursor-pointer">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-medium text-[13px]">Cerrar Sesióon</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 flex-1 p-8 bg-[#F1F5F9] min-h-screen relative">
+<!-- Action Toolbar (Fixed Side) -->
+<div class="fixed right-10 top-24 flex flex-col gap-4 no-print">
+<button class="flex flex-col items-center justify-center w-16 h-16 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:bg-slate-50 transition-all group">
+<span class="material-symbols-outlined text-[#0B3D91] mb-1">download</span>
+<span class="text-[10px] font-bold text-slate-600 uppercase tracking-tighter">Descargar</span>
+</button>
+<button class="flex flex-col items-center justify-center w-16 h-16 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:bg-slate-50 transition-all group" onclick="window.print()">
+<span class="material-symbols-outlined text-[#0B3D91] mb-1">print</span>
+<span class="text-[10px] font-bold text-slate-600 uppercase tracking-tighter">Imprimir</span>
+</button>
+<button class="flex flex-col items-center justify-center w-16 h-16 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:bg-slate-50 transition-all group">
+<span class="material-symbols-outlined text-tertiary-container mb-1">share</span>
+<span class="text-[10px] font-bold text-slate-600 uppercase tracking-tighter">Compartir</span>
+</button>
+</div>
+<!-- PDF Simulation Wrapper -->
+<div class="max-w-[850px] mx-auto bg-white paper-shadow min-h-[1100px] p-12 border border-slate-200 relative overflow-hidden">
+<!-- Institutional Header -->
+<div class="flex justify-between items-start border-b-2 border-slate-900 pb-6 mb-8">
+<div class="flex flex-col">
+<img alt="Secretaría de Educación del Distrito Logo" class="h-16 w-auto object-contain mb-2" data-alt="Official government logo for the Secretariat of Education of Bogotá, featuring stylized typography and a traditional crest. The design is presented in a clean, professional corporate style with high-contrast colors suitable for institutional documentation. The overall aesthetic is formal, stable, and authoritative." src="https://lh3.googleusercontent.com/aida/ADBb0uhVRMR04f2IM80aWpLHKzpPjWdyYoBNEByYqJ5QN89CamdA2yoJ3PQUNB1voV49CQhYQWhDNHR0Mmhvl9yPZlBz0x_fD7MSQi2AQ2NCdl-0D_XMcpDanJbuAl8eSkmu_dUqV01s_KPRJ_8wwLcAc-ZpashOjuSUHa6Afr137JgrT8z1jYi_jKO84BC4HRNyxK5LYf4kiAaHQDxvUOm-5s6YzuYjyRber4aFXWK4i5bsBOkli9qqdIaETJTrC-1Abga7tBP043K0"/>
+<div class="text-[10px] font-bold text-slate-800 uppercase leading-tight">
+                            Secretaría de Educación del Distrito<br/>
+                            Subsecretaría de Gestión Institucional<br/>
+                            Dirección de Contratación
+                        </div>
+</div>
+<div class="text-right">
+<div class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Código: GC-F-02</div>
+<div class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Versión: 04</div>
+<div class="text-xs font-bold text-slate-500 uppercase tracking-widest">Página 1 de 1</div>
+</div>
+</div>
+<!-- Report Title & Metadata -->
+<div class="text-center mb-10">
+<h1 class="font-h1 text-h3 text-slate-900 uppercase mb-4">Informe Mensual de Actividades</h1>
+<div class="inline-block px-4 py-1 bg-slate-100 border border-slate-300 font-label-bold text-slate-700">
+                        ESTADO DEL DOCUMENTO: APROBADO
+                    </div>
+</div>
+<!-- Contract Details Grid -->
+<div class="grid grid-cols-2 gap-y-4 gap-x-8 mb-10 text-table-data">
+<div class="border-b border-slate-200 pb-2">
+<span class="block font-label-bold text-slate-500 uppercase text-[10px]">Número de Contrato</span>
+<span class="text-slate-900 font-bold">SED-OPS-2023-1458</span>
+</div>
+<div class="border-b border-slate-200 pb-2">
+<span class="block font-label-bold text-slate-500 uppercase text-[10px]">Periodo del Informe</span>
+<span class="text-slate-900 font-bold">01 Octubre - 31 Octubre 2023</span>
+</div>
+<div class="border-b border-slate-200 pb-2">
+<span class="block font-label-bold text-slate-500 uppercase text-[10px]">Contratista</span>
+<span class="text-slate-900 font-bold">Carlos Eduardo Méndez Rojas</span>
+</div>
+<div class="border-b border-slate-200 pb-2">
+<span class="block font-label-bold text-slate-500 uppercase text-[10px]">Identificación</span>
+<span class="text-slate-900 font-bold">C.C. 80.123.456</span>
+</div>
+</div>
+<!-- Obligations Table -->
+<div class="mb-12">
+<h3 class="font-label-bold text-slate-800 uppercase border-l-4 border-[#0B3D91] pl-3 mb-4">Resumen de Obligaciones y Cumplimiento</h3>
+<table class="w-full border-collapse">
+<thead>
+<tr class="bg-slate-50 border-y border-slate-300">
+<th class="py-3 px-4 text-left font-label-bold text-slate-600 uppercase text-[11px]">Item</th>
+<th class="py-3 px-4 text-left font-label-bold text-slate-600 uppercase text-[11px]">Actividad Realizada</th>
+<th class="py-3 px-4 text-center font-label-bold text-slate-600 uppercase text-[11px] w-32">% Cumplimiento</th>
+</tr>
+</thead>
+<tbody class="text-table-data text-slate-700">
+<tr class="border-b border-slate-100 hover:bg-slate-50/50">
+<td class="py-4 px-4 font-bold align-top">01</td>
+<td class="py-4 px-4">Desarrollo de los módulos de seguimiento presupuestal para el proyecto de inversión 7810. Revisión técnica con el equipo de TI.</td>
+<td class="py-4 px-4 text-center">
+<span class="font-bold">100%</span>
+<div class="w-full bg-slate-200 h-1 mt-1 rounded-full">
+<div class="bg-[#0B3D91] h-1 rounded-full" style="width: 100%"></div>
+</div>
+</td>
+</tr>
+<tr class="border-b border-slate-100 hover:bg-slate-50/50">
+<td class="py-4 px-4 font-bold align-top">02</td>
+<td class="py-4 px-4">Cargue de evidencias contractuales en la plataforma SECOP II correspondientes al periodo de octubre.</td>
+<td class="py-4 px-4 text-center">
+<span class="font-bold">100%</span>
+<div class="w-full bg-slate-200 h-1 mt-1 rounded-full">
+<div class="bg-[#0B3D91] h-1 rounded-full" style="width: 100%"></div>
+</div>
+</td>
+</tr>
+<tr class="border-b border-slate-100 hover:bg-slate-50/50">
+<td class="py-4 px-4 font-bold align-top">03</td>
+<td class="py-4 px-4">Asistencia a comités técnicos semanales y elaboración de actas de seguimiento operativo.</td>
+<td class="py-4 px-4 text-center">
+<span class="font-bold">100%</span>
+<div class="w-full bg-slate-200 h-1 mt-1 rounded-full">
+<div class="bg-[#0B3D91] h-1 rounded-full" style="width: 100%"></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Descriptive Section -->
+<div class="mb-12">
+<h3 class="font-label-bold text-slate-800 uppercase border-l-4 border-[#0B3D91] pl-3 mb-4">Observaciones del Supervisor</h3>
+<div class="p-6 bg-slate-50 border border-slate-200 rounded text-table-data text-slate-600 leading-relaxed italic">
+                        "El contratista ha cumplido satisfactoriamente con la totalidad de las actividades programadas para el mes de octubre. Se destaca la calidad técnica de los entregables y la puntualidad en los reportes de avance."
+                    </div>
+</div>
+<!-- Signatures & Approval Stamp -->
+<div class="mt-20 relative">
+<!-- Approved Watermark/Stamp -->
+<div class="absolute -top-10 right-4 transform rotate-[-15deg] opacity-80 pointer-events-none">
+<div class="border-4 border-tertiary-container text-tertiary-container px-6 py-2 rounded-lg font-black text-3xl tracking-widest uppercase">
+                            APROBADO
+                        </div>
+<div class="text-center text-[10px] font-bold text-tertiary-container mt-1">
+                            VALIDADO POR SIGCON - 2023-11-05
+                        </div>
+</div>
+<div class="grid grid-cols-2 gap-24">
+<div class="text-center">
+<div class="h-16 flex items-center justify-center mb-4">
+<img alt="Firma Digital Contratista" class="h-14 object-contain opacity-80" data-alt="A detailed image of a professional digital signature on a white background, featuring a fluid handwritten name and a stylized seal of authenticity. The lighting is bright and even, mimicking a scanned document's clarity. The composition is centered, symbolizing formal agreement and legal validation within an institutional government context." src="https://lh3.googleusercontent.com/aida/ADBb0uiy5WuRvk0SE7-B7T77x01R9Q2gf70PbjG5zTVO7x7KGpAJnyqLRdfjczNiz0xE82fSCIp-YeZXlikfUmds418_tnUWAxepPaRmfZUsioOun5BWXqzC-2_6DeHvTj07tmwlwJNpeOLQfV1c99Asc6WhkfqOHRc14TdFE0xpA4TH1eCWAqzYi-uU8Lt-VTdMaHGfWg5oLz591EuX57_YCHx3G6qfwgUQpVWzCQjq_-Zn2mGX8Y75D5A7T6VQtif8W4YkExJjbs4-2g"/>
+</div>
+<div class="border-t border-slate-400 pt-2">
+<span class="block font-bold text-slate-900 text-sm">Carlos Eduardo Méndez Rojas</span>
+<span class="block text-slate-500 text-xs uppercase">Contratista</span>
+</div>
+</div>
+<div class="text-center">
+<div class="h-16 flex items-center justify-center mb-4">
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined text-4xl text-slate-300">verified_user</span>
+<span class="text-[9px] text-slate-400 italic">Firmado Digitalmente</span>
+</div>
+</div>
+<div class="border-t border-slate-400 pt-2">
+<span class="block font-bold text-slate-900 text-sm">Dra. Marta Lucía Benavides</span>
+<span class="block text-slate-500 text-xs uppercase">Supervisor de Contrato</span>
+</div>
+</div>
+</div>
+</div>
+<!-- PDF Footer Branding -->
+<div class="absolute bottom-8 left-12 right-12 border-t border-slate-100 pt-4 flex justify-between items-center text-[9px] text-slate-400 uppercase font-bold tracking-tighter">
+<span>Bogotá D.C. - Sistema Integrado de Gestión Contractual SIGCON</span>
+<span>Generado el: 05/11/2023 14:32:10</span>
+</div>
+</div>
+<!-- Contextual Floating Action Button -->
+<button class="fixed bottom-8 right-8 w-14 h-14 bg-primary-container text-white rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-transform no-print">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+</main>
+</div>
+</body></html>

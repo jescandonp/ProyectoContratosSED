@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-error-container": "#93000a",
+                    "surface-container-highest": "#d3e4fe",
+                    "on-tertiary-fixed-variant": "#91022d",
+                    "on-error": "#ffffff",
+                    "on-primary-fixed-variant": "#144296",
+                    "on-background": "#0b1c30",
+                    "primary": "#002869",
+                    "secondary-container": "#feb300",
+                    "on-primary-fixed": "#001947",
+                    "surface-bright": "#f8f9ff",
+                    "surface-tint": "#345baf",
+                    "on-tertiary": "#ffffff",
+                    "primary-container": "#0b3d91",
+                    "secondary-fixed": "#ffdeac",
+                    "tertiary": "#5f001b",
+                    "surface-container-high": "#dce9ff",
+                    "on-secondary-container": "#6a4800",
+                    "tertiary-fixed-dim": "#ffb2b8",
+                    "surface-variant": "#d3e4fe",
+                    "on-tertiary-container": "#ff8d99",
+                    "error-container": "#ffdad6",
+                    "inverse-primary": "#b1c5ff",
+                    "secondary-fixed-dim": "#ffba38",
+                    "on-surface": "#0b1c30",
+                    "on-primary-container": "#8dadff",
+                    "surface-container-low": "#eff4ff",
+                    "surface": "#f8f9ff",
+                    "tertiary-container": "#89002a",
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary": "#ffffff",
+                    "outline": "#747783",
+                    "on-surface-variant": "#434652",
+                    "on-secondary-fixed-variant": "#604100",
+                    "secondary": "#7e5700",
+                    "primary-fixed-dim": "#b1c5ff",
+                    "on-secondary": "#ffffff",
+                    "background": "#f8f9ff",
+                    "inverse-surface": "#213145",
+                    "tertiary-fixed": "#ffdadb",
+                    "inverse-on-surface": "#eaf1ff",
+                    "on-tertiary-fixed": "#40000f",
+                    "outline-variant": "#c4c6d3",
+                    "on-secondary-fixed": "#281900",
+                    "surface-dim": "#cbdbf5",
+                    "surface-container": "#e5eeff",
+                    "error": "#ba1a1a",
+                    "primary-fixed": "#dae2ff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "xl": "40px",
+                    "unit": "4px",
+                    "lg": "24px",
+                    "sm": "8px",
+                    "gutter": "16px",
+                    "md": "16px",
+                    "margin": "32px"
+            },
+            "fontFamily": {
+                    "body-sm": ["Public Sans"],
+                    "body-lg": ["Public Sans"],
+                    "table-data": ["Public Sans"],
+                    "h2": ["Public Sans"],
+                    "body-md": ["Public Sans"],
+                    "h3": ["Public Sans"],
+                    "label-bold": ["Public Sans"],
+                    "h1": ["Public Sans"]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Public Sans', sans-serif;
+            background-color: #f8f9ff;
+        }
+    </style>
+</head>
+<body class="text-on-background">
+<!-- TopAppBar -->
+<header class="flex justify-between items-center h-14 px-6 w-full z-50 sticky top-0 bg-white border-b border-slate-200 font-['Public_Sans'] text-sm antialiased">
+<div class="flex items-center gap-4">
+<span class="text-xl font-black text-blue-800 tracking-tighter">SIGCON</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden md:block">
+<span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+<input class="pl-9 pr-4 py-1.5 bg-slate-100 border-none rounded text-xs w-64 focus:ring-2 focus:ring-primary-container" placeholder="Buscar..." type="text"/>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 hover:bg-slate-50 transition-all duration-200"><span class="material-symbols-outlined text-slate-600">notifications</span></button>
+<button class="p-2 hover:bg-slate-50 transition-all duration-200"><span class="material-symbols-outlined text-slate-600">help</span></button>
+<div class="flex items-center gap-2 border-l pl-4 ml-2 border-slate-200">
+<span class="material-symbols-outlined text-blue-700">account_circle</span>
+<span class="font-medium text-slate-700 hidden sm:inline">Carlos Rodriguez</span>
+</div>
+</div>
+</div>
+</header>
+<div class="flex">
+<!-- SideNavBar -->
+<aside class="flex flex-col fixed left-0 top-0 h-full z-40 pt-14 w-60 bg-slate-50 border-r border-slate-200 font-['Public_Sans'] text-[13px] font-medium">
+<div class="px-6 py-8">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-10 h-10 bg-primary-container rounded flex items-center justify-center text-white font-bold">SED</div>
+<div>
+<div class="text-lg font-bold text-blue-800">SIGCON</div>
+<div class="text-[10px] text-slate-500 uppercase tracking-widest">Gestión de Contratos</div>
+</div>
+</div>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-4 py-2.5 text-slate-600 hover:bg-slate-200 hover:text-blue-800 transition-transform duration-100 active:scale-95" href="#">
+<span class="material-symbols-outlined">dashboard</span> Dashboard
+                    </a>
+<a class="flex items-center gap-3 px-4 py-2.5 text-slate-600 hover:bg-slate-200 hover:text-blue-800 transition-transform duration-100 active:scale-95" href="#">
+<span class="material-symbols-outlined">description</span> Contratos
+                    </a>
+<a class="flex items-center gap-3 px-4 py-2.5 text-slate-600 hover:bg-slate-200 hover:text-blue-800 transition-transform duration-100 active:scale-95" href="#">
+<span class="material-symbols-outlined">group</span> Contratistas
+                    </a>
+<a class="flex items-center gap-3 px-4 py-2.5 text-slate-600 hover:bg-slate-200 hover:text-blue-800 transition-transform duration-100 active:scale-95" href="#">
+<span class="material-symbols-outlined">assignment_turned_in</span> Obligaciones
+                    </a>
+<a class="flex items-center gap-3 px-4 py-2.5 bg-blue-50 text-blue-700 border-r-4 border-blue-700 font-semibold transition-transform duration-100 active:scale-95" href="#">
+<span class="material-symbols-outlined">analytics</span> Reportes
+                    </a>
+</nav>
+</div>
+<div class="mt-auto border-t border-slate-200 p-4 space-y-1">
+<a class="flex items-center gap-3 px-4 py-2 text-slate-600 hover:bg-slate-200 transition-transform duration-100" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span> Configuración
+                </a>
+<a class="flex items-center gap-3 px-4 py-2 text-slate-600 hover:bg-slate-200 transition-transform duration-100" href="#">
+<span class="material-symbols-outlined text-[20px]">logout</span> Cerrar Sesión
+                </a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-60 flex-1 p-8">
+<!-- Header Section -->
+<div class="max-w-6xl mx-auto mb-8">
+<nav class="flex text-xs text-slate-500 mb-4 gap-2 items-center">
+<span>Mis Reportes</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span>Informe de Actividades Octubre</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-blue-700 font-semibold">Corrección de Informe</span>
+</nav>
+<div class="flex justify-between items-end mb-6">
+<div>
+<h1 class="font-h1 text-h1 text-on-background mb-2">Corrección de Informe de Actividades</h1>
+<p class="text-body-md text-on-surface-variant max-w-2xl">Informe No. 10 - Contrato No. SED-452-2023. Realice las correcciones solicitadas por el supervisor para proceder con la aprobación.</p>
+</div>
+<div class="flex items-center gap-3">
+<span class="px-3 py-1 bg-red-50 text-tertiary border border-red-200 rounded text-sm font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">error</span> DEVUELTO
+                        </span>
+</div>
+</div>
+<!-- Global Feedback Alert -->
+<div class="bg-red-50 border-l-4 border-tertiary p-4 rounded mb-8 flex gap-4">
+<span class="material-symbols-outlined text-tertiary">chat_error</span>
+<div>
+<h4 class="font-label-bold text-label-bold text-tertiary uppercase">Observación General del Supervisor</h4>
+<p class="text-body-sm text-on-tertiary-fixed-variant mt-1">El informe carece de soportes legibles en las obligaciones 2 y 4. Adicionalmente, el texto descriptivo de la obligación 1 no detalla las fechas de ejecución de las reuniones. Por favor ajustar y reenviar lo antes posible.</p>
+<p class="text-[11px] text-tertiary/70 mt-2">Revisado por: Ing. Martha Elena Gómez - 24/10/2023</p>
+</div>
+</div>
+<!-- Obligations Correction Section -->
+<div class="space-y-6">
+<h3 class="font-h3 text-h3 text-on-background border-b border-slate-200 pb-2">Obligaciones Contractuales</h3>
+<!-- Obligation Item 1 (Affected) -->
+<div class="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+<div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+<div class="flex items-center gap-3">
+<span class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs">01</span>
+<h4 class="font-label-bold text-body-sm text-on-surface uppercase">Ejecución Técnica</h4>
+</div>
+<span class="text-[11px] font-bold text-tertiary bg-red-50 px-2 py-0.5 rounded border border-red-100">AJUSTE REQUERIDO</span>
+</div>
+<div class="p-6 grid grid-cols-1 md:grid-cols-12 gap-6">
+<div class="md:col-span-4">
+<label class="block text-[11px] font-bold text-slate-500 uppercase mb-2">Descripción Contractual</label>
+<p class="text-body-sm text-slate-700 leading-relaxed italic">"Desarrollar y documentar las mesas de trabajo para la definición de requerimientos funcionales del sistema SIGCON..."</p>
+</div>
+<div class="md:col-span-8 space-y-4">
+<div>
+<div class="flex justify-between items-center mb-2">
+<label class="block text-[11px] font-bold text-blue-800 uppercase">Resumen de Actividades Realizadas</label>
+<span class="text-[11px] text-tertiary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">warning</span> Falta detalle de fechas
+                                        </span>
+</div>
+<textarea class="w-full text-body-sm border-slate-200 rounded p-3 focus:ring-primary focus:border-primary transition-all" rows="4">Se realizaron las mesas de trabajo con el equipo técnico de la SED para definir los módulos de reportes y contratación. Se acordaron los campos mínimos obligatorios.</textarea>
+</div>
+<div class="bg-amber-50 border border-amber-200 p-3 rounded">
+<p class="text-[12px] text-amber-900 leading-tight">
+<strong>Observación:</strong> Por favor especifique los días exactos y las actas generadas para cada reunión.
+                                    </p>
+</div>
+<div class="pt-2">
+<label class="block text-[11px] font-bold text-slate-500 uppercase mb-2">Soportes Adjuntos</label>
+<div class="flex flex-wrap gap-2">
+<div class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded border border-slate-200 text-xs">
+<span class="material-symbols-outlined text-[16px] text-blue-700">picture_as_pdf</span>
+<span class="text-slate-700">acta_reunion_01.pdf</span>
+<button class="hover:text-red-600"><span class="material-symbols-outlined text-[16px]">close</span></button>
+</div>
+<button class="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded border border-blue-200 text-xs hover:bg-blue-100 transition-colors">
+<span class="material-symbols-outlined text-[16px]">upload_file</span> Cargar Nuevo Soporte
+                                        </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Obligation Item 2 (Affected - Support Issue) -->
+<div class="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+<div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+<div class="flex items-center gap-3">
+<span class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs">02</span>
+<h4 class="font-label-bold text-body-sm text-on-surface uppercase">Mantenimiento Preventivo</h4>
+</div>
+<span class="text-[11px] font-bold text-tertiary bg-red-50 px-2 py-0.5 rounded border border-red-100">SOPORTE ERRÓNEO</span>
+</div>
+<div class="p-6 grid grid-cols-1 md:grid-cols-12 gap-6">
+<div class="md:col-span-4">
+<label class="block text-[11px] font-bold text-slate-500 uppercase mb-2">Descripción Contractual</label>
+<p class="text-body-sm text-slate-700 leading-relaxed italic">"Realizar el mantenimiento preventivo bimensual a los servidores de base de datos asignados..."</p>
+</div>
+<div class="md:col-span-8 space-y-4">
+<div>
+<label class="block text-[11px] font-bold text-blue-800 uppercase mb-2">Resumen de Actividades Realizadas</label>
+<textarea class="w-full text-body-sm border-slate-200 rounded p-3 focus:ring-primary focus:border-primary" rows="3">Se ejecutó el plan de mantenimiento preventivo de acuerdo al cronograma adjunto. No se presentaron novedades críticas en el hardware.</textarea>
+</div>
+<div class="bg-red-50 border border-red-100 p-3 rounded flex items-start gap-3">
+<span class="material-symbols-outlined text-tertiary text-[20px] mt-0.5">warning</span>
+<p class="text-[12px] text-tertiary leading-tight">
+<strong>Observación del Revisor:</strong> El archivo PDF cargado no abre o está corrupto. Por favor verifique el documento y vuelva a subirlo.
+                                    </p>
+</div>
+<div class="pt-2">
+<label class="block text-[11px] font-bold text-slate-500 uppercase mb-2">Soportes Adjuntos</label>
+<div class="flex flex-col gap-3">
+<div class="flex items-center justify-between bg-red-50/50 p-4 border border-dashed border-red-200 rounded">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[32px] text-red-300">error</span>
+<div>
+<p class="text-xs font-bold text-slate-700">reporte_mantenimiento_v2.pdf</p>
+<p class="text-[10px] text-red-600 italic">Archivo dañado o inaccesible</p>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="bg-white border border-slate-300 text-slate-600 px-3 py-1 rounded text-xs font-medium hover:bg-slate-50">Eliminar</button>
+<button class="bg-primary text-white px-3 py-1 rounded text-xs font-medium hover:bg-primary-container">Reemplazar Archivo</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Obligation Item 3 (Correct - View Only or simple confirm) -->
+<div class="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm opacity-75">
+<div class="p-4 bg-green-50/50 border-b border-slate-200 flex justify-between items-center">
+<div class="flex items-center gap-3">
+<span class="w-8 h-8 rounded-full bg-slate-400 text-white flex items-center justify-center font-bold text-xs">03</span>
+<h4 class="font-label-bold text-body-sm text-slate-500 uppercase">Capacitación de Usuarios</h4>
+</div>
+<span class="text-[11px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-100 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> SIN OBSERVACIONES
+                            </span>
+</div>
+<div class="p-6 grid grid-cols-1 md:grid-cols-12 gap-6">
+<div class="md:col-span-4">
+<label class="block text-[11px] font-bold text-slate-400 uppercase mb-2">Descripción Contractual</label>
+<p class="text-body-sm text-slate-400 leading-relaxed italic">"Brindar capacitación técnica a 5 funcionarios de la oficina de contratación..."</p>
+</div>
+<div class="md:col-span-8">
+<div class="bg-slate-50 p-3 rounded text-slate-500 text-body-sm border border-slate-100">
+                                    Se realizó capacitación el día 15 de octubre. Se adjunta lista de asistencia y registro fotográfico.
+                                </div>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Action Bar -->
+<div class="mt-12 sticky bottom-8 bg-white/90 backdrop-blur-md p-6 rounded-xl border border-slate-200 shadow-xl flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-secondary animate-pulse"></div>
+<span class="text-body-sm font-medium text-slate-600">Tienes 2 obligaciones pendientes por corregir</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="px-6 py-2 border border-slate-300 text-slate-600 rounded font-bold text-sm hover:bg-slate-50 transition-colors">Guardar Borrador</button>
+<button class="px-8 py-2.5 bg-secondary-container text-on-secondary-container rounded font-bold text-sm flex items-center gap-2 shadow-lg hover:brightness-95 active:scale-95 transition-all">
+<span class="material-symbols-outlined">send</span> Reenviar para Aprobación
+                        </button>
+</div>
+</div>
+</div>
+<!-- Supporting Resources / Help Sidebar-like area in bento style -->
+<div class="max-w-6xl mx-auto mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="bg-blue-50/50 p-6 rounded-lg border border-blue-100">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-blue-800">info</span>
+<h4 class="font-bold text-blue-800 text-sm">Guía de Corrección</h4>
+</div>
+<p class="text-xs text-blue-900/70 leading-relaxed mb-4">Recuerda que una vez reenviado el informe, no podrás realizar más cambios hasta que el supervisor emita un nuevo juicio.</p>
+<a class="text-xs font-bold text-blue-800 underline" href="#">Descargar manual de usuario</a>
+</div>
+<div class="bg-slate-100 p-6 rounded-lg border border-slate-200">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-slate-600">contact_support</span>
+<h4 class="font-bold text-slate-600 text-sm">¿Necesitas ayuda técnica?</h4>
+</div>
+<p class="text-xs text-slate-500 leading-relaxed mb-4">Si tienes problemas al cargar archivos, contacta a la mesa de ayuda institucional.</p>
+<p class="text-xs font-bold text-slate-700">Ext: 4500 - SOPORTE SIGCON</p>
+</div>
+<div class="relative rounded-lg overflow-hidden border border-slate-200 h-full min-h-[120px]">
+<img alt="Work environment" class="w-full h-full object-cover" data-alt="A professional and clean office setting with a blurred modern desk environment featuring notebooks and organizational tools. The lighting is soft and natural, reflecting an institutional and efficient workplace atmosphere. The color palette is dominated by neutral whites and professional blues, aligning with a governmental corporate aesthetic. The mood is focused and productive." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAEHT-PUONIL_oBBa4klKdenvJCklS_syTLSQMRTmWqVGFd9AhLDLcnOejnM2puSi8EkSvlWcsP3POu2UmMJbHL-Sxx4jqnQjhn5u-viR_e-r2YNjsjcBqERXxaahHLcposbj3j2D7fkqURZZLdj0sQa_tQjWS1_LmTTzCIfjl0qhXgJPbDMiggyL1jV8VwVeZcGF_a9CD3VZedO51pbeZGTekeK6TNpXWcHuPZqvfhKxUyCWwVdgFQnk-eJ74g10d8z_OL7DD6e2s"/>
+<div class="absolute inset-0 bg-primary/20 flex items-end p-4">
+<span class="text-white text-[10px] font-bold uppercase tracking-wider">Secretaría de Educación del Distrito</span>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

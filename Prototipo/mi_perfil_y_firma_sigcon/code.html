@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Public Sans', sans-serif;
+            background-color: #f8f9ff;
+        }
+        .pattern-dots {
+            background-image: radial-gradient(#d3e4fe 0.5px, transparent 0.5px);
+            background-size: 10px 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-variant": "#d3e4fe",
+                        "surface-container-highest": "#d3e4fe",
+                        "primary-fixed": "#dae2ff",
+                        "on-tertiary-fixed": "#40000f",
+                        "surface-bright": "#f8f9ff",
+                        "on-primary-fixed-variant": "#144296",
+                        "outline": "#747783",
+                        "on-surface-variant": "#434652",
+                        "background": "#f8f9ff",
+                        "on-tertiary-fixed-variant": "#91022d",
+                        "on-tertiary-container": "#ff8d99",
+                        "surface-dim": "#cbdbf5",
+                        "outline-variant": "#c4c6d3",
+                        "secondary": "#7e5700",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed": "#281900",
+                        "on-secondary-container": "#6a4800",
+                        "error": "#ba1a1a",
+                        "primary-container": "#0b3d91",
+                        "tertiary-fixed-dim": "#ffb2b8",
+                        "tertiary-fixed": "#ffdadb",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed-variant": "#604100",
+                        "primary": "#002869",
+                        "on-surface": "#0b1c30",
+                        "on-error-container": "#93000a",
+                        "inverse-surface": "#213145",
+                        "tertiary": "#5f001b",
+                        "tertiary-container": "#89002a",
+                        "on-primary-container": "#8dadff",
+                        "inverse-primary": "#b1c5ff",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed-dim": "#ffba38",
+                        "inverse-on-surface": "#eaf1ff",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface": "#f8f9ff",
+                        "surface-container": "#e5eeff",
+                        "secondary-fixed": "#ffdeac",
+                        "on-background": "#0b1c30",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#dce9ff",
+                        "on-primary-fixed": "#001947",
+                        "surface-tint": "#345baf",
+                        "secondary-container": "#feb300",
+                        "surface-container-low": "#eff4ff",
+                        "primary-fixed-dim": "#b1c5ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "xl": "40px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "margin": "32px",
+                        "unit": "4px",
+                        "gutter": "16px",
+                        "sm": "8px",
+                        "xs": "4px"
+                    },
+                    "fontFamily": {
+                        "h1": ["Public Sans"],
+                        "label-bold": ["Public Sans"],
+                        "h3": ["Public Sans"],
+                        "body-md": ["Public Sans"],
+                        "body-sm": ["Public Sans"],
+                        "body-lg": ["Public Sans"],
+                        "h2": ["Public Sans"],
+                        "table-data": ["Public Sans"]
+                    },
+                    "fontSize": {
+                        "h1": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "label-bold": ["12px", {"lineHeight": "16px", "fontWeight": "700"}],
+                        "h3": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "h2": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "table-data": ["13px", {"lineHeight": "18px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface">
+<!-- TopAppBar -->
+<header class="flex justify-between items-center h-16 px-6 w-full z-50 sticky top-0 bg-white border-b border-surface-container transition-all duration-200 ease-in-out font-['Public_Sans'] antialiased">
+<div class="flex items-center gap-4">
+<span class="text-2xl font-black text-primary tracking-tighter">SIGCON</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="relative group mr-4">
+<span class="absolute inset-y-0 left-0 pl-3 flex items-center text-outline">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</span>
+<input class="bg-surface-container-low border-none rounded-lg py-2 pl-10 pr-4 w-72 focus:ring-2 focus:ring-primary text-body-sm" placeholder="Buscar en SIGCON..." type="text"/>
+</div>
+<button class="p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant transition-all duration-200">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant transition-all duration-200">
+<span class="material-symbols-outlined">help</span>
+</button>
+<div class="flex items-center gap-3 ml-2 pl-4 border-l border-outline-variant">
+<div class="text-right hidden md:block">
+<p class="font-bold text-primary leading-tight">Admin Usuario</p>
+<p class="text-[11px] text-on-surface-variant uppercase tracking-wider font-bold">Supervisión</p>
+</div>
+<img alt="Avatar del usuario" class="w-9 h-9 rounded-full border-2 border-primary-container" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAm7G8BFBvYm87cKJjOYOttDG7cVxa23AZfshSXYyYQgsRTfIoWQkC7WQUNiu3yhv1XXQGfb9RB-fNqF2-6MmfUYcztpTz5ArK1l-lotVXP2v7kkdJs3rkYij_XzEVse_9uIbJ7NMWuOStuq6JxfkS7Vwm30Xg0GmSEFxo-BntG1YjvIWz_jGfTxen7-sUqmmP9TGS4DTel7tkUBnTbp9WKuxT5Zr-qURxGbf_VMOjeiwqewd1d8F4SW_iSePe3zFGLcQ1H9Y9kc5g"/>
+</div>
+</div>
+</header>
+<div class="flex min-h-screen">
+<!-- SideNavBar -->
+<aside class="flex flex-col fixed left-0 top-0 h-full z-40 pt-16 w-64 bg-surface-container-lowest border-r border-outline-variant font-['Public_Sans']">
+<div class="px-6 py-8 border-b border-surface-container-high mb-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-white shadow-md">
+<span class="material-symbols-outlined" font-variation-settings="'FILL' 1">account_balance</span>
+</div>
+<div>
+<h2 class="text-lg font-bold text-primary leading-none">SIGCON</h2>
+<p class="text-[12px] text-on-surface-variant mt-1 font-medium">Gestión de Contratos</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 px-4 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all group" href="#">
+<span class="material-symbols-outlined text-[22px]">dashboard</span>
+<span class="font-medium text-body-sm">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined text-[22px]">description</span>
+<span class="font-medium text-body-sm">Contratos</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined text-[22px]">group</span>
+<span class="font-medium text-body-sm">Contratistas</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined text-[22px]">assignment_turned_in</span>
+<span class="font-medium text-body-sm">Obligaciones</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined text-[22px]">analytics</span>
+<span class="font-medium text-body-sm">Reportes</span>
+</a>
+</nav>
+<div class="px-4 py-6 space-y-1 border-t border-surface-container-high">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary text-on-primary font-bold shadow-sm" href="#">
+<span class="material-symbols-outlined text-[22px]" font-variation-settings="'FILL' 1">settings</span>
+<span class="text-body-sm">Configuración</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined text-[22px]">logout</span>
+<span class="font-medium text-body-sm">Cerrar Sesión</span>
+</a>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="ml-64 pt-16 w-full bg-background min-h-screen pb-12">
+<div class="max-w-6xl mx-auto px-10 py-12">
+<!-- Breadcrumbs -->
+<nav class="flex items-center gap-2 mb-8 text-body-sm font-medium">
+<a class="text-primary hover:underline" href="#">Configuración</a>
+<span class="material-symbols-outlined text-[16px] text-outline">chevron_right</span>
+<span class="text-on-surface-variant">Perfil de Usuario</span>
+</nav>
+<div class="mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+<div>
+<h1 class="font-h1 text-h1 text-primary mb-2">Perfil de Usuario</h1>
+<p class="text-body-md text-on-surface-variant max-w-2xl">Gestione su información personal y firma electrónica autorizada para la formalización de trámites legales en el sistema.</p>
+</div>
+<button class="bg-primary text-on-primary font-bold text-body-md px-8 py-3 rounded-full flex items-center gap-2 shadow-lg hover:brightness-110 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[20px]">save</span>
+                    Actualizar Perfil
+                </button>
+</div>
+<div class="grid grid-cols-12 gap-10">
+<!-- Column 1: Personal Info -->
+<div class="col-span-12 lg:col-span-7 space-y-8">
+<div class="bg-surface-container-lowest p-8 rounded-xl border border-outline-variant shadow-sm">
+<div class="flex items-center gap-4 mb-10">
+<div class="w-2 h-8 bg-primary rounded-full"></div>
+<h3 class="font-h2 text-h3 text-primary uppercase tracking-tight">Datos Personales</h3>
+</div>
+<form class="space-y-8">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="space-y-2">
+<label class="font-label-bold text-label-bold text-on-surface-variant uppercase tracking-wider ml-1">Nombre Completo</label>
+<input class="w-full border border-outline-variant rounded-xl px-5 py-3 text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all bg-surface-container-low" type="text" value="Admin Usuario SIGCON"/>
+</div>
+<div class="space-y-2">
+<label class="font-label-bold text-label-bold text-on-surface-variant uppercase tracking-wider ml-1">Correo Institucional</label>
+<input class="w-full border border-outline-variant rounded-xl px-5 py-3 text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all bg-surface-container-low" type="email" value="admin.sigcon@educacionbogota.gov.co"/>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="space-y-2">
+<label class="font-label-bold text-label-bold text-on-surface-variant uppercase tracking-wider ml-1">Cargo / Rol</label>
+<select class="w-full border border-outline-variant rounded-xl px-5 py-3 text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all bg-surface-container-low appearance-none">
+<option selected="">Supervisor de Contratos</option>
+<option>Administrador de Sistema</option>
+<option>Analista Financiero</option>
+</select>
+</div>
+<div class="space-y-2">
+<label class="font-label-bold text-label-bold text-on-surface-variant uppercase tracking-wider ml-1">Dependencia</label>
+<input class="w-full border border-outline-variant rounded-xl px-5 py-3 text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all bg-surface-container-low" type="text" value="Dirección de Contratación"/>
+</div>
+</div>
+<div class="space-y-2">
+<label class="font-label-bold text-label-bold text-on-surface-variant uppercase tracking-wider ml-1">Biografía Breve</label>
+<textarea class="w-full border border-outline-variant rounded-xl px-5 py-3 text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all bg-surface-container-low" rows="4">Responsable de la supervisión técnica y administrativa de contratos de infraestructura escolar en la zona sur de Bogotá.</textarea>
+</div>
+</form>
+</div>
+<div class="bg-surface-container-low border-l-4 border-primary p-6 rounded-r-xl shadow-sm">
+<div class="flex gap-4 items-start">
+<span class="material-symbols-outlined text-primary text-[28px]">info</span>
+<div>
+<p class="font-bold text-primary text-body-md mb-1 uppercase tracking-tight">Aviso de Privacidad</p>
+<p class="text-body-sm text-on-surface-variant leading-relaxed">Su información personal se utiliza exclusivamente para la identificación en documentos contractuales oficiales y flujos de aprobación en cumplimiento con la normativa de Transparencia y Acceso a la Información Pública.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Column 2: Digital Signature -->
+<div class="col-span-12 lg:col-span-5 space-y-8">
+<div class="bg-surface-container-lowest p-8 rounded-xl border border-outline-variant shadow-sm">
+<div class="flex items-center gap-4 mb-8">
+<div class="w-2 h-8 bg-secondary rounded-full"></div>
+<h3 class="font-h2 text-h3 text-primary uppercase tracking-tight">Firma Digital</h3>
+</div>
+<div class="mb-8 p-5 bg-surface-container-low rounded-xl border border-outline-variant/30">
+<h4 class="font-bold text-body-sm text-on-surface uppercase mb-3 tracking-wider">Especificaciones:</h4>
+<ul class="space-y-3">
+<li class="flex items-start gap-3 text-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px] text-primary mt-0.5">check_circle</span>
+<span>Formatos: <strong>JPG, PNG, WEBP</strong>.</span>
+</li>
+<li class="flex items-start gap-3 text-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px] text-primary mt-0.5">check_circle</span>
+<span>Recomendamos <strong>fondo transparente</strong>.</span>
+</li>
+<li class="flex items-start gap-3 text-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px] text-primary mt-0.5">check_circle</span>
+<span>Dimensión óptima: <strong>800 x 400 píxeles</strong>.</span>
+</li>
+</ul>
+</div>
+<!-- Drag & Drop Area -->
+<div class="border-2 border-dashed border-outline-variant rounded-2xl p-10 text-center bg-surface-container-low hover:bg-surface-container hover:border-primary transition-all cursor-pointer group mb-10 relative">
+<div class="flex flex-col items-center gap-4">
+<div class="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-[32px]">upload_file</span>
+</div>
+<div class="space-y-1">
+<p class="font-bold text-body-md text-on-surface">Cargar nueva firma</p>
+<p class="text-body-sm text-on-surface-variant">Arrastre el archivo o haga clic para buscar</p>
+</div>
+</div>
+</div>
+<!-- Preview Section -->
+<div class="space-y-4">
+<label class="font-label-bold text-label-bold text-on-surface-variant uppercase tracking-wider ml-1">Previsualización Actual</label>
+<div class="w-full h-48 bg-white border border-outline-variant rounded-xl flex items-center justify-center p-6 relative overflow-hidden pattern-dots">
+<img alt="Previsualización de firma" class="max-h-full max-w-full object-contain mix-blend-multiply opacity-90" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtXNsNCHvZik_H3Sdj_169d8EFpFtCtRvYEFfc7ENss_Fw99C2d3IHI2zwlL9ae7nZ_SPQEOfdXOQOxD64Ekd_yQ5X70FgtaIOgXGy_yXzX966-D7QR2oiQyrZPER5lPBKde3bGkX3YetDBLA3o9VUQ4mS2hBBfm7yekvxzSV-XAEf0UfQSeAlBY-L2E_mRnwkRlX4R9TDi_m5cfiBDYy2ob0xdTe2esUgcA5pcIdoUFLdTdR6VuDz4-6UsT73TTmGrGaNUm27b3Y"/>
+<button class="absolute top-4 right-4 bg-error text-on-error p-2 rounded-full hover:scale-110 transition-all shadow-md">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+<div class="flex justify-between items-center px-2">
+<span class="text-body-sm text-on-surface-variant italic truncate max-w-[200px]">firma_digital_2024.png</span>
+<span class="text-body-sm font-bold text-primary flex items-center gap-1.5 bg-surface-container px-3 py-1 rounded-full">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+                                    Firma Válida
+                                </span>
+</div>
+</div>
+</div>
+<!-- Security Alert -->
+<div class="bg-surface-container-high p-6 rounded-xl border border-outline-variant flex gap-4 shadow-inner">
+<span class="material-symbols-outlined text-on-surface-variant">lock_person</span>
+<p class="text-body-sm text-on-surface-variant leading-tight">Su firma digital está encriptada bajo altos estándares de seguridad y solo será aplicada en los procesos donde se requiera su aprobación formal.</p>
+</div>
+</div>
+</div>
+<!-- Action Footer Mobile Only -->
+<div class="lg:hidden mt-10 flex flex-col gap-4">
+<button class="w-full bg-primary text-on-primary font-bold text-body-md py-4 rounded-xl flex items-center justify-center gap-2 shadow-lg">
+<span class="material-symbols-outlined">save</span>
+                    Actualizar Perfil
+                </button>
+<button class="w-full bg-white text-primary border border-primary font-bold text-body-md py-4 rounded-xl flex items-center justify-center gap-2">
+                    Cancelar Cambios
+                </button>
+</div>
+</div>
+</main>
+</div>
+</body></html>
