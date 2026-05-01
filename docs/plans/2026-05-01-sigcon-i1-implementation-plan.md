@@ -4,7 +4,7 @@
 
 **Goal:** Build Incremento 1 of SIGCON: local authentication/profile, contract administration, and contractor contract views, without implementing reports, review flow, PDF generation, or notifications.
 
-**Architecture:** Implement a Spring Boot 2.7.18 backend packaged as WAR for Java 8/WebLogic, with Oracle-compatible SQL scripts and a local-dev security profile. Implement an Angular 20 + PrimeNG 21 frontend that follows `Prototipo/DESIGN.md` and consumes the backend APIs through a proxy. Keep `docs/superpowers/CONSTITUTION.md`, `ARCHITECTURE.md`, the PRD, and the I1 spec as the governing sources of truth; use I2/I3 only as forward-compatibility constraints so I1 does not block the next increments.
+**Architecture:** Implement a Spring Boot 2.7.18 backend packaged as WAR for Java 8/WebLogic, with Oracle-compatible SQL scripts and a local-dev security profile. Implement an Angular 20 + PrimeNG 21 frontend that follows `Prototipo/DESIGN.md` and consumes the backend APIs through a proxy. Keep `docs/CONSTITUTION.md`, `docs/ARCHITECTURE.md`, the PRD, and the I1 spec as the governing sources of truth; use I2/I3 only as forward-compatibility constraints so I1 does not block the next increments.
 
 **Tech Stack:** Java 8, Spring Boot 2.7.18, Spring Security 5.7, Spring Data JPA, SpringDoc OpenAPI 1.7.0, Oracle JDBC ojdbc8, Maven WAR, Angular 20, PrimeNG 21, TypeScript 5.8, Tailwind CSS 3.4.
 
@@ -12,16 +12,16 @@
 
 ## Source Of Truth
 
-- SDD governance: `docs/superpowers/CONSTITUTION.md`
-- Architecture constraints: `ARCHITECTURE.md`
-- Stack versions: `TECNOLOGIAS.md`
-- Product scope: `docs/superpowers/specs/2026-04-30-sigcon-prd.md`
-- I1 technical contract: `docs/superpowers/specs/2026-04-30-sigcon-i1-spec.md`
-- Forward compatibility references: `docs/superpowers/specs/2026-05-01-sigcon-i2-spec.md` and `docs/superpowers/specs/2026-05-01-sigcon-i3-spec.md`
+- SDD governance: `docs/CONSTITUTION.md`
+- Architecture constraints: `docs/ARCHITECTURE.md`
+- Stack versions: `docs/TECNOLOGIAS.md`
+- Product scope: `docs/specs/2026-04-30-sigcon-prd.md`
+- I1 technical contract: `docs/specs/2026-04-30-sigcon-i1-spec.md`
+- Forward compatibility references: `docs/specs/2026-05-01-sigcon-i2-spec.md` and `docs/specs/2026-05-01-sigcon-i3-spec.md`
 - Visual reference: `Prototipo/DESIGN.md` and `Prototipo/*/screen.png`
 - Strict I1 boundary: do not implement report creation, review/approval workflow, PDF generation, or notifications.
 
-Apply this authority order when documents disagree: `CONSTITUTION.md` → `ARCHITECTURE.md` → PRD → I1 spec → I2/I3 forward-compatibility notes → this plan → code.
+Apply this authority order when documents disagree: `docs/CONSTITUTION.md` → `docs/ARCHITECTURE.md` → PRD → I1 spec → I2/I3 forward-compatibility notes → this plan → code.
 
 ## Forward-Compatibility Gates From I2/I3
 
@@ -41,8 +41,13 @@ Create the following implementation structure:
 
 ```text
 ProyectoContratosSED/
-├── ARRANQUE.md
-├── TECNOLOGIAS.md
+├── docs/
+│   ├── CONSTITUTION.md
+│   ├── ARCHITECTURE.md
+│   ├── TECNOLOGIAS.md
+│   ├── ARRANQUE.md
+│   ├── specs/
+│   └── plans/
 ├── db/
 │   ├── 00_setup.sql
 │   └── 01_datos_prueba.sql
@@ -77,10 +82,10 @@ Use commits after each task if the workspace is a Git repository. If `.git` is a
 
 **Files:**
 - Create: `.gitignore`
-- Verify/update: `ARRANQUE.md`
-- Verify: `TECNOLOGIAS.md`
-- Verify: `docs/superpowers/CONSTITUTION.md`
-- Verify: `docs/superpowers/plans/2026-05-01-sigcon-i1-implementation-plan.md`
+- Verify/update: `docs/ARRANQUE.md`
+- Verify: `docs/TECNOLOGIAS.md`
+- Verify: `docs/CONSTITUTION.md`
+- Verify: `docs/plans/2026-05-01-sigcon-i1-implementation-plan.md`
 
 - [ ] **Step 1: Check repository state**
 
@@ -100,7 +105,7 @@ Run only when Step 1 reports no repository:
 
 ```powershell
 git init
-git add ARCHITECTURE.md "Spec-Driven Development (SDD)_ A Comprehensive Technical Guide.pdf" docs Prototipo Notas_ProyectoContratos
+git add docs/ARCHITECTURE.md "Spec-Driven Development (SDD)_ A Comprehensive Technical Guide.pdf" docs Prototipo Notas_ProyectoContratos
 git commit -m "chore: baseline SDD artifacts"
 ```
 
@@ -122,15 +127,15 @@ coverage/
 *.war
 ```
 
-- [ ] **Step 4: Verify initial `ARRANQUE.md` and `TECNOLOGIAS.md`**
+- [ ] **Step 4: Verify initial `docs/ARRANQUE.md` and `docs/TECNOLOGIAS.md`**
 
 Confirm both root documents exist and remain aligned with the current architecture:
 
 ```powershell
-Test-Path ARRANQUE.md
-Test-Path TECNOLOGIAS.md
-Select-String -Path ARRANQUE.md -Pattern "pre-implementacion I1|sigcon-backend|sigcon-angular|local-dev|weblogic|Excluye|Swagger"
-Select-String -Path TECNOLOGIAS.md -Pattern "Spring Boot|2.7.18|Angular|20.x|PrimeNG|21.x|SED_SIGCON|SGCN_|sigcon-backend.war"
+Test-Path docs/ARRANQUE.md
+Test-Path docs/TECNOLOGIAS.md
+Select-String -Path docs/ARRANQUE.md -Pattern "pre-implementacion I1|sigcon-backend|sigcon-angular|local-dev|weblogic|Excluye|Swagger"
+Select-String -Path docs/TECNOLOGIAS.md -Pattern "Spring Boot|2.7.18|Angular|20.x|PrimeNG|21.x|SED_SIGCON|SGCN_|sigcon-backend.war"
 ```
 
 Expected: both `Test-Path` commands return `True`, and both `Select-String` commands return matches.
@@ -140,12 +145,12 @@ Expected: both `Test-Path` commands return `True`, and both `Select-String` comm
 Run:
 
 ```powershell
-Test-Path docs\superpowers\CONSTITUTION.md
-Select-String -Path docs\superpowers\CONSTITUTION.md -Pattern "Spec-Anchored|ARCHITECTURE.md|Java runtime: Oracle JDK 8|Incremento 1 excluye|Gates De Calidad"
-Select-String -Path ARCHITECTURE.md -Pattern "Adaptacion SIGCON|sigcon-backend.war|SED_SIGCON|Prototipo/DESIGN.md"
-Select-String -Path TECNOLOGIAS.md -Pattern "Oracle JDK 8|Spring Boot|2.7.18|Angular|20.x|PrimeNG|21.x"
-Select-String -Path docs\superpowers\plans\2026-05-01-sigcon-i1-implementation-plan.md -Pattern "CONSTITUTION.md|ARCHITECTURE.md|I1 boundary"
-Select-String -Path docs\superpowers\plans\2026-05-01-sigcon-i1-implementation-plan.md -Pattern "Forward-Compatibility Gates|SGCN_INFORMES|Nuevo Informe|firmaImagen"
+Test-Path docs/CONSTITUTION.md
+Select-String -Path docs/CONSTITUTION.md -Pattern "Spec-Anchored|docs/ARCHITECTURE.md|Java runtime: Oracle JDK 8|Incremento 1 excluye|Gates De Calidad"
+Select-String -Path docs/ARCHITECTURE.md -Pattern "Adaptacion SIGCON|sigcon-backend.war|SED_SIGCON|Prototipo/DESIGN.md"
+Select-String -Path docs/TECNOLOGIAS.md -Pattern "Oracle JDK 8|Spring Boot|2.7.18|Angular|20.x|PrimeNG|21.x"
+Select-String -Path docs/plans/2026-05-01-sigcon-i1-implementation-plan.md -Pattern "docs/CONSTITUTION.md|docs/ARCHITECTURE.md|I1 boundary"
+Select-String -Path docs/plans/2026-05-01-sigcon-i1-implementation-plan.md -Pattern "Forward-Compatibility Gates|SGCN_INFORMES|Nuevo Informe|firmaImagen"
 ```
 
 Expected: `Test-Path` returns `True`, and every `Select-String` command returns at least one match.
@@ -153,7 +158,7 @@ Expected: `Test-Path` returns `True`, and every `Select-String` command returns 
 - [ ] **Step 6: Commit**
 
 ```powershell
-git add .gitignore ARRANQUE.md TECNOLOGIAS.md docs/superpowers/CONSTITUTION.md docs/superpowers/plans/2026-05-01-sigcon-i1-implementation-plan.md
+git add .gitignore docs/ARRANQUE.md docs/TECNOLOGIAS.md docs/CONSTITUTION.md docs/plans/2026-05-01-sigcon-i1-implementation-plan.md
 git commit -m "docs: add SIGCON SDD governance and I1 plan"
 ```
 
@@ -774,10 +779,10 @@ git commit -m "feat: add SIGCON I1 frontend screens"
 ### Task 10: End-To-End Local Verification And Documentation
 
 **Files:**
-- Modify: `ARRANQUE.md`
+- Modify: `docs/ARRANQUE.md`
 - Verify: backend, frontend, SQL, acceptance matrix
 
-- [ ] **Step 1: Complete `ARRANQUE.md`**
+- [ ] **Step 1: Complete `docs/ARRANQUE.md`**
 
 Document:
 
@@ -839,7 +844,7 @@ Manually run through:
 - [ ] **Step 6: Commit**
 
 ```powershell
-git add ARRANQUE.md sigcon-backend sigcon-angular db
+git add docs/ARRANQUE.md sigcon-backend sigcon-angular db
 git commit -m "docs: document SIGCON I1 local verification"
 ```
 
@@ -883,7 +888,7 @@ git commit -m "docs: document SIGCON I1 local verification"
 
 ## Execution Handoff
 
-Plan complete and saved to `docs/superpowers/plans/2026-05-01-sigcon-i1-implementation-plan.md`.
+Plan complete and saved to `docs/plans/2026-05-01-sigcon-i1-implementation-plan.md`.
 
 Two execution options:
 

@@ -3,7 +3,7 @@
 
 > **Metodología:** Spec-Driven Development (SDD) — Spec-Anchored  
 > **Versión:** 1.0 · **Fecha:** 2026-04-30  
-> **PRD de referencia:** `docs/superpowers/specs/2026-04-30-sigcon-prd.md`  
+> **PRD de referencia:** `docs/specs/2026-04-30-sigcon-prd.md`
 > **Design System:** `Prototipo/DESIGN.md`  
 > **Estado:** Listo para implementación
 
@@ -64,13 +64,17 @@ Sistema desplegable en `local-dev` donde un Admin puede registrar contratos comp
 
 ```
 ProyectoContratosSED/
-├── ARCHITECTURE.md
-├── ARRANQUE.md                          ← guía de inicio local (por escribir)
-├── DESIGN.md → Prototipo/DESIGN.md      ← referencia de diseño
 ├── docs/
-│   └── superpowers/specs/
-│       ├── 2026-04-30-sigcon-prd.md
-│       └── 2026-04-30-sigcon-i1-spec.md (este documento)
+│   ├── CONSTITUTION.md
+│   ├── ARCHITECTURE.md
+│   ├── TECNOLOGIAS.md
+│   ├── ARRANQUE.md
+│   ├── specs/
+│   │   ├── 2026-04-30-sigcon-prd.md
+│   │   └── 2026-04-30-sigcon-i1-spec.md (este documento)
+│   └── plans/
+├── Prototipo/
+│   └── DESIGN.md                         ← referencia de diseño
 ├── sigcon-backend/                      ← Spring Boot WAR
 │   ├── pom.xml
 │   └── src/main/
@@ -267,7 +271,7 @@ COMMIT;
 
 ### 4.1 Configuración pom.xml
 
-Siguiendo exactamente la arquitectura SED (`ARCHITECTURE.md`):
+Siguiendo exactamente la arquitectura SED (`docs/ARCHITECTURE.md`):
 
 - `<packaging>war</packaging>`
 - `<java.version>8</java.version>`
@@ -1027,7 +1031,7 @@ export interface DocumentoCatalogo {
 
 ### 6.1 Perfil `weblogic` — Azure AD JWT
 
-`SecurityConfig.java` (idéntico al de ARCHITECTURE.md) con los siguientes matchers:
+`SecurityConfig.java` (idéntico al de docs/ARCHITECTURE.md) con los siguientes matchers:
 
 ```java
 .authorizeHttpRequests(auth -> auth

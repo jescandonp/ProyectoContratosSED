@@ -47,7 +47,7 @@ Esta arquitectura se interpreta para SIGCON con las siguientes coordenadas canon
 | Perfil local | `local-dev` |
 | Perfil servidor | `weblogic` |
 
-La autoridad documental se mantiene en `docs/superpowers/CONSTITUTION.md`. Para UX/UI, la fuente visual primaria es `Prototipo/DESIGN.md`; esta arquitectura define integracion tecnica con Angular 20, PrimeNG 21 y Tailwind, pero no reemplaza los tokens visuales aprobados.
+La autoridad documental se mantiene en `docs/CONSTITUTION.md`. Para UX/UI, la fuente visual primaria es `Prototipo/DESIGN.md`; esta arquitectura define integracion tecnica con Angular 20, PrimeNG 21 y Tailwind, pero no reemplaza los tokens visuales aprobados.
 
 ---
 
@@ -1142,11 +1142,11 @@ AZURE_CLIENT_ID=[client-id-app-registration]
 
 ```
 ProyectoContratosSED/
-├── ARCHITECTURE.md
-├── ARRANQUE.md
-├── TECNOLOGIAS.md
-├── docs/superpowers/
+├── docs/
 │   ├── CONSTITUTION.md
+│   ├── ARCHITECTURE.md
+│   ├── TECNOLOGIAS.md
+│   ├── ARRANQUE.md
 │   ├── specs/
 │   └── plans/
 ├── Prototipo/
@@ -1424,10 +1424,13 @@ providePrimeNG({
 
 ```
 ProyectoContratosSED/
-├── ARCHITECTURE.md           ← Este documento (adaptado)
-├── ARRANQUE.md               ← Guía de inicio rápido para devs
-├── TECNOLOGIAS.md            ← Versiones exactas del stack
-├── docs/superpowers/         ← Constitucion SDD, specs y plans
+├── docs/
+│   ├── CONSTITUTION.md            ← Constitucion SDD
+│   ├── ARCHITECTURE.md            ← Este documento (adaptado)
+│   ├── TECNOLOGIAS.md             ← Versiones exactas del stack
+│   ├── ARRANQUE.md                ← Guia de inicio rapido para devs
+│   ├── specs/                     ← PRD y specs tecnicas
+│   └── plans/                     ← Planes y outlines de implementacion
 ├── Prototipo/                ← Design system y pantallas de referencia
 ├── sigcon-backend/           ← Spring Boot API (WAR, JDK 8)
 ├── sigcon-angular/           ← Angular 20 SPA + PrimeNG 21
@@ -1467,7 +1470,7 @@ En JPA: `@EnableJpaAuditing` + `@EntityListeners(AuditingEntityListener.class)`.
 
 ### Setup Inicial
 - [ ] Crear repositorio con estructura estándar de carpetas
-- [ ] Copiar y adaptar `ARCHITECTURE.md`, `ARRANQUE.md`, `TECNOLOGIAS.md`
+- [ ] Copiar y adaptar `docs/ARCHITECTURE.md`, `docs/ARRANQUE.md`, `docs/TECNOLOGIAS.md`
 - [ ] Definir prefijo de módulo para tablas Oracle (ej: `CTRL_`, `RRHH_`, `ACAD_`)
 - [ ] Definir nombre del WAR y contexto WebLogic (`sigcon-backend.war`, `/sigcon`)
 - [ ] Registrar la aplicación en Azure AD (App Registration en tenant SED)
@@ -1530,11 +1533,11 @@ En JPA: `@EnableJpaAuditing` + `@EntityListeners(AuditingEntityListener.class)`.
 - [ ] `.gitignore` con: `.env`, `target/`, `dist/`, `node_modules/`, Oracle wallets
 
 ### Documentación
-- [ ] `ARRANQUE.md` con pasos de inicio local (Oracle local → Backend → Frontend)
-- [ ] `TECNOLOGIAS.md` con versiones exactas de todas las dependencias
+- [ ] `docs/ARRANQUE.md` con pasos de inicio local (Oracle local → Backend → Frontend)
+- [ ] `docs/TECNOLOGIAS.md` con versiones exactas de todas las dependencias
 - [ ] `SDD_SPEC_v1.md` con arquitectura, pantallas, modelos de datos
 - [ ] `PRD_[NOMBRE].txt` con requerimientos del producto
-- [ ] `README.md` mínimo con descripción, arquitectura y enlace a ARRANQUE.md
+- [ ] `README.md` mínimo con descripción, arquitectura y enlace a docs/ARRANQUE.md
 
 ---
 
@@ -1543,12 +1546,12 @@ En JPA: `@EnableJpaAuditing` + `@EntityListeners(AuditingEntityListener.class)`.
 | Recurso | Ubicación |
 |---------|-----------|
 | Proyecto | `ProyectoContratosSED/` |
-| Constitucion SDD | `docs/superpowers/CONSTITUTION.md` |
-| Especificaciones tecnicas | `docs/superpowers/specs/` |
-| Planes de implementacion | `docs/superpowers/plans/` |
-| Guía de arranque | `ARRANQUE.md` |
-| Versiones del stack | `TECNOLOGIAS.md` |
-| Requerimientos | `docs/superpowers/specs/2026-04-30-sigcon-prd.md` |
+| Constitucion SDD | `docs/CONSTITUTION.md` |
+| Especificaciones tecnicas | `docs/specs/` |
+| Planes de implementacion | `docs/plans/` |
+| Guía de arranque | `docs/ARRANQUE.md` |
+| Versiones del stack | `docs/TECNOLOGIAS.md` |
+| Requerimientos | `docs/specs/2026-04-30-sigcon-prd.md` |
 | Design System | `Prototipo/DESIGN.md` |
 | Scripts Oracle | `db/00_setup.sql` |
 

@@ -6,13 +6,13 @@
 
 ## Orden De Trabajo
 
-1. Constitucion SDD: `docs/superpowers/CONSTITUTION.md`
-2. Arquitectura SIGCON/SED: `ARCHITECTURE.md`
-3. Versiones del stack: `TECNOLOGIAS.md`
-4. PRD: `docs/superpowers/specs/2026-04-30-sigcon-prd.md`
-5. Spec tecnica I1: `docs/superpowers/specs/2026-04-30-sigcon-i1-spec.md`
-6. Specs futuras de referencia: `docs/superpowers/specs/2026-05-01-sigcon-i2-spec.md` y `docs/superpowers/specs/2026-05-01-sigcon-i3-spec.md`
-7. Plan I1: `docs/superpowers/plans/2026-05-01-sigcon-i1-implementation-plan.md`
+1. Constitucion SDD: `docs/CONSTITUTION.md`
+2. Arquitectura SIGCON/SED: `docs/ARCHITECTURE.md`
+3. Versiones del stack: `docs/TECNOLOGIAS.md`
+4. PRD: `docs/specs/2026-04-30-sigcon-prd.md`
+5. Spec tecnica I1: `docs/specs/2026-04-30-sigcon-i1-spec.md`
+6. Specs futuras de referencia: `docs/specs/2026-05-01-sigcon-i2-spec.md` y `docs/specs/2026-05-01-sigcon-i3-spec.md`
+7. Plan I1: `docs/plans/2026-05-01-sigcon-i1-implementation-plan.md`
 8. Implementacion I1
 
 ## Estado Actual
@@ -46,7 +46,7 @@ Excluye:
 
 ## Stack Base
 
-Resumen operativo. Ver detalle completo en `TECNOLOGIAS.md`.
+Resumen operativo. Ver detalle completo en `docs/TECNOLOGIAS.md`.
 
 | Capa | Decision |
 |------|----------|
@@ -75,7 +75,7 @@ Antes de ejecutar I1:
 La implementacion no debe hacerse libremente desde codigo. Debe seguir el plan aprobado:
 
 ```powershell
-Get-Content docs\superpowers\plans\2026-05-01-sigcon-i1-implementation-plan.md
+Get-Content docs\plans\2026-05-01-sigcon-i1-implementation-plan.md
 ```
 
 Orden esperado:
@@ -154,8 +154,8 @@ Segun PRD/spec I1:
 
 Actualizar este archivo cuando:
 
-- Cambie una version en `TECNOLOGIAS.md`.
-- Cambie una coordenada en `ARCHITECTURE.md`.
+- Cambie una version en `docs/TECNOLOGIAS.md`.
+- Cambie una coordenada en `docs/ARCHITECTURE.md`.
 - Se cierre I1, I2 o I3.
 - Cambien los comandos reales de arranque local.
 - Se agregue configuracion `weblogic` real validada con entorno SED.

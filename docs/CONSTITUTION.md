@@ -8,24 +8,24 @@
 
 Cuando exista tension entre documentos, decisiones o codigo, aplicar este orden:
 
-1. `docs/superpowers/CONSTITUTION.md`
-2. `ARCHITECTURE.md`
-3. `docs/superpowers/specs/2026-04-30-sigcon-prd.md`
+1. `docs/CONSTITUTION.md`
+2. `docs/ARCHITECTURE.md`
+3. `docs/specs/2026-04-30-sigcon-prd.md`
 4. Spec tecnica del incremento activo
-5. Plan de implementacion aprobado en `docs/superpowers/plans/`
+5. Plan de implementacion aprobado en `docs/plans/`
 6. Codigo fuente
 
 El codigo nunca es la fuente primaria de verdad del proyecto. Si el codigo contradice la spec, se corrige el codigo o se actualiza primero la spec y luego el plan.
 
-Cuando `ARCHITECTURE.md` conserve ejemplos o plantillas reutilizables del ecosistema SED, las coordenadas canonicas SIGCON prevalecen para este proyecto: `SGCN_`, `SED_SIGCON`, `/sigcon`, `sigcon-backend.war`, `sigcon-angular` y `co.gov.bogota.sed.sigcon`.
+Cuando `docs/ARCHITECTURE.md` conserve ejemplos o plantillas reutilizables del ecosistema SED, las coordenadas canonicas SIGCON prevalecen para este proyecto: `SGCN_`, `SED_SIGCON`, `/sigcon`, `sigcon-backend.war`, `sigcon-angular` y `co.gov.bogota.sed.sigcon`.
 
 ## 2. Reglas SDD
 
 - Todo incremento debe tener spec tecnica escrita, revisada y aprobada antes de implementarse.
-- Todo incremento debe tener plan de implementacion en `docs/superpowers/plans/` antes de ejecutar tareas.
+- Todo incremento debe tener plan de implementacion en `docs/plans/` antes de ejecutar tareas.
 - Los cambios de alcance entran primero por PRD o spec tecnica, no por codigo.
-- Los cambios de arquitectura entran primero por `ARCHITECTURE.md` o por esta constitucion.
-- Los cambios visuales entran primero por `Prototipo/DESIGN.md` o por la spec activa; `ARCHITECTURE.md` solo define la integracion tecnica UI.
+- Los cambios de arquitectura entran primero por `docs/ARCHITECTURE.md` o por esta constitucion.
+- Los cambios visuales entran primero por `Prototipo/DESIGN.md` o por la spec activa; `docs/ARCHITECTURE.md` solo define la integracion tecnica UI.
 - Cada tarea de implementacion debe tener salida verificable y trazabilidad a criterios de aceptacion.
 - No se implementa funcionalidad fuera del incremento activo aunque parezca conveniente.
 
@@ -102,7 +102,7 @@ Antes de cerrar una tarea:
 
 - Ejecutar la verificacion definida en el plan.
 - Confirmar que no se invadio alcance de otro incremento.
-- Confirmar que el cambio respeta `ARCHITECTURE.md`.
+- Confirmar que el cambio respeta `docs/ARCHITECTURE.md`.
 - Confirmar que los criterios de aceptacion afectados estan cubiertos.
 
 Antes de cerrar Incremento 1:
@@ -112,7 +112,7 @@ Antes de cerrar Incremento 1:
 - Integracion local-dev: flujo Admin y Contratista.
 - WAR: `sigcon-backend.war` generado.
 - Swagger y health accesibles.
-- `ARRANQUE.md` actualizado.
+- `docs/ARRANQUE.md` actualizado.
 
 ## 8. Politica De Evolucion
 

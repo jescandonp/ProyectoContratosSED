@@ -2,7 +2,7 @@
 
 > **Tipo de artefacto:** Outline SDD previo a plan ejecutable.  
 > **No ejecutar directamente:** este documento debe convertirse en `*-implementation-plan.md` despues de cerrar I2.  
-> **Spec fuente:** `docs/superpowers/specs/2026-05-01-sigcon-i3-spec.md`.
+> **Spec fuente:** `docs/specs/2026-05-01-sigcon-i3-spec.md`.
 
 ## Objetivo
 
@@ -80,11 +80,11 @@ Antes de convertir este outline en plan ejecutable:
 - Notificaciones in-app aparecen y se marcan como leidas.
 - Email se simula en `local-dev` y queda configurable para `weblogic`.
 - I1 e I2 siguen funcionando.
-- `ARRANQUE.md` documenta configuracion PDF/email/notificaciones.
+- `docs/ARRANQUE.md` documenta configuracion PDF/email/notificaciones.
 
 ## Promocion A Plan Ejecutable
 
-Convertir este outline en `docs/superpowers/plans/YYYY-MM-DD-sigcon-i3-implementation-plan.md` despues de:
+Convertir este outline en `docs/plans/YYYY-MM-DD-sigcon-i3-implementation-plan.md` despues de:
 
 - Revisar diff final de I2.
 - Confirmar servicios y endpoints reales de informes.

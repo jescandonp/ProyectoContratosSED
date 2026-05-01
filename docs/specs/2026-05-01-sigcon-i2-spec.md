@@ -3,10 +3,10 @@
 
 > **Metodologia:** Spec-Driven Development (SDD) - Spec-Anchored  
 > **Version:** 1.0 - **Fecha:** 2026-05-01  
-> **Constitucion:** `docs/superpowers/CONSTITUTION.md`  
-> **Arquitectura:** `ARCHITECTURE.md`  
-> **PRD de referencia:** `docs/superpowers/specs/2026-04-30-sigcon-prd.md`  
-> **Spec base:** `docs/superpowers/specs/2026-04-30-sigcon-i1-spec.md`  
+> **Constitucion:** `docs/CONSTITUTION.md`
+> **Arquitectura:** `docs/ARCHITECTURE.md`
+> **PRD de referencia:** `docs/specs/2026-04-30-sigcon-prd.md`
+> **Spec base:** `docs/specs/2026-04-30-sigcon-i1-spec.md`
 > **Design System:** `Prototipo/DESIGN.md`  
 > **Estado:** Listo para revision
 

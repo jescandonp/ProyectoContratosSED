@@ -2,7 +2,7 @@
 
 > **Tipo de artefacto:** Outline SDD previo a plan ejecutable.  
 > **No ejecutar directamente:** este documento debe convertirse en `*-implementation-plan.md` despues de cerrar I1.  
-> **Spec fuente:** `docs/superpowers/specs/2026-05-01-sigcon-i2-spec.md`.
+> **Spec fuente:** `docs/specs/2026-05-01-sigcon-i2-spec.md`.
 
 ## Objetivo
 
@@ -13,7 +13,7 @@ Implementar el nucleo operativo de informes: creacion por contratista, actividad
 Antes de convertir este outline en plan ejecutable:
 
 - I1 esta implementado y verificado en `local-dev`.
-- Existen backend, frontend, `db/00_setup.sql`, `db/01_datos_prueba.sql` y `ARRANQUE.md`.
+- Existen backend, frontend, `db/00_setup.sql`, `db/01_datos_prueba.sql` y `docs/ARRANQUE.md`.
 - `DocumentStorageService` existe y almacena firma en `local-dev`.
 - Detalle de contrato muestra historial vacio y boton "Nuevo Informe" deshabilitado sin llamadas a `/api/informes`.
 - Usuarios, roles, contratos, obligaciones, catalogo OPS y asignaciones funcionan.
@@ -68,11 +68,11 @@ Antes de convertir este outline en plan ejecutable:
 - Informe `APROBADO` puede existir sin `pdfRuta`.
 - I1 sigue pasando sus criterios.
 - Swagger documenta endpoints I2.
-- `ARRANQUE.md` queda actualizado con flujo I2.
+- `docs/ARRANQUE.md` queda actualizado con flujo I2.
 
 ## Promocion A Plan Ejecutable
 
-Convertir este outline en `docs/superpowers/plans/YYYY-MM-DD-sigcon-i2-implementation-plan.md` despues de:
+Convertir este outline en `docs/plans/YYYY-MM-DD-sigcon-i2-implementation-plan.md` despues de:
 
 - Revisar diff final de I1.
 - Confirmar nombres reales de paquetes, servicios, DTOs y rutas Angular.

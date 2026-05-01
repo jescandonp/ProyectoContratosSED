@@ -1,7 +1,7 @@
 # TECNOLOGIAS SIGCON
 
 > Estado: base pre-implementacion I1.
-> Fuente rectora: `ARCHITECTURE.md` y `docs/superpowers/CONSTITUTION.md`.
+> Fuente rectora: `docs/ARCHITECTURE.md` y `docs/CONSTITUTION.md`.
 > Alcance: versiones canonicas para implementar SIGCON bajo SDD Spec-Anchored.
 
 ## Coordenadas Del Sistema
@@ -88,7 +88,7 @@
 
 Cambios de version deben actualizar, en este orden:
 
-1. `docs/superpowers/CONSTITUTION.md` si cambia una regla no negociable.
-2. `ARCHITECTURE.md` si cambia una decision tecnica.
-3. Este `TECNOLOGIAS.md`.
+1. `docs/CONSTITUTION.md` si cambia una regla no negociable.
+2. `docs/ARCHITECTURE.md` si cambia una decision tecnica.
+3. Este `docs/TECNOLOGIAS.md`.
 4. Specs o plans afectados antes de tocar codigo.

@@ -3,10 +3,10 @@
 
 > **Metodologia:** Spec-Driven Development (SDD) - Spec-Anchored  
 > **Version:** 1.0 - **Fecha:** 2026-05-01  
-> **Constitucion:** `docs/superpowers/CONSTITUTION.md`  
-> **Arquitectura:** `ARCHITECTURE.md`  
-> **PRD de referencia:** `docs/superpowers/specs/2026-04-30-sigcon-prd.md`  
-> **Specs base:** `docs/superpowers/specs/2026-04-30-sigcon-i1-spec.md`, `docs/superpowers/specs/2026-05-01-sigcon-i2-spec.md`  
+> **Constitucion:** `docs/CONSTITUTION.md`
+> **Arquitectura:** `docs/ARCHITECTURE.md`
+> **PRD de referencia:** `docs/specs/2026-04-30-sigcon-prd.md`
+> **Specs base:** `docs/specs/2026-04-30-sigcon-i1-spec.md`, `docs/specs/2026-05-01-sigcon-i2-spec.md`
 > **Formato institucional:** `Notas_ProyectoContratos/06_Informe_actividades_06_Abril_2026_Juan_Escandon.docx`  
 > **Design System:** `Prototipo/DESIGN.md`  
 > **Estado:** Listo para revision
@@ -342,7 +342,7 @@ Orden transaccional recomendado:
 - [ ] I1 e I2 siguen funcionando.
 - [ ] Swagger documenta endpoints PDF/notificaciones.
 - [ ] No se agregan modulos fuera del MVP.
-- [ ] `ARRANQUE.md` documenta configuracion local-dev y weblogic de email.
+- [ ] `docs/ARRANQUE.md` documenta configuracion local-dev y weblogic de email.
 
 ---
 
