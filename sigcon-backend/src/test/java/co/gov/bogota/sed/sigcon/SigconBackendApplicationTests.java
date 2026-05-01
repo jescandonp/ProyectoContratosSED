@@ -30,6 +30,7 @@ class SigconBackendApplicationTests {
      * Scans the production package but excludes:
      *  - SigconBackendApplication (avoids its own @ComponentScan triggering JPA auditing)
      *  - JpaAuditingConfig (avoids @EnableJpaAuditing requiring a JPA metamodel)
+     *  - application.service.* (services depend on repositories; covered by unit tests)
      * Also excludes all auto-configurations that require a running DB or OAuth2 issuer.
      */
     @org.springframework.boot.SpringBootConfiguration
@@ -46,6 +47,10 @@ class SigconBackendApplicationTests {
             @ComponentScan.Filter(
                 type = FilterType.ASSIGNABLE_TYPE,
                 classes = { SigconBackendApplication.class, JpaAuditingConfig.class }
+            ),
+            @ComponentScan.Filter(
+                type = FilterType.REGEX,
+                pattern = "co\\.gov\\.bogota\\.sed\\.sigcon\\.application\\.service\\..*"
             )
         }
     )

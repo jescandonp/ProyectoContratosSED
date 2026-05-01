@@ -13,6 +13,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     Optional<Usuario> findByEmailAndActivoTrue(String email);
 
+    Optional<Usuario> findByIdAndActivoTrue(Long id);
+
     List<Usuario> findByRolAndActivoTrue(RolUsuario rol);
 
     Page<Usuario> findByActivoTrue(Pageable pageable);

@@ -1,0 +1,11 @@
+package co.gov.bogota.sed.sigcon.web.exception;
+
+public enum ErrorCode {
+    USUARIO_NO_ENCONTRADO,
+    CONTRATO_NO_ENCONTRADO,
+    NUMERO_CONTRATO_DUPLICADO,
+    EMAIL_DUPLICADO,
+    ACCESO_DENEGADO,
+    FORMATO_IMAGEN_INVALIDO,
+    ESTADO_INVALIDO
+}

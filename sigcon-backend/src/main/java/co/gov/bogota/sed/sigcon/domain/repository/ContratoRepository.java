@@ -14,7 +14,11 @@ public interface ContratoRepository extends JpaRepository<Contrato, Long> {
 
     Page<Contrato> findBySupervisorAndActivoTrue(Usuario supervisor, Pageable pageable);
 
+    Page<Contrato> findByRevisorAndActivoTrue(Usuario revisor, Pageable pageable);
+
     Page<Contrato> findByActivoTrue(Pageable pageable);
+
+    Optional<Contrato> findByIdAndActivoTrue(Long id);
 
     Optional<Contrato> findByNumeroAndActivoTrue(String numero);
 }

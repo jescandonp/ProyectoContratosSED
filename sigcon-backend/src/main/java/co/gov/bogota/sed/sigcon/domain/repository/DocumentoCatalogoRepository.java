@@ -7,10 +7,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface DocumentoCatalogoRepository extends JpaRepository<DocumentoCatalogo, Long> {
 
     List<DocumentoCatalogo> findByTipoContratoAndActivoTrue(TipoContrato tipo);
 
     Page<DocumentoCatalogo> findByActivoTrue(Pageable pageable);
+
+    Optional<DocumentoCatalogo> findByIdAndActivoTrue(Long id);
 }
