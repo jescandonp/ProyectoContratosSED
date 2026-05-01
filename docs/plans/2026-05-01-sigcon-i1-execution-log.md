@@ -12,7 +12,7 @@
 - Ultimo commit funcional de Task 7: `799388e feat: bootstrap SIGCON Angular app`
 - Ultimo commit funcional de Task 8: `0a88904 feat: add SIGCON Angular core shell`
 - Ultimo commit funcional de Task 9: `ef4fab9 feat: add SIGCON I1 frontend screens`
-- Ultimo commit funcional de Task 10: (ver abajo)
+- Ultimo commit funcional de Task 10: `f230537 docs: complete SIGCON I1 — update ARRANQUE and execution log`
 - Cambio local no versionado conocido: `.claude/` queda fuera de Git por ser configuracion local de Claude.
 
 ## Tareas I1 Completadas
@@ -27,7 +27,7 @@
 | Task 7 - Frontend bootstrap/design system | Completa | `799388e` | `npm install`; `npm run verify:bootstrap`; `npm run build` pasan |
 | Task 8 - Frontend core auth/API/shell | Completa | `0a88904` | `npm test -- --watch=false`; `npm run build` pasan |
 | Task 9 - Frontend I1 screens | Completa | `ef4fab9` | `npm test -- --watch=false`: 10/10; `npm run build` pasa |
-| Task 10 - End-to-end local verification | Completa | (ver abajo) | 21 backend tests; WAR; 10/10 Angular tests; build prod; `ARRANQUE.md` actualizado |
+| Task 10 - End-to-end local verification | Completa | `f230537` | 21 backend tests; WAR; 10/10 Angular tests; build prod; `ARRANQUE.md` actualizado |
 
 ## Task 5 Implementado
 
