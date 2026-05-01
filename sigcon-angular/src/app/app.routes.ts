@@ -3,7 +3,6 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/auth/auth.guard';
 import { roleGuard } from './core/auth/role.guard';
 import { AppShellComponent } from './shared/app-shell.component';
-import { EmptyStateComponent } from './shared/components/empty-state/empty-state.component';
 
 export const routes: Routes = [
   {
@@ -13,8 +12,8 @@ export const routes: Routes = [
   },
   {
     path: 'login',
-    component: EmptyStateComponent,
-    title: 'Ingreso'
+    loadComponent: () => import('./features/auth/login.component').then((m) => m.LoginComponent),
+    title: 'Ingreso — SIGCON'
   },
   {
     path: '',
@@ -23,54 +22,62 @@ export const routes: Routes = [
     children: [
       {
         path: 'perfil',
-        component: EmptyStateComponent,
-        title: 'Perfil'
+        loadComponent: () => import('./features/perfil/perfil.component').then((m) => m.PerfilComponent),
+        title: 'Mi Perfil — SIGCON'
       },
       {
         path: 'contratos',
-        component: EmptyStateComponent,
-        title: 'Contratos'
+        loadComponent: () =>
+          import('./features/contratos/lista/contratos-lista.component').then((m) => m.ContratosListaComponent),
+        title: 'Contratos — SIGCON'
       },
       {
         path: 'contratos/:id',
-        component: EmptyStateComponent,
-        title: 'Detalle contrato'
+        loadComponent: () =>
+          import('./features/contratos/detalle/contrato-detalle.component').then((m) => m.ContratoDetalleComponent),
+        title: 'Detalle de contrato — SIGCON'
       },
       {
         path: 'admin',
-        component: EmptyStateComponent,
         canActivate: [roleGuard(['ADMIN'])],
-        title: 'Admin'
+        loadComponent: () =>
+          import('./features/admin/dashboard/admin-dashboard.component').then((m) => m.AdminDashboardComponent),
+        title: 'Administración — SIGCON'
       },
       {
         path: 'admin/contratos',
-        component: EmptyStateComponent,
         canActivate: [roleGuard(['ADMIN'])],
-        title: 'Contratos admin'
+        loadComponent: () =>
+          import('./features/admin/contratos/admin-contratos.component').then((m) => m.AdminContratosComponent),
+        title: 'Contratos — Admin SIGCON'
       },
       {
         path: 'admin/contratos/nuevo',
-        component: EmptyStateComponent,
         canActivate: [roleGuard(['ADMIN'])],
-        title: 'Nuevo contrato'
+        loadComponent: () =>
+          import('./features/admin/contratos/admin-contrato-form.component').then((m) => m.AdminContratoFormComponent),
+        title: 'Nuevo contrato — Admin SIGCON'
       },
       {
         path: 'admin/contratos/:id/editar',
-        component: EmptyStateComponent,
         canActivate: [roleGuard(['ADMIN'])],
-        title: 'Editar contrato'
+        loadComponent: () =>
+          import('./features/admin/contratos/admin-contrato-form.component').then((m) => m.AdminContratoFormComponent),
+        title: 'Editar contrato — Admin SIGCON'
       },
       {
         path: 'admin/usuarios',
-        component: EmptyStateComponent,
         canActivate: [roleGuard(['ADMIN'])],
-        title: 'Usuarios'
+        loadComponent: () =>
+          import('./features/admin/usuarios/admin-usuarios.component').then((m) => m.AdminUsuariosComponent),
+        title: 'Usuarios — Admin SIGCON'
       },
       {
         path: 'admin/documentos-catalogo',
-        component: EmptyStateComponent,
         canActivate: [roleGuard(['ADMIN'])],
-        title: 'Catalogo documentos'
+        loadComponent: () =>
+          import('./features/admin/catalogo/admin-catalogo.component').then((m) => m.AdminCatalogoComponent),
+        title: 'Catálogo — Admin SIGCON'
       }
     ]
   },
