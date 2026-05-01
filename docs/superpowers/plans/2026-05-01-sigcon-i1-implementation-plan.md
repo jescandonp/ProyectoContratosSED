@@ -14,6 +14,7 @@
 
 - SDD governance: `docs/superpowers/CONSTITUTION.md`
 - Architecture constraints: `ARCHITECTURE.md`
+- Stack versions: `TECNOLOGIAS.md`
 - Product scope: `docs/superpowers/specs/2026-04-30-sigcon-prd.md`
 - I1 technical contract: `docs/superpowers/specs/2026-04-30-sigcon-i1-spec.md`
 - Forward compatibility references: `docs/superpowers/specs/2026-05-01-sigcon-i2-spec.md` and `docs/superpowers/specs/2026-05-01-sigcon-i3-spec.md`
@@ -41,6 +42,7 @@ Create the following implementation structure:
 ```text
 ProyectoContratosSED/
 ├── ARRANQUE.md
+├── TECNOLOGIAS.md
 ├── db/
 │   ├── 00_setup.sql
 │   └── 01_datos_prueba.sql
@@ -75,7 +77,8 @@ Use commits after each task if the workspace is a Git repository. If `.git` is a
 
 **Files:**
 - Create: `.gitignore`
-- Create: `ARRANQUE.md`
+- Verify/update: `ARRANQUE.md`
+- Verify: `TECNOLOGIAS.md`
 - Verify: `docs/superpowers/CONSTITUTION.md`
 - Verify: `docs/superpowers/plans/2026-05-01-sigcon-i1-implementation-plan.md`
 
@@ -119,33 +122,18 @@ coverage/
 *.war
 ```
 
-- [ ] **Step 4: Create initial `ARRANQUE.md`**
+- [ ] **Step 4: Verify initial `ARRANQUE.md` and `TECNOLOGIAS.md`**
 
-Document that I1 is not yet executed and that implementation must follow this plan:
+Confirm both root documents exist and remain aligned with the current architecture:
 
-```markdown
-# ARRANQUE SIGCON
-
-SIGCON usa Spec-Driven Development (SDD) en nivel Spec-Anchored.
-
-## Orden de trabajo
-
-1. Constitucion SDD: `docs/superpowers/CONSTITUTION.md`
-2. Arquitectura SED: `ARCHITECTURE.md`
-3. PRD: `docs/superpowers/specs/2026-04-30-sigcon-prd.md`
-4. Spec tecnica I1: `docs/superpowers/specs/2026-04-30-sigcon-i1-spec.md`
-5. Specs de referencia futura: `docs/superpowers/specs/2026-05-01-sigcon-i2-spec.md`, `docs/superpowers/specs/2026-05-01-sigcon-i3-spec.md`
-6. Plan I1: `docs/superpowers/plans/2026-05-01-sigcon-i1-implementation-plan.md`
-7. Implementacion I1
-
-## Alcance I1
-
-- Auth local-dev y perfil de usuario
-- Administración de contratos
-- Vista de contratos del contratista
-
-Fuera de I1: informes, revisión/aprobación, PDF y notificaciones.
+```powershell
+Test-Path ARRANQUE.md
+Test-Path TECNOLOGIAS.md
+Select-String -Path ARRANQUE.md -Pattern "pre-implementacion I1|sigcon-backend|sigcon-angular|local-dev|weblogic|Excluye|Swagger"
+Select-String -Path TECNOLOGIAS.md -Pattern "Spring Boot|2.7.18|Angular|20.x|PrimeNG|21.x|SED_SIGCON|SGCN_|sigcon-backend.war"
 ```
+
+Expected: both `Test-Path` commands return `True`, and both `Select-String` commands return matches.
 
 - [ ] **Step 5: Verify SDD governance files**
 
@@ -154,6 +142,8 @@ Run:
 ```powershell
 Test-Path docs\superpowers\CONSTITUTION.md
 Select-String -Path docs\superpowers\CONSTITUTION.md -Pattern "Spec-Anchored|ARCHITECTURE.md|Java runtime: Oracle JDK 8|Incremento 1 excluye|Gates De Calidad"
+Select-String -Path ARCHITECTURE.md -Pattern "Adaptacion SIGCON|sigcon-backend.war|SED_SIGCON|Prototipo/DESIGN.md"
+Select-String -Path TECNOLOGIAS.md -Pattern "Oracle JDK 8|Spring Boot|2.7.18|Angular|20.x|PrimeNG|21.x"
 Select-String -Path docs\superpowers\plans\2026-05-01-sigcon-i1-implementation-plan.md -Pattern "CONSTITUTION.md|ARCHITECTURE.md|I1 boundary"
 Select-String -Path docs\superpowers\plans\2026-05-01-sigcon-i1-implementation-plan.md -Pattern "Forward-Compatibility Gates|SGCN_INFORMES|Nuevo Informe|firmaImagen"
 ```
@@ -163,7 +153,7 @@ Expected: `Test-Path` returns `True`, and every `Select-String` command returns 
 - [ ] **Step 6: Commit**
 
 ```powershell
-git add .gitignore ARRANQUE.md docs/superpowers/CONSTITUTION.md docs/superpowers/plans/2026-05-01-sigcon-i1-implementation-plan.md
+git add .gitignore ARRANQUE.md TECNOLOGIAS.md docs/superpowers/CONSTITUTION.md docs/superpowers/plans/2026-05-01-sigcon-i1-implementation-plan.md
 git commit -m "docs: add SIGCON SDD governance and I1 plan"
 ```
 
