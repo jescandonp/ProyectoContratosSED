@@ -501,7 +501,7 @@ public interface DocumentoCatalogoRepository extends JpaRepository<DocumentoCata
 application/dto/
 ├── usuario/
 │   ├── UsuarioDto          { id, email, nombre, cargo, rol, firmaImagen, activo }
-│   ├── UsuarioRequest      { nombre, cargo, rol }          -- Admin crea/edita
+│   ├── UsuarioRequest      { email, nombre, cargo, rol }   -- Admin crea/edita
 │   └── PerfilUpdateRequest { nombre, cargo }               -- Usuario edita su perfil
 │
 ├── contrato/

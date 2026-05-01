@@ -70,11 +70,18 @@ public class UsuarioService {
             .collect(java.util.stream.Collectors.toList());
     }
 
+    public UsuarioDto crearUsuario(UsuarioRequest request) {
+        ensureUniqueEmail(request.getEmail(), null);
+        Usuario usuario = new Usuario();
+        applyRequest(usuario, request);
+        usuario.setActivo(true);
+        return usuarioMapper.toDto(usuarioRepository.save(usuario));
+    }
+
     public UsuarioDto actualizarUsuario(Long id, UsuarioRequest request) {
         Usuario usuario = findActiveUsuario(id);
-        usuario.setNombre(request.getNombre());
-        usuario.setCargo(request.getCargo());
-        usuario.setRol(request.getRol());
+        ensureUniqueEmail(request.getEmail(), id);
+        applyRequest(usuario, request);
         return usuarioMapper.toDto(usuarioRepository.save(usuario));
     }
 
@@ -91,5 +98,24 @@ public class UsuarioService {
                 "Usuario no encontrado",
                 HttpStatus.NOT_FOUND
             ));
+    }
+
+    private void applyRequest(Usuario usuario, UsuarioRequest request) {
+        usuario.setEmail(request.getEmail());
+        usuario.setNombre(request.getNombre());
+        usuario.setCargo(request.getCargo());
+        usuario.setRol(request.getRol());
+    }
+
+    private void ensureUniqueEmail(String email, Long currentUserId) {
+        usuarioRepository.findByEmailAndActivoTrue(email)
+            .filter(existing -> currentUserId == null || !existing.getId().equals(currentUserId))
+            .ifPresent(existing -> {
+                throw new SigconBusinessException(
+                    ErrorCode.EMAIL_DUPLICADO,
+                    "El email ya existe",
+                    HttpStatus.CONFLICT
+                );
+            });
     }
 }
