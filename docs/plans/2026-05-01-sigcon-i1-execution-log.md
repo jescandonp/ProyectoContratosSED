@@ -11,6 +11,8 @@
 - Ultimo commit funcional de Task 6: `dd76343 feat: add SIGCON I1 backend APIs and security`
 - Ultimo commit funcional de Task 7: `799388e feat: bootstrap SIGCON Angular app`
 - Ultimo commit funcional de Task 8: `0a88904 feat: add SIGCON Angular core shell`
+- Ultimo commit funcional de Task 9: `ef4fab9 feat: add SIGCON I1 frontend screens`
+- Ultimo commit funcional de Task 10: (ver abajo)
 - Cambio local no versionado conocido: `.claude/` queda fuera de Git por ser configuracion local de Claude.
 
 ## Tareas I1 Completadas
@@ -24,6 +26,8 @@
 | Task 6 - Backend security/controllers | Completa | `dd76343` | `mvn test -Dtest=*SecurityTest`; `mvn test`; `mvn test -DskipTests` pasan |
 | Task 7 - Frontend bootstrap/design system | Completa | `799388e` | `npm install`; `npm run verify:bootstrap`; `npm run build` pasan |
 | Task 8 - Frontend core auth/API/shell | Completa | `0a88904` | `npm test -- --watch=false`; `npm run build` pasan |
+| Task 9 - Frontend I1 screens | Completa | `ef4fab9` | `npm test -- --watch=false`: 10/10; `npm run build` pasa |
+| Task 10 - End-to-end local verification | Completa | (ver abajo) | 21 backend tests; WAR; 10/10 Angular tests; build prod; `ARRANQUE.md` actualizado |
 
 ## Task 5 Implementado
 
@@ -205,15 +209,79 @@ Resultados observados:
 - No se agrego ningun servicio/modelo de informes, soportes, PDF ni notificaciones.
 - Maven corre actualmente con Java 21 en esta maquina, aunque `pom.xml` compila con source/target `1.8`. Falta validar con Oracle JDK 8 real antes del cierre backend.
 
+## Task 9 Implementado
+
+Archivos principales:
+
+- `sigcon-angular/src/app/core/models/page.model.ts` — agregados campos `first` y `last` requeridos por controles de paginacion.
+- `sigcon-angular/src/app/app.routes.ts` — reescrito con lazy loading `loadComponent` para todas las rutas I1.
+- `sigcon-angular/src/app/features/auth/login.component.ts` — pantalla login con botones de acceso directo por rol (local-dev).
+- `sigcon-angular/src/app/features/perfil/perfil.component.ts` — vista y edicion de perfil; carga de imagen de firma.
+- `sigcon-angular/src/app/features/contratos/lista/contratos-lista.component.ts` — lista de contratos con busqueda con debounce y filtro por estado.
+- `sigcon-angular/src/app/features/contratos/detalle/contrato-detalle.component.ts` — detalle de contrato con obligaciones, actores y placeholder I2 deshabilitado.
+- `sigcon-angular/src/app/features/admin/dashboard/admin-dashboard.component.ts` — dashboard admin con 4 cards (Informes deshabilitado).
+- `sigcon-angular/src/app/features/admin/contratos/admin-contratos.component.ts` — lista admin de contratos con filtro y paginacion.
+- `sigcon-angular/src/app/features/admin/contratos/admin-contrato-form.component.ts` — formulario crear/editar contrato con obligaciones dinamicas.
+- `sigcon-angular/src/app/features/admin/usuarios/admin-usuarios.component.ts` — gestion de usuarios con filtro por rol.
+- `sigcon-angular/src/app/features/admin/catalogo/admin-catalogo.component.ts` — CRUD de catalogo de documentos OPS.
+
+Reglas I2 forward-compat verificadas:
+
+- Boton "Nuevo Informe" en detalle de contrato tiene atributo `disabled` y sin handler `(click)`.
+- Card "Informes" en dashboard admin tiene clase `opacity-50` y sin enlace de navegacion.
+- Ningun archivo fuera de specs/plans referencia `/api/informes` ni `/api/notificaciones`.
+
+Validaciones ejecutadas:
+
+```powershell
+cd sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run build
+grep -r "informes" sigcon-angular/src/app --include="*.ts" -l
+```
+
+Resultados observados:
+
+- `npm test -- --watch=false`: 10 specs, 0 fallas.
+- `npm run build`: production build success.
+- Grep de alcance: solo plantillas HTML con comentarios/texto, sin llamadas a API de informes.
+
+## Task 10 Implementado
+
+Archivos principales:
+
+- `docs/ARRANQUE.md` — reescrito completo: estado I1 completado, prerrequisitos, setup Oracle, variables de entorno backend, comandos arranque, URLs, credenciales local-dev con emails completos, configuracion WebLogic, nota I3 email (futuro).
+
+Criterios de aceptacion I1 verificados:
+
+| Criterio | Resultado |
+|---|---|
+| Backend: 21 tests, 0 fallas | ✅ `mvn test`: Tests run: 21, Failures: 0, Errors: 0 |
+| Backend: WAR generado | ✅ `mvn clean package -DskipTests`: `target/sigcon-backend.war` |
+| Frontend: 10 specs, 0 fallas | ✅ `npm test -- --watch=false`: 10 SUCCESS |
+| Frontend: build produccion | ✅ `npm run build`: bundle generado en `dist/sigcon-angular` |
+| Sin alcance I2/I3 en codigo | ✅ grep sin coincidencias de API endpoints de informes/notificaciones |
+
+Validaciones ejecutadas:
+
+```powershell
+cd sigcon-backend
+mvn test
+mvn clean package -DskipTests
+cd ..\sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run build
+```
+
+## Estado Final I1
+
+**Incremento 1 completo.** Todas las tareas del plan `2026-05-01-sigcon-i1-implementation-plan.md` ejecutadas y validadas.
+
 ## Proximo Punto De Retoma
 
-Continuar con **Task 9: Frontend I1 Screens**.
+Continuar con **Incremento 2 (I2)**:
 
-Antes de avanzar:
-
-1. Leer `docs/plans/2026-05-01-sigcon-i1-implementation-plan.md`, Task 9.
-2. Revisar `Prototipo/*/screen.png` y `Prototipo/*/code.html` antes de crear cada pantalla.
-3. Reemplazar placeholders por pantallas I1 reales sin ampliar alcance.
-4. Mantener servicios/modelos I1 existentes; no crear informes, PDF, soportes ni notificaciones.
-5. Ejecutar `npm test -- --watch=false` y `npm run build`.
-6. Registrar en este log los archivos tocados, validaciones, errores y commit resultante.
+1. Leer `docs/specs/2026-05-01-sigcon-i2-spec.md` como referencia de funcionalidades.
+2. Crear branch `feat/sigcon-i2` desde `feat/sigcon-i1`.
+3. Brainstorming y plan I2 siguiendo el proceso SDD Spec-Anchored.
+4. Actualizar este documento (o crear log I2) con el nuevo execution log.
