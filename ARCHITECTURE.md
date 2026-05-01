@@ -1,9 +1,11 @@
-# Arquitectura de Referencia — Ecosistema SED Bogotá
+# Arquitectura de Referencia — SIGCON / Ecosistema SED Bogotá
 
-> Documento vivo extraído del proyecto **Portal de Pagos a Terceros (SI)**  
+> Documento vivo adaptado para **SIGCON — Sistema de Gestion de Contratos**.  
+> La base tecnica proviene de la arquitectura reutilizable del ecosistema SED.  
 > Secretaría de Educación del Distrito — Bogotá, Colombia  
-> Sirve como arquitectura base reutilizable para nuevos proyectos del ecosistema.
+> Sirve como arquitectura tecnica rectora para SIGCON y como referencia reutilizable para proyectos compatibles.
 >
+> **Revisión 3 — 01/05/2026** — Adaptacion SIGCON: coordenadas canonicas, autoridad visual en `Prototipo/DESIGN.md`, limpieza de referencias heredadas de Portal Pagos.
 > **Revisión 2 — 30/04/2026** — Ajustes por Líder de Desarrollo:  
 > Angular 20 + PrimeNG 21 · Auth Office 365 (MSAL) · Swagger siempre activo · WAR para WebLogic 12 · JDK 8 · Docker/nginx/Keycloak omitidos
 
@@ -11,6 +13,7 @@
 
 ## Tabla de Contenido
 
+0. [Adaptacion SIGCON](#0-adaptacion-sigcon)
 1. [Visión General](#1-visión-general)
 2. [Stack Tecnológico](#2-stack-tecnológico)
 3. [Arquitectura por Capas](#3-arquitectura-por-capas)
@@ -21,9 +24,30 @@
 8. [Infraestructura — WebLogic 12](#8-infraestructura--weblogic-12)
 9. [CI/CD](#9-cicd)
 10. [Patrones de Diseño](#10-patrones-de-diseño)
-11. [Sistema de Diseño — Civic Curator](#11-sistema-de-diseño--civic-curator)
+11. [Sistema de Diseño — SIGCON](#11-sistema-de-diseño--sigcon)
 12. [Convenciones y Estándares](#12-convenciones-y-estándares)
 13. [Checklist para Nuevos Proyectos](#13-checklist-para-nuevos-proyectos)
+
+---
+
+## 0. Adaptacion SIGCON
+
+Esta arquitectura se interpreta para SIGCON con las siguientes coordenadas canonicas. Si una plantilla o ejemplo generico dentro de este documento usa `[nombre-si]`, `[modulo]`, `PRTL_`, `SED_PORTAL`, `PortalPagos` o `/portal-pagos`, en SIGCON se reemplaza por estos valores:
+
+| Coordenada | Valor SIGCON |
+|------------|--------------|
+| Sistema | `SIGCON` |
+| Backend | `sigcon-backend` |
+| WAR | `sigcon-backend.war` |
+| Contexto WebLogic | `/sigcon` |
+| Paquete Java base | `co.gov.bogota.sed.sigcon` |
+| Frontend | `sigcon-angular` |
+| Esquema Oracle MVP | `SED_SIGCON` |
+| Prefijo de tablas | `SGCN_` |
+| Perfil local | `local-dev` |
+| Perfil servidor | `weblogic` |
+
+La autoridad documental se mantiene en `docs/superpowers/CONSTITUTION.md`. Para UX/UI, la fuente visual primaria es `Prototipo/DESIGN.md`; esta arquitectura define integracion tecnica con Angular 20, PrimeNG 21 y Tailwind, pero no reemplaza los tokens visuales aprobados.
 
 ---
 
@@ -36,7 +60,7 @@ Los proyectos del ecosistema SED son **aplicaciones web empresariales** orientad
 - Usuarios internos de la SED (funcionarios, contratistas, supervisores)
 - Autenticación corporativa a través de **Office 365 / Azure Active Directory**
 - Despliegue en infraestructura del Distrito (**Oracle WebLogic 12** + Oracle Database)
-- Identidad visual institucional uniforme (Design System "Civic Curator")
+- Identidad visual institucional uniforme gobernada por `Prototipo/DESIGN.md`
 
 ### Diagrama de Contexto
 
@@ -45,7 +69,7 @@ Los proyectos del ecosistema SED son **aplicaciones web empresariales** orientad
 │                    ECOSISTEMA SED BOGOTÁ                            │
 │                                                                     │
 │  ┌──────────────────┐   ┌──────────────────┐   ┌────────────────┐  │
-│  │  Portal Pagos SI │   │  [Otro Proyecto] │   │  [Otro SI]     │  │
+│  │  SIGCON          │   │  [Otro Proyecto] │   │  [Otro SI]     │  │
 │  │  (este repo)     │   │                  │   │                │  │
 │  └────────┬─────────┘   └────────┬─────────┘   └───────┬────────┘  │
 │           │                      │                      │           │
@@ -168,7 +192,7 @@ Usuario (navegador)
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐   │
 │  │ Tablas       │  │ Vistas       │  │ Sequences/Triggers   │   │
 │  │ (prefijo     │  │ (V_*)        │  │ Auditoría automática  │   │
-│  │  PRTL_)      │  │ Reporting    │  │ ON UPDATE            │   │
+│  │  SGCN_)      │  │ Reporting    │  │ ON UPDATE            │   │
 │  └──────────────┘  └──────────────┘  └──────────────────────┘   │
 └──────────────────────────────────────────────────────────────────┘
                                │
@@ -293,19 +317,19 @@ src/main/java/co/gov/bogota/sed/{nombre-si}/
 **Clase de arranque para WAR:**
 
 ```java
-// PortalPagosApplication.java
+// SigconBackendApplication.java
 @SpringBootApplication
-public class PortalPagosApplication extends SpringBootServletInitializer {
+public class SigconBackendApplication extends SpringBootServletInitializer {
 
     @Override
     protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
         // Requerido para despliegue en contenedor externo (WebLogic)
-        return builder.sources(PortalPagosApplication.class);
+        return builder.sources(SigconBackendApplication.class);
     }
 
     public static void main(String[] args) {
         // Permite ejecución directa con mvn spring-boot:run en desarrollo
-        SpringApplication.run(PortalPagosApplication.class, args);
+        SpringApplication.run(SigconBackendApplication.class, args);
     }
 }
 ```
@@ -328,7 +352,7 @@ public class PortalPagosApplication extends SpringBootServletInitializer {
         <prefer-web-inf-classes>true</prefer-web-inf-classes>
     </container-descriptor>
 
-    <context-root>/${project.artifactId}</context-root>
+    <context-root>/sigcon</context-root>
 </weblogic-web-app>
 ```
 
@@ -343,7 +367,7 @@ public class OpenApiConfig {
     public OpenAPI openAPI() {
         return new OpenAPI()
             .info(new Info()
-                .title("Portal Pagos SED — API")
+                .title("SIGCON SED — API")
                 .description("API REST del sistema de información")
                 .version("v1.0")
                 .contact(new Contact()
@@ -417,8 +441,8 @@ spring:
       on-profile: local-dev
   datasource:
     url: jdbc:oracle:thin:@localhost:1521/XEPDB1
-    username: ${DB_USERNAME:SED_PORTAL}
-    password: ${DB_PASSWORD:SedPortal_2024#}
+    username: ${DB_USERNAME:SED_SIGCON}
+    password: ${DB_PASSWORD:Sigcon_2026#}
   jpa:
     database-platform: org.hibernate.dialect.Oracle12cDialect
     hibernate:
@@ -431,15 +455,15 @@ spring:
 **Entidades JPA**
 ```java
 @Entity
-@Table(name = "PRTL_ENTIDAD")
+@Table(name = "SGCN_ENTIDAD")
 @EntityListeners(AuditingEntityListener.class)
 @Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor
 public class Entidad {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE,
-                    generator = "PRTL_ENTIDAD_SEQ")
-    @SequenceGenerator(name = "PRTL_ENTIDAD_SEQ",
-                       sequenceName = "PRTL_ENTIDAD_SEQ", allocationSize = 1)
+                    generator = "SGCN_ENTIDAD_SEQ")
+    @SequenceGenerator(name = "SGCN_ENTIDAD_SEQ",
+                       sequenceName = "SGCN_ENTIDAD_SEQ", allocationSize = 1)
     private Long id;
 
     @CreatedDate
@@ -719,13 +743,13 @@ import { Configuration, BrowserCacheLocation, LogLevel } from '@azure/msal-brows
 
 export const environment = {
   production: true,
-  apiUrl: '/[nombre-si]/api',            // Contexto WebLogic + ruta API
+  apiUrl: '/sigcon/api',                 // Contexto WebLogic + ruta API
 
   msalConfig: {
     auth: {
       clientId: '[AZURE_CLIENT_ID]',
       authority: 'https://login.microsoftonline.com/[AZURE_TENANT_ID]',
-      redirectUri: 'https://[servidor-sed]/[nombre-si]',
+      redirectUri: 'https://[servidor-sed]/sigcon',
     },
     cache: {
       cacheLocation: BrowserCacheLocation.SessionStorage,
@@ -780,9 +804,9 @@ export const environment = {
 
 | Objeto | Patrón | Ejemplo |
 |--------|--------|---------|
-| Esquema | `SED_[MODULO]` | `SED_PORTAL` |
-| Tablas | `[PREFIJO]_[ENTIDAD]` | `PRTL_CONTRATOS` |
-| Sequences | `[TABLA]_SEQ` | `PRTL_CONTRATOS_SEQ` |
+| Esquema | `SED_[MODULO]` | `SED_SIGCON` |
+| Tablas | `[PREFIJO]_[ENTIDAD]` | `SGCN_CONTRATOS` |
+| Sequences | `[TABLA]_SEQ` | `SGCN_CONTRATOS_SEQ` |
 | Triggers | `TRG_[TABLA]_AUDIT` | `TRG_CONTRATOS_AUDIT` |
 | Vistas | `V_[NOMBRE]` | `V_CONTRATOS_RESUMEN` |
 | Índices | `IDX_[TABLA]_[CAMPO]` | `IDX_CONTRATOS_FASE` |
@@ -791,11 +815,11 @@ export const environment = {
 
 ```sql
 -- 1. Sequences
-CREATE SEQUENCE PRTL_ENTIDAD_SEQ START WITH 1 INCREMENT BY 1 NOCACHE;
+CREATE SEQUENCE SGCN_ENTIDAD_SEQ START WITH 1 INCREMENT BY 1 NOCACHE;
 
 -- 2. Tabla principal
-CREATE TABLE PRTL_ENTIDAD (
-    ID            NUMBER        DEFAULT PRTL_ENTIDAD_SEQ.NEXTVAL PRIMARY KEY,
+CREATE TABLE SGCN_ENTIDAD (
+    ID            NUMBER        DEFAULT SGCN_ENTIDAD_SEQ.NEXTVAL PRIMARY KEY,
     -- campos de negocio...
     ACTIVO        NUMBER(1)     DEFAULT 1 NOT NULL,
     CREATED_AT    TIMESTAMP     DEFAULT SYSTIMESTAMP NOT NULL,
@@ -804,11 +828,11 @@ CREATE TABLE PRTL_ENTIDAD (
 );
 
 -- 3. Índices funcionales
-CREATE INDEX IDX_ENTIDAD_CAMPO ON PRTL_ENTIDAD(CAMPO_BUSQUEDA);
+CREATE INDEX IDX_ENTIDAD_CAMPO ON SGCN_ENTIDAD(CAMPO_BUSQUEDA);
 
 -- 4. Trigger de auditoría
 CREATE OR REPLACE TRIGGER TRG_ENTIDAD_AUDIT
-BEFORE UPDATE ON PRTL_ENTIDAD
+BEFORE UPDATE ON SGCN_ENTIDAD
 FOR EACH ROW
 BEGIN
     :NEW.UPDATED_AT := SYSTIMESTAMP;
@@ -818,8 +842,8 @@ END;
 -- 5. Vistas desnormalizadas (reportes)
 CREATE OR REPLACE VIEW V_ENTIDAD_RESUMEN AS
 SELECT e.*, r.nombre AS referencia_nombre
-FROM PRTL_ENTIDAD e
-LEFT JOIN PRTL_REFERENCIA r ON r.id = e.referencia_id;
+FROM SGCN_ENTIDAD e
+LEFT JOIN SGCN_REFERENCIA r ON r.id = e.referencia_id;
 ```
 
 ### Archivos de Base de Datos
@@ -967,7 +991,7 @@ App Roles definidos en Azure Portal:
   └─ APROBADOR      → asignado a supervisores/aprobadores
 
 Redirect URIs:
-  ├─ https://[servidor]/[nombre-si]           (producción)
+  ├─ https://[servidor]/sigcon                (producción)
   └─ http://localhost:4200                    (desarrollo)
 
 Token claim mapping:
@@ -1059,7 +1083,7 @@ Usuario:    aprobador   / aprobador123   → ROLE_ADMIN_BASICO, ROLE_APROBADOR
 │  │         Oracle WebLogic 12.2.1.4.0              │    │
 │  │                                                 │    │
 │  │  ┌───────────────────┐  ┌───────────────────┐   │    │
-│  │  │  [nombre-si].war  │  │  [otro-si].war    │   │    │
+│  │  │ sigcon-backend.war│  │  [otro-si].war    │   │    │
 │  │  │  Spring Boot API  │  │                   │   │    │
 │  │  │  JDK 8            │  │                   │   │    │
 │  │  └───────────────────┘  └───────────────────┘   │    │
@@ -1081,7 +1105,7 @@ Usuario:    aprobador   / aprobador123   → ROLE_ADMIN_BASICO, ROLE_APROBADOR
 Desarrollador
     │
     │  mvn clean package -P weblogic
-    │  → genera: target/[nombre-si].war
+    │  → genera: target/sigcon-backend.war
     │
     ▼
 Control de versiones / repositorio de artefactos
@@ -1093,7 +1117,7 @@ DBA / DevOps SED
     │     (http://[servidor]:7001/console)
     │  3. Activa despliegue
     ▼
-WebLogic 12.2.1.4.0 — contexto: /[nombre-si]
+WebLogic 12.2.1.4.0 — contexto: /sigcon
 ```
 
 ### Variables de Configuración (properties WebLogic)
@@ -1103,7 +1127,7 @@ En el servidor WebLogic configurar las siguientes JNDI properties o variables de
 ```properties
 # Fuente de datos Oracle (configurar JNDI en WebLogic o via application.yml)
 DB_URL=jdbc:oracle:thin:@//[host-oracle]:1521/[service-name]
-DB_USERNAME=SED_[MODULO]
+DB_USERNAME=SED_SIGCON
 DB_PASSWORD=[contraseña-segura]
 
 # Perfil Spring activo
@@ -1117,13 +1141,16 @@ AZURE_CLIENT_ID=[client-id-app-registration]
 ### Estructura de Archivos del Proyecto (sin Docker)
 
 ```
-[nombre-si]/
+ProyectoContratosSED/
 ├── ARCHITECTURE.md
 ├── ARRANQUE.md
 ├── TECNOLOGIAS.md
-├── SDD_SPEC_v1.md
-├── PRD_[NOMBRE].txt
-├── [nombre]-backend/
+├── docs/superpowers/
+│   ├── CONSTITUTION.md
+│   ├── specs/
+│   └── plans/
+├── Prototipo/
+├── sigcon-backend/
 │   ├── pom.xml                       ← packaging: war, java.version: 8
 │   ├── src/main/
 │   │   ├── java/...                  ← Código fuente
@@ -1132,7 +1159,7 @@ AZURE_CLIENT_ID=[client-id-app-registration]
 │   │   └── webapp/WEB-INF/
 │   │       └── weblogic.xml          ← Descriptor WebLogic
 │   └── src/test/...
-├── [nombre]-angular/
+├── sigcon-angular/
 │   ├── package.json                  ← Angular 20, PrimeNG 21, MSAL
 │   ├── angular.json
 │   ├── src/
@@ -1161,7 +1188,7 @@ Push a main/develop
 │  1. Checkout           │
 │  2. Java 8 (Oracle JDK)│
 │     mvn test + package │
-│     → [nombre-si].war  │
+│     → sigcon-backend.war │
 │  3. Node 20 LTS        │
 │     npm ci + ng lint   │
 │     ng build --prod    │
@@ -1274,28 +1301,41 @@ public void avanzarFase(Long id) {
 
 ---
 
-## 11. Sistema de Diseño — Civic Curator
+## 11. Sistema de Diseño — SIGCON
 
-### Identidad Visual SED
+### Autoridad Visual
+
+`Prototipo/DESIGN.md` gobierna la identidad visual de SIGCON: paleta, tipografia, radios, densidad, espaciado y comportamiento visual de componentes. Esta seccion solo traduce esa referencia a decisiones tecnicas de Angular 20 + PrimeNG 21 + Tailwind CSS.
+
+Reglas canonicas para SIGCON:
+
+- Tipografia principal: `Public Sans`.
+- Radio base para botones, inputs, cards y paneles: `4px`.
+- Interfaz administrativa compacta, con formularios de alta densidad.
+- Cards y paneles con borde neutral de `1px`; no usar sombras pesadas como estilo base.
+- Tablas con zebra stripes y densidad operativa.
+- PrimeNG 21 es la libreria primaria de componentes; los tokens SED se aplican por CSS variables.
 
 ```scss
 // design-tokens.scss
 :root {
-  // Colores institucionales
-  --color-primary:    #094cb2;   // Azul SED
-  --color-secondary:  #7e5700;   // Dorado institucional
-  --color-tertiary:   #a21638;   // Rojo Bogotá
-  --color-surface:    #f8faff;
-  --color-on-surface: #1a1c1e;
+  // Colores institucionales desde Prototipo/DESIGN.md
+  --color-primary:    #0b3d91;
+  --color-secondary:  #ffb300;
+  --color-tertiary:   #92032e;
+  --color-surface:    #f8f9ff;
+  --color-on-surface: #0b1c30;
 
   // Tipografía
-  --font-family: 'Inter', 'Outfit', sans-serif;
+  --font-family: 'Public Sans', 'Inter', sans-serif;
   --font-size-base: 14px;
 
-  // Espaciado
-  --radius-card: 12px;
-  --radius-chip: 999px;
-  --shadow-card: 0 2px 8px rgba(0,0,0,0.06);
+  // Forma y densidad
+  --radius-card: 4px;
+  --radius-control: 4px;
+  --radius-chip: 8px;
+  --spacing-unit: 4px;
+  --panel-border: 1px solid #e2e8f0;
 }
 ```
 
@@ -1319,11 +1359,11 @@ providePrimeNG({
 ```scss
 // styles.scss — sobreescritura de variables PrimeNG con paleta SED
 :root {
-  --p-primary-color: #094cb2;
+  --p-primary-color: #0b3d91;
   --p-primary-contrast-color: #ffffff;
-  --p-primary-hover-color: #073a94;
+  --p-primary-hover-color: #002869;
   --p-surface-card: #ffffff;
-  --p-surface-ground: #f8faff;
+  --p-surface-ground: #f8f9ff;
 }
 ```
 
@@ -1354,11 +1394,11 @@ providePrimeNG({
 
 ### Principios de UI
 
-- **No borders**: Cards sin bordes, diferenciados por elevación (`--p-card-shadow`)
-- **White space generoso**: Padding mínimo `p-6` en contenedores principales
-- **Zebra layering**: `p-datatable-striped` en todas las tablas
-- **Status chips**: `p-tag` con severities (`success`, `warn`, `danger`, `info`)
-- **Glassmorphism suave**: `backdrop-blur` para overlays y `p-dialog`
+- **Densidad operativa**: formularios, tablas y paneles priorizan lectura rapida y gestion repetitiva.
+- **Bordes sutiles**: cards y paneles usan borde neutral; sombras solo para overlays, dropdowns y tooltips.
+- **Zebra stripes**: `p-datatable-striped` en tablas operativas.
+- **Status chips**: `p-tag` con severities (`success`, `warn`, `danger`, `info`) y mapeo semantico definido por la spec activa.
+- **Sin efectos decorativos dominantes**: no usar glassmorphism como estilo base de pantallas administrativas.
 
 ---
 
@@ -1368,29 +1408,29 @@ providePrimeNG({
 
 | Ámbito | Convención | Ejemplo |
 |--------|-----------|---------|
-| Paquetes Java | `co.gov.bogota.sed.[modulo]` | `co.gov.bogota.sed.portalpagos` |
+| Paquetes Java | `co.gov.bogota.sed.[modulo]` | `co.gov.bogota.sed.sigcon` |
 | Clases Controller | `[Entidad]Controller` | `ContratoController` |
 | Clases Service | `[Entidad]Service` | `ContratoService` |
 | Clases Entity | `[Entidad]` (singular) | `Contrato` |
 | Clases DTO | `[Entidad]Dto`, `[Entidad]Request` | `ContratoDto`, `ContratoRequest` |
-| Tablas Oracle | `[PREFIJO]_[ENTIDAD]` (mayúscula) | `PRTL_CONTRATOS` |
+| Tablas Oracle | `[PREFIJO]_[ENTIDAD]` (mayúscula) | `SGCN_CONTRATOS` |
 | Archivos Angular | `[entidad].[tipo].ts` | `contrato.service.ts` |
 | Componentes Angular | `[nombre].component.ts` | `contratos-list.component.ts` |
 | Rutas API | `/api/[entidades]` (plural, kebab-case) | `/api/contratos-activos` |
-| WAR desplegado | `[nombre-si].war` | `portal-pagos.war` |
-| Contexto WebLogic | `/[nombre-si]` | `/portal-pagos` |
+| WAR desplegado | `[sistema]-backend.war` | `sigcon-backend.war` |
+| Contexto WebLogic | `/[sistema]` | `/sigcon` |
 
 ### Estructura de Proyecto
 
 ```
-[nombre-si]/
+ProyectoContratosSED/
 ├── ARCHITECTURE.md           ← Este documento (adaptado)
 ├── ARRANQUE.md               ← Guía de inicio rápido para devs
 ├── TECNOLOGIAS.md            ← Versiones exactas del stack
-├── SDD_SPEC_v1.md            ← Especificación técnica del sistema
-├── PRD_[NOMBRE].txt          ← Requerimientos de producto
-├── [nombre]-backend/         ← Spring Boot API (WAR, JDK 8)
-├── [nombre]-angular/         ← Angular 20 SPA + PrimeNG 21
+├── docs/superpowers/         ← Constitucion SDD, specs y plans
+├── Prototipo/                ← Design system y pantallas de referencia
+├── sigcon-backend/           ← Spring Boot API (WAR, JDK 8)
+├── sigcon-angular/           ← Angular 20 SPA + PrimeNG 21
 └── db/                       ← Scripts SQL Oracle
 ```
 
@@ -1429,7 +1469,7 @@ En JPA: `@EnableJpaAuditing` + `@EntityListeners(AuditingEntityListener.class)`.
 - [ ] Crear repositorio con estructura estándar de carpetas
 - [ ] Copiar y adaptar `ARCHITECTURE.md`, `ARRANQUE.md`, `TECNOLOGIAS.md`
 - [ ] Definir prefijo de módulo para tablas Oracle (ej: `CTRL_`, `RRHH_`, `ACAD_`)
-- [ ] Definir nombre del WAR y contexto WebLogic (`[nombre-si]`)
+- [ ] Definir nombre del WAR y contexto WebLogic (`sigcon-backend.war`, `/sigcon`)
 - [ ] Registrar la aplicación en Azure AD (App Registration en tenant SED)
 - [ ] Obtener `AZURE_TENANT_ID` y `AZURE_CLIENT_ID` de TI SED
 - [ ] Definir App Roles en Azure AD (`ADMIN_BASICO`, `APROBADOR`, etc.)
@@ -1502,16 +1542,18 @@ En JPA: `@EnableJpaAuditing` + `@EntityListeners(AuditingEntityListener.class)`.
 
 | Recurso | Ubicación |
 |---------|-----------|
-| Proyecto de referencia | `PortalPagosTercerosSI/` (este repo) |
-| Especificación técnica | `SDD_SPEC_v1.md` |
+| Proyecto | `ProyectoContratosSED/` |
+| Constitucion SDD | `docs/superpowers/CONSTITUTION.md` |
+| Especificaciones tecnicas | `docs/superpowers/specs/` |
+| Planes de implementacion | `docs/superpowers/plans/` |
 | Guía de arranque | `ARRANQUE.md` |
 | Versiones del stack | `TECNOLOGIAS.md` |
-| Requerimientos | `PRD_PORTAL_PAGOS.txt` |
-| Design System | `stitch_gestor_de_pagos_sed/stitch_gestor_de_pagos_sed/bogot_educativa/DESIGN.md` |
+| Requerimientos | `docs/superpowers/specs/2026-04-30-sigcon-prd.md` |
+| Design System | `Prototipo/DESIGN.md` |
 | Scripts Oracle | `db/00_setup.sql` |
 
 ---
 
-*Documento generado desde `PortalPagosTercerosSI` — Ecosistema SED Bogotá*  
-*Revisión 2 aplicada según instrucciones Líder de Desarrollo — 30/04/2026*  
+*Documento adaptado para `ProyectoContratosSED` — SIGCON / Ecosistema SED Bogotá*  
+*Revisión 3 aplicada para coherencia SDD — 01/05/2026*  
 *Actualizar cuando cambien decisiones arquitectónicas fundamentales.*

@@ -17,12 +17,15 @@ Cuando exista tension entre documentos, decisiones o codigo, aplicar este orden:
 
 El codigo nunca es la fuente primaria de verdad del proyecto. Si el codigo contradice la spec, se corrige el codigo o se actualiza primero la spec y luego el plan.
 
+Cuando `ARCHITECTURE.md` conserve ejemplos o plantillas reutilizables del ecosistema SED, las coordenadas canonicas SIGCON prevalecen para este proyecto: `SGCN_`, `SED_SIGCON`, `/sigcon`, `sigcon-backend.war`, `sigcon-angular` y `co.gov.bogota.sed.sigcon`.
+
 ## 2. Reglas SDD
 
 - Todo incremento debe tener spec tecnica escrita, revisada y aprobada antes de implementarse.
 - Todo incremento debe tener plan de implementacion en `docs/superpowers/plans/` antes de ejecutar tareas.
 - Los cambios de alcance entran primero por PRD o spec tecnica, no por codigo.
 - Los cambios de arquitectura entran primero por `ARCHITECTURE.md` o por esta constitucion.
+- Los cambios visuales entran primero por `Prototipo/DESIGN.md` o por la spec activa; `ARCHITECTURE.md` solo define la integracion tecnica UI.
 - Cada tarea de implementacion debe tener salida verificable y trazabilidad a criterios de aceptacion.
 - No se implementa funcionalidad fuera del incremento activo aunque parezca conveniente.
 
@@ -73,6 +76,7 @@ Identidad y seguridad:
 - Usar componentes PrimeNG 21 antes de construir controles propios.
 - Mantener interfaz institucional, densa, clara y orientada a gestion operativa.
 - No introducir pantallas tipo landing page para flujos administrativos.
+- No introducir estilos visuales que contradigan `Prototipo/DESIGN.md`, aunque aparezcan como ejemplos genericos en documentos de arquitectura reutilizable.
 
 ## 6. Fronteras Por Incremento
 
