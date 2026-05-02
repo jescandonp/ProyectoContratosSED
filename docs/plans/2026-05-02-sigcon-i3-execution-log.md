@@ -17,7 +17,7 @@
 
 - Rama activa: `feat/sigcon-i3`
 - Punto de partida: `feat/sigcon-i2` HEAD `0658cef` (I2 completo: 64 backend + 53 frontend tests).
-- Remoto: `origin/feat/sigcon-i3` (push pendiente tras primer commit).
+- Remoto: `origin/feat/sigcon-i3`; sincronizar antes de retomar.
 - Cambio local no versionado conocido: `.claude/` fuera de Git por configuracion local.
 
 ## Ajustes Plan I3 Tras Cierre I2
@@ -37,12 +37,12 @@
 | Task | Estado | Modelo | Commit | Notas |
 |---|---|---|---|---|
 | Task 1 - Plan + execution log baseline | ✅ done | Claude | `7c9ff1c` | Plan promovido desde outline; ajustes I2 incorporados; decisiones tecnicas resueltas |
-| Task 2 - Oracle DDL I3 | ⏳ pending | — | — | — |
-| Task 3 - Backend domain I3 | ⏳ pending | — | — | — |
-| Task 4 - Backend PDF service | ⏳ pending | — | — | — |
-| Task 5 - Backend notificaciones + email | ⏳ pending | — | — | — |
-| Task 6 - Integracion estado + auditorProvider | ⏳ pending | — | — | — |
-| Task 7 - Backend controllers + security + Swagger | ⏳ pending | — | — | — |
+| Task 2 - Oracle DDL I3 | ✅ done | Claude | `5784e17` | DDL notificaciones + metadatos PDF |
+| Task 3 - Backend domain I3 | ✅ done | Claude | `65d8ac6` | `Notificacion`, `TipoEvento`, repository y campos PDF |
+| Task 4 - Backend PDF service | ✅ done | Claude | `ff59aff` | Template/service PDF I3 |
+| Task 5 - Backend notificaciones + email | ✅ done | Claude | `8da44dd` | Services, DTOs, mapper y mail local-dev |
+| Task 6 - Integracion estado + auditorProvider | ✅ done | Claude | `de63e28` | PDF/eventos en `InformeEstadoService`; auditorProvider corregido |
+| Task 7 - Backend controllers + security + Swagger | ✅ done | Codex | `875ff45` | Controllers PDF/notificaciones; RBAC y endpoints ajustados a spec |
 | Task 8 - Frontend models + services | ⏳ pending | — | — | — |
 | Task 9 - Frontend campana + centro notificaciones | ⏳ pending | — | — | — |
 | Task 10 - Frontend visor PDF + advertencia firma | ⏳ pending | — | — | — |
@@ -105,5 +105,87 @@ Proximo Punto De Retoma (para siguiente modelo):
 > Tomar **Task 2** (Oracle DDL I3). Agregar cabecera `===== INCREMENTO 3 =====` a `db/00_setup.sql` con el `ALTER TABLE` de `SGCN_INFORMES` y `CREATE TABLE SGCN_NOTIFICACIONES` exactos del plan. Agregar seed de prueba a `db/01_datos_prueba.sql`. Commitear y actualizar este log con SHA y resultado de las validaciones del plan Task 2.
 
 ---
+
+## Checkpoint Tras Trabajo Paralelo Tasks 2-6
+
+Commits detectados en `feat/sigcon-i3` antes de tomar Task 7:
+
+- `5784e17 feat: add SIGCON I3 Oracle DDL -- notifications table and PDF metadata`
+- `65d8ac6 feat: add SIGCON I3 backend domain -- Notificacion entity, TipoEvento enum, repository`
+- `ff59aff feat: add SIGCON I3 PDF service -- InformePdfTemplateService + PdfInformeService`
+- `8da44dd feat: add SIGCON I3 notification and email services`
+- `de63e28 feat(i3): integrate PDF + eventos into InformeEstadoService; fix auditorProvider`
+
+Notas de checkpoint:
+
+- `README.md` y `docs/ARRANQUE.md` aun describen I2 como estado activo/cerrado. No se corrige en Task 7 para no mezclar documentacion general; queda como ajuste de cierre I3 o Task 11.
+- Se detecto incompatibilidad Java 8 heredada en `EmailNotificacionService` por uso de `Map.of`; se corrigio en Task 7 porque afecta WebLogic/JDK 8.
+
+## Task 7 Implementado
+
+Commit funcional:
+
+- `875ff45 feat: add SIGCON I3 PDF and notification controllers`
+
+Archivos creados:
+
+- `web/controller/InformePdfController.java`
+- `web/controller/NotificacionController.java`
+
+Archivos modificados:
+
+- `config/SecurityConfig.java`
+- `config/DevSecurityConfig.java`
+- `application/service/EmailNotificacionService.java`
+- `application/service/PdfInformeService.java`
+- `test/java/.../web/InformeSecurityTest.java`
+- `test/java/.../web/SigconBackendSecurityTest.java`
+
+Implementado y ajustado:
+
+- `GET /api/informes/{id}/pdf` con `@Tag(name = "PDF")`, `Content-Type: application/pdf` y `Content-Disposition: attachment`.
+- PDF restringido a `CONTRATISTA`, `SUPERVISOR`, `ADMIN`; `REVISOR` queda bloqueado segun spec I3.
+- `GET /api/notificaciones`.
+- `GET /api/notificaciones/no-leidas/count`.
+- `PATCH /api/notificaciones/{id}/leida`.
+- `PATCH /api/notificaciones/leidas`.
+- Seguridad local-dev/weblogic explicita para `/api/informes/*/pdf` y `/api/notificaciones/**`.
+- Tests de seguridad actualizados para exponer notificaciones en I3 y validar que PDF no permite `REVISOR`.
+- Compatibilidad Java 8: `EmailNotificacionService` ya no usa `Map.of`; auditoria queda limpia.
+
+Validaciones:
+
+```powershell
+cd sigcon-backend
+mvn test "-Dtest=InformeSecurityTest,SigconBackendSecurityTest"
+mvn test
+mvn package -DskipTests
+Get-ChildItem -Path sigcon-backend\src\main\java -Recurse -File | Select-String -Pattern "\bvar\b|List\.of|Map\.of|Set\.of|Optional\.orElseThrow\(\)|InputStream\.readAllBytes"
+Get-ChildItem -Path sigcon-backend\src\main\java -Recurse -File | Select-String -Pattern "SECOP|MotorPagos|radicacion|PKcs11|firma.criptografica"
+```
+
+Resultado:
+
+- TDD RED inicial: `REVISOR` alcanzaba el controller PDF y `/api/notificaciones/no-leidas/count` devolvia 404.
+- `InformeSecurityTest,SigconBackendSecurityTest`: 18 tests, 0 fallas, 0 errores.
+- `mvn test`: 91 tests, 0 fallas, 0 errores.
+- `mvn package -DskipTests`: build success; WAR generado en `sigcon-backend/target/sigcon-backend.war`.
+- Auditoria Java 8: 0 coincidencias.
+- Auditoria de alcance I3: 0 coincidencias para SECOP, motor de pagos, radicacion, PKCS#11 o firma criptografica.
+
+## Proximo Punto De Retoma
+
+Continuar con **Task 8 — Frontend Models + Services I3**.
+
+Antes de avanzar:
+
+1. Sincronizar: `git fetch origin && git pull --ff-only origin feat/sigcon-i3`.
+2. Leer `docs/plans/2026-05-02-sigcon-i3-implementation-plan.md`, Task 8.
+3. Leer `docs/specs/2026-05-01-sigcon-i3-spec.md` §5.1-§5.4 y criterios frontend I3.
+4. Crear `core/models/notificacion.model.ts`, `core/services/notificacion.service.ts`, `core/services/pdf-informe.service.ts`.
+5. Agregar campos PDF opcionales a `core/models/informe.model.ts`.
+6. Escribir specs Jasmine para servicios.
+7. Mantener fuera de scope SECOP, motor de pagos, firma criptografica avanzada y regeneracion de PDF desde UI.
+8. Validar Angular test/build y actualizar este log con commit, resultados y siguiente retoma.
 
 *Execution log creado 2026-05-02. Rama `feat/sigcon-i3` base commit `0658cef`.*
