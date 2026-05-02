@@ -1,8 +1,8 @@
 # ARRANQUE SIGCON
 
-> Estado: Incremento 1 completado.
+> Estado: Incremento 2 completado.
 > Metodologia: Spec-Driven Development (SDD), nivel Spec-Anchored.
-> Ultima actualizacion: 2026-05-01 — cierre I1.
+> Ultima actualizacion: 2026-05-02 — cierre I2.
 
 ## Orden De Documentos
 
@@ -11,9 +11,33 @@
 3. Versiones del stack: `docs/TECNOLOGIAS.md`
 4. PRD: `docs/specs/2026-04-30-sigcon-prd.md`
 5. Spec tecnica I1: `docs/specs/2026-04-30-sigcon-i1-spec.md`
-6. Specs futuras de referencia: `docs/specs/2026-05-01-sigcon-i2-spec.md` y `docs/specs/2026-05-01-sigcon-i3-spec.md`
-7. Plan I1: `docs/plans/2026-05-01-sigcon-i1-implementation-plan.md`
-8. Log de ejecucion: `docs/plans/2026-05-01-sigcon-i1-execution-log.md`
+6. Spec tecnica I2: `docs/specs/2026-05-01-sigcon-i2-spec.md`
+7. Specs futuras de referencia: `docs/specs/2026-05-01-sigcon-i3-spec.md`
+8. Plan I2: `docs/plans/2026-05-01-sigcon-i2-implementation-plan.md`
+9. Log de ejecucion I2: `docs/plans/2026-05-01-sigcon-i2-execution-log.md`
+
+## Alcance I2 (implementado)
+
+Incluye:
+- Creacion y gestion de informes de actividades (CONTRATISTA).
+- Adjuntar soportes URL y archivo por actividad.
+- Documentos adicionales del catalogo OPS.
+- Vista previa del informe (read-only, sin PDF real).
+- Correccion de informes devueltos con historial de observaciones.
+- Cola de revision para REVISOR: aprobar revision o devolver con observacion.
+- Cola de aprobacion para SUPERVISOR: aprobar o devolver con observacion.
+- Maquina de estados completa: `BORRADOR → ENVIADO → EN_REVISION → APROBADO` (y devoluciones).
+- Historial de informes en detalle de contrato (CONTRATISTA/REVISOR/SUPERVISOR/ADMIN).
+- Boton "Nuevo Informe" habilitado en detalle de contrato para contratos `EN_EJECUCION`.
+- Card "Informes" activa en dashboard ADMIN (enlaza a lista de contratos).
+- Sidebar con entradas "Revision" (REVISOR) y "Aprobacion" (SUPERVISOR).
+
+Excluye (I3):
+- Generacion real de PDF institucional.
+- Firmas incrustadas en PDF.
+- Notificaciones email e in-app.
+- Centro de notificaciones.
+- Integracion SECOP2.
 
 ## Alcance I1 (implementado)
 
@@ -21,14 +45,6 @@ Incluye:
 - Auth `local-dev` (HTTP Basic) y perfil de usuario con imagen de firma.
 - Administracion de contratos, obligaciones, usuarios y catalogo de documentos (ADMIN).
 - Vista de contratos y detalle para CONTRATISTA/SUPERVISOR/REVISOR.
-- Placeholder de historial de informes (deshabilitado, forward-compat I2).
-
-Excluye:
-- Creacion y gestion de informes (I2).
-- Flujo de revision/aprobacion (I2).
-- Generacion de PDF (I3).
-- Notificaciones email o in-app (I3).
-- Integracion SECOP2.
 
 ## Stack
 
@@ -67,7 +83,7 @@ GRANT CREATE SESSION, CREATE TABLE, CREATE SEQUENCE, CREATE TRIGGER, CREATE INDE
 GRANT UNLIMITED TABLESPACE TO SED_SIGCON;
 ```
 
-### 2. Ejecutar DDL I1
+### 2. Ejecutar DDL I1 + I2
 
 ```powershell
 # Conectar con sqlplus y ejecutar en orden:
@@ -75,6 +91,7 @@ sqlplus SED_SIGCON/<password>@localhost:1521/XEPDB1 @db/00_setup.sql
 sqlplus SED_SIGCON/<password>@localhost:1521/XEPDB1 @db/01_datos_prueba.sql
 ```
 
+`db/00_setup.sql` contiene DDL de I1 e I2 bajo cabeceras `-- ===== INCREMENTO 1 =====` y `-- ===== INCREMENTO 2 =====`.
 `db/01_datos_prueba.sql` solo debe ejecutarse en ambientes de desarrollo local.
 
 ## Configuracion Local-Dev: Backend
