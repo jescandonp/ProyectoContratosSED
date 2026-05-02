@@ -47,7 +47,7 @@
 | Task 7 - Frontend models + services | ✅ done | Codex | `aa1ea19` | Modelos TS + services Angular I2; 15 frontend specs pasan |
 | Task 8 - Informe form + detalle + preview | ✅ done | Codex | `f40a95b` | Form, detalle y preview I2; 23 frontend specs pasan |
 | Task 9 - Corregir informe devuelto | ✅ done | Claude | `4ac95c2` | CorregirInformeComponent con panel de observaciones; 30 frontend specs pasan |
-| Task 10 - Cola de revision (REVISOR) | ⏳ pending | — | — | — |
+| Task 10 - Cola de revision (REVISOR) | ✅ done | Claude | `f9c81d5` | ColaRevisionComponent + sidebar REVISOR/SUPERVISOR; 39 frontend specs pasan |
 | Task 11 - Cola de aprobacion (SUPERVISOR) | ⏳ pending | — | — | — |
 | Task 12 - Activar placeholders I1 | ⏳ pending | — | — | — |
 | Task 13 - Verificacion E2E + docs | ⏳ pending | — | — | — |
@@ -459,18 +459,60 @@ Resultado:
 - `npm run build`: build success; `corregir-informe-component` aparece como lazy chunk de 16.84 kB.
 - Auditoría de alcance frontend: 0 coincidencias para `/api/notificaciones`, `notificacion.service`, `PdfService`, `pdf.service`, `/api/pdf`.
 
+## Task 10 Implementado
+
+Commit funcional:
+
+- `f9c81d5 feat: add SIGCON I2 cola de revision`
+
+Archivos creados/modificados:
+
+- `features/revision/cola-revision.component.ts` — tabla paginada de informes `ENVIADO` para REVISOR.
+- `features/revision/cola-revision.component.spec.ts` — 7 specs cubriendo carga, estado vacío, navegación, aprobar revisión, bloqueo de devolución sin observación, devolución con observación y cierre de diálogo.
+- `app.routes.ts` — agrega ruta `revision/informes` con `roleGuard(['REVISOR'])`.
+- `app.routes.spec.ts` — actualiza superficie de rutas a 17 (Task 10).
+- `shared/components/sidebar/sidebar.component.ts` — agrega entradas "Revision" (REVISOR) y "Aprobacion" (SUPERVISOR) condicionales por rol.
+- `shared/components/sidebar/sidebar.component.spec.ts` — agrega 2 specs para REVISOR y SUPERVISOR.
+
+Implementado:
+
+- Tabla paginada con filtros por contrato, contratista y periodo (aplicados en cliente; el backend filtra por revisor autenticado).
+- Acción "Aprobar revisión" → `POST /api/informes/{id}/aprobar-revision` vía `ObservacionService`.
+- Acción "Devolver" abre diálogo modal con textarea de observación obligatoria → `POST /api/informes/{id}/devolver-revision`.
+- Bloqueo de envío si la observación está vacía con mensaje de error inline.
+- Paginación con botones Anterior/Siguiente usando `page.first` y `page.last`.
+- Sidebar actualizado: "Revision" visible solo para REVISOR, "Aprobacion" visible solo para SUPERVISOR (anticipando Task 11 sin duplicar trabajo).
+
+Decisiones:
+
+- El sidebar ya incluye la entrada "Aprobacion" para SUPERVISOR aunque Task 11 aún no existe; la ruta `aprobacion/informes` se agregará en Task 11. Esto evita tocar el sidebar dos veces.
+- Los filtros de contrato/contratista/periodo son campos de UI; el endpoint `GET /api/informes` ya filtra por revisor autenticado en backend. Los filtros de texto se pueden extender en I3 si se añaden query params al backend.
+
+Validaciones:
+
+```powershell
+cd sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run build
+Get-ChildItem -Path sigcon-angular\src\app -Recurse -File | Select-String -Pattern "/api/notificaciones|notificacion.service|PdfService|pdf.service|/api/pdf"
+```
+
+Resultado:
+
+- `npm test -- --watch=false`: 39 specs, 0 fallas (30 anteriores + 7 nuevas de `ColaRevisionComponent` + 2 nuevas de `SidebarComponent`).
+- `npm run build`: build success; `cola-revision-component` aparece como lazy chunk de 12.52 kB.
+- Auditoría de alcance frontend: 0 coincidencias.
+
 ## Proximo Punto De Retoma
 
-Continuar con **Task 10: Frontend — Cola de Revisión (REVISOR)**.
+Continuar con **Task 11: Frontend — Cola de Aprobación (SUPERVISOR)**.
 
 Antes de avanzar:
 
 1. Sincronizar: `git fetch origin && git pull --ff-only origin feat/sigcon-i2`.
-2. Leer `docs/plans/2026-05-01-sigcon-i2-implementation-plan.md`, Task 10.
-3. Leer `docs/specs/2026-05-01-sigcon-i2-spec.md` §5 (cola de revisión) y §6 (seguridad por rol).
-4. Crear `features/revision/cola-revision.component.ts` con tabla paginada de informes `ENVIADO` para el revisor autenticado.
-5. Agregar ruta `revision/informes` con `roleGuard(['REVISOR'])` en `app.routes.ts`.
-6. Actualizar `shared/components/sidebar.component.ts` para mostrar entrada "Revisión" solo para REVISOR.
-7. Acciones de fila: "Aprobar revisión" → `POST /api/informes/{id}/aprobar-revision`; "Devolver" abre diálogo con observación obligatoria → `POST /api/informes/{id}/devolver-revision`.
-8. Mantener fuera de scope `/api/notificaciones`, `notificacion.service`, `pdf.service`.
-9. Validar con tests/build Angular, auditoría de alcance, y actualizar este log con commit/siguiente retoma.
+2. Leer `docs/plans/2026-05-01-sigcon-i2-implementation-plan.md`, Task 11.
+3. Crear `features/aprobacion/cola-aprobacion.component.ts` siguiendo el mismo patrón de `ColaRevisionComponent`.
+4. Agregar ruta `aprobacion/informes` con `roleGuard(['SUPERVISOR'])` en `app.routes.ts` (el sidebar ya tiene la entrada).
+5. Acciones de fila: "Aprobar" → `POST /api/informes/{id}/aprobar`; "Devolver" abre diálogo con observación obligatoria → `POST /api/informes/{id}/devolver`.
+6. Mantener fuera de scope `/api/notificaciones`, `notificacion.service`, `pdf.service`.
+7. Validar con tests/build Angular, auditoría de alcance, y actualizar este log con commit/siguiente retoma.
