@@ -38,6 +38,25 @@ export const routes: Routes = [
         title: 'Detalle de contrato — SIGCON'
       },
       {
+        path: 'contratos/:contratoId/informes/nuevo',
+        canActivate: [roleGuard(['CONTRATISTA'])],
+        loadComponent: () =>
+          import('./features/informes/nuevo/informe-form.component').then((m) => m.InformeFormComponent),
+        title: 'Nuevo informe — SIGCON'
+      },
+      {
+        path: 'informes/:id',
+        loadComponent: () =>
+          import('./features/informes/detalle/informe-detalle.component').then((m) => m.InformeDetalleComponent),
+        title: 'Detalle de informe — SIGCON'
+      },
+      {
+        path: 'informes/:id/preview',
+        loadComponent: () =>
+          import('./features/informes/preview/informe-preview.component').then((m) => m.InformePreviewComponent),
+        title: 'Vista previa de informe — SIGCON'
+      },
+      {
         path: 'admin',
         canActivate: [roleGuard(['ADMIN'])],
         loadComponent: () =>
