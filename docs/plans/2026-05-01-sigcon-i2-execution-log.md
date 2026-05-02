@@ -48,7 +48,7 @@
 | Task 8 - Informe form + detalle + preview | ✅ done | Codex | `f40a95b` | Form, detalle y preview I2; 23 frontend specs pasan |
 | Task 9 - Corregir informe devuelto | ✅ done | Claude | `4ac95c2` | CorregirInformeComponent con panel de observaciones; 30 frontend specs pasan |
 | Task 10 - Cola de revision (REVISOR) | ✅ done | Claude | `f9c81d5` | ColaRevisionComponent + sidebar REVISOR/SUPERVISOR; 39 frontend specs pasan |
-| Task 11 - Cola de aprobacion (SUPERVISOR) | ⏳ pending | — | — | — |
+| Task 11 - Cola de aprobacion (SUPERVISOR) | ✅ done | Claude | `54b6fe7` | ColaAprobacionComponent + aprobarInforme en ObservacionService; 46 frontend specs pasan |
 | Task 12 - Activar placeholders I1 | ⏳ pending | — | — | — |
 | Task 13 - Verificacion E2E + docs | ⏳ pending | — | — | — |
 
@@ -503,16 +503,57 @@ Resultado:
 - `npm run build`: build success; `cola-revision-component` aparece como lazy chunk de 12.52 kB.
 - Auditoría de alcance frontend: 0 coincidencias.
 
+## Task 11 Implementado
+
+Commit funcional:
+
+- `54b6fe7 feat: add SIGCON I2 cola de aprobacion`
+
+Archivos creados/modificados:
+
+- `features/aprobacion/cola-aprobacion.component.ts` — tabla paginada de informes `EN_REVISION` para SUPERVISOR.
+- `features/aprobacion/cola-aprobacion.component.spec.ts` — 7 specs cubriendo carga, estado vacío, navegación, aprobar, bloqueo de devolución sin observación, devolución con observación y cierre de diálogo.
+- `core/services/observacion.service.ts` — agrega `aprobarInforme(informeId)` → `POST /api/informes/{id}/aprobar`.
+- `core/services/observacion.service.spec.ts` — agrega test del nuevo método `aprobarInforme`.
+- `app.routes.ts` — agrega ruta `aprobacion/informes` con `roleGuard(['SUPERVISOR'])`.
+- `app.routes.spec.ts` — actualiza superficie de rutas a 18 (Task 11).
+
+Implementado:
+
+- Mismo patrón que `ColaRevisionComponent` con las diferencias de rol y transición:
+  - Muestra informes `EN_REVISION` (el backend filtra por supervisor autenticado).
+  - Acción "Aprobar" → `ObservacionService.aprobarInforme()` → `POST /api/informes/{id}/aprobar`.
+  - Acción "Devolver" → diálogo con observación obligatoria → `ObservacionService.devolverInforme()` → `POST /api/informes/{id}/devolver`.
+- `ObservacionService.aprobarInforme` añadido como método nuevo (faltaba; `InformeService.aprobarInforme` existía pero no era el canal correcto para la cola de aprobación).
+
+Decisiones:
+
+- Se usó `ObservacionService` como punto de entrada para las transiciones de supervisor, igual que para revisor, para mantener coherencia: todas las transiciones con observación (o sin ella) pasan por `ObservacionService`.
+- El sidebar ya tenía la entrada "Aprobacion" desde Task 10; no se tocó.
+
+Validaciones:
+
+```powershell
+cd sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run build
+Get-ChildItem -Path sigcon-angular\src\app -Recurse -File | Select-String -Pattern "/api/notificaciones|notificacion.service|PdfService|pdf.service|/api/pdf"
+```
+
+Resultado:
+
+- `npm test -- --watch=false`: 46 specs, 0 fallas (39 anteriores + 7 nuevas de `ColaAprobacionComponent`).
+- `npm run build`: build success; `cola-aprobacion-component` aparece como lazy chunk de 12.07 kB.
+- Auditoría de alcance frontend: 0 coincidencias.
+
 ## Proximo Punto De Retoma
 
-Continuar con **Task 11: Frontend — Cola de Aprobación (SUPERVISOR)**.
+Continuar con **Task 12: Activar placeholders I1 (Detalle Contrato y Admin Dashboard)**.
 
 Antes de avanzar:
 
 1. Sincronizar: `git fetch origin && git pull --ff-only origin feat/sigcon-i2`.
-2. Leer `docs/plans/2026-05-01-sigcon-i2-implementation-plan.md`, Task 11.
-3. Crear `features/aprobacion/cola-aprobacion.component.ts` siguiendo el mismo patrón de `ColaRevisionComponent`.
-4. Agregar ruta `aprobacion/informes` con `roleGuard(['SUPERVISOR'])` en `app.routes.ts` (el sidebar ya tiene la entrada).
-5. Acciones de fila: "Aprobar" → `POST /api/informes/{id}/aprobar`; "Devolver" abre diálogo con observación obligatoria → `POST /api/informes/{id}/devolver`.
-6. Mantener fuera de scope `/api/notificaciones`, `notificacion.service`, `pdf.service`.
-7. Validar con tests/build Angular, auditoría de alcance, y actualizar este log con commit/siguiente retoma.
+2. Leer `docs/plans/2026-05-01-sigcon-i2-implementation-plan.md`, Task 12.
+3. En `features/contratos/detalle/contrato-detalle.component.ts`: reemplazar el botón "Nuevo Informe" deshabilitado con `routerLink` a `/contratos/{{c.id}}/informes/nuevo`; mostrar historial de informes del contrato con `GET /api/informes?contratoId=...`.
+4. En `features/admin/dashboard/admin-dashboard.component.ts`: decisión de scope — card "Informes" con "próximamente" (default del plan) o vista read-only. Documentar la decisión en el log.
+5. Validar con tests/build Angular, auditoría de alcance, y actualizar este log con commit/siguiente retoma.
