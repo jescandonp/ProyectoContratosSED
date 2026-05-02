@@ -43,7 +43,7 @@
 | Task 5 - Backend notificaciones + email | ✅ done | Claude | `8da44dd` | Services, DTOs, mapper y mail local-dev |
 | Task 6 - Integracion estado + auditorProvider | ✅ done | Claude | `de63e28` | PDF/eventos en `InformeEstadoService`; auditorProvider corregido |
 | Task 7 - Backend controllers + security + Swagger | ✅ done | Codex | `875ff45` | Controllers PDF/notificaciones; RBAC y endpoints ajustados a spec |
-| Task 8 - Frontend models + services | ⏳ pending | — | — | — |
+| Task 8 - Frontend models + services | ✅ done | Codex | `8608227` | Modelos/servicios Angular PDF + notificaciones; specs unitarios |
 | Task 9 - Frontend campana + centro notificaciones | ⏳ pending | — | — | — |
 | Task 10 - Frontend visor PDF + advertencia firma | ⏳ pending | — | — | — |
 | Task 11 - Verificacion E2E + docs | ⏳ pending | — | — | — |
@@ -173,19 +173,70 @@ Resultado:
 - Auditoria Java 8: 0 coincidencias.
 - Auditoria de alcance I3: 0 coincidencias para SECOP, motor de pagos, radicacion, PKCS#11 o firma criptografica.
 
+## Task 8 Implementado
+
+Commit funcional:
+
+- `8608227 feat: add SIGCON I3 frontend PDF and notification services`
+
+Archivos creados:
+
+- `sigcon-angular/src/app/core/models/notificacion.model.ts`
+- `sigcon-angular/src/app/core/services/notificacion.service.ts`
+- `sigcon-angular/src/app/core/services/notificacion.service.spec.ts`
+- `sigcon-angular/src/app/core/services/pdf-informe.service.ts`
+- `sigcon-angular/src/app/core/services/pdf-informe.service.spec.ts`
+
+Archivos modificados:
+
+- `sigcon-angular/src/app/core/models/informe.model.ts`
+
+Implementado:
+
+- Modelo `Notificacion` y union type `TipoEventoNotificacion` alineados con eventos I3.
+- Servicio `NotificacionService` con:
+  - `GET /api/notificaciones`
+  - `GET /api/notificaciones/no-leidas/count`
+  - `PATCH /api/notificaciones/{id}/leida`
+  - `PATCH /api/notificaciones/leidas`
+  - polling local `pollNoLeidas()`.
+- Servicio `PdfInformeService.descargar(idInforme)` contra `GET /api/informes/{id}/pdf` con `responseType: 'blob'`.
+- Campos PDF opcionales en `InformeResumen`: `pdfRuta`, `pdfGeneradoAt`, `pdfHash`.
+
+Validaciones:
+
+```powershell
+cd sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run build
+Get-ChildItem -Path sigcon-angular\src\app -Recurse -File | Select-String -Pattern "secop|motor-pagos|PKCS|CAdES|XAdES|regenerarPdf|regenerar-pdf"
+```
+
+Resultado:
+
+- TDD RED inicial: specs fallaron porque no existian modelo/servicios I3.
+- `ng test`: 57 specs, 0 fallas.
+- `ng build`: build success; salida en `sigcon-angular/dist/sigcon-angular`.
+- Auditoria de alcance frontend: 0 coincidencias para SECOP, motor de pagos, PKCS, CAdES, XAdES o regeneracion de PDF.
+
+Notas:
+
+- `sigcon-angular/angular.json` mantiene un cambio local no relacionado (`cli.analytics`) y no fue incluido en este commit.
+- `.claude/` permanece como carpeta local no versionada conocida.
+- Pendiente tecnico detectado para siguientes tasks/cierre: confirmar si los DTO backend de informe deben exponer `pdfRuta`, `pdfGeneradoAt` y `pdfHash` para que la UI pueda mostrar estado PDF sin llamada adicional.
+
 ## Proximo Punto De Retoma
 
-Continuar con **Task 8 — Frontend Models + Services I3**.
+Continuar con **Task 9 — Frontend Campana + Centro De Notificaciones**.
 
 Antes de avanzar:
 
 1. Sincronizar: `git fetch origin && git pull --ff-only origin feat/sigcon-i3`.
-2. Leer `docs/plans/2026-05-02-sigcon-i3-implementation-plan.md`, Task 8.
-3. Leer `docs/specs/2026-05-01-sigcon-i3-spec.md` §5.1-§5.4 y criterios frontend I3.
-4. Crear `core/models/notificacion.model.ts`, `core/services/notificacion.service.ts`, `core/services/pdf-informe.service.ts`.
-5. Agregar campos PDF opcionales a `core/models/informe.model.ts`.
-6. Escribir specs Jasmine para servicios.
-7. Mantener fuera de scope SECOP, motor de pagos, firma criptografica avanzada y regeneracion de PDF desde UI.
-8. Validar Angular test/build y actualizar este log con commit, resultados y siguiente retoma.
+2. Leer `docs/plans/2026-05-02-sigcon-i3-implementation-plan.md`, Task 9.
+3. Revisar layout actual/topbar antes de insertar la campana.
+4. Crear componentes de campana y centro de notificaciones usando `NotificacionService`.
+5. Agregar ruta `/notificaciones` segun plan, sin crear rutas futuras.
+6. Escribir specs Jasmine para badge, polling/contador, lista paginada y acciones de marcado como leida.
+7. Validar Angular test/build y actualizar este log con commit, resultados y siguiente retoma.
 
 *Execution log creado 2026-05-02. Rama `feat/sigcon-i3` base commit `0658cef`.*
