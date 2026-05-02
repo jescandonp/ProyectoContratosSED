@@ -24,6 +24,8 @@ import co.gov.bogota.sed.sigcon.application.service.PdfInformeService;
 import co.gov.bogota.sed.sigcon.application.service.ObligacionService;
 import co.gov.bogota.sed.sigcon.application.service.SoporteAdjuntoService;
 import co.gov.bogota.sed.sigcon.application.service.UsuarioService;
+import co.gov.bogota.sed.sigcon.domain.entity.Contrato;
+import co.gov.bogota.sed.sigcon.domain.entity.Informe;
 import co.gov.bogota.sed.sigcon.domain.enums.EstadoInforme;
 import co.gov.bogota.sed.sigcon.web.exception.ErrorCode;
 import co.gov.bogota.sed.sigcon.web.exception.SigconBusinessException;
@@ -41,6 +43,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 import java.util.Collections;
 
@@ -342,6 +345,22 @@ class InformeSecurityTest {
     }
 
     @Test
+    void contractorCannotDownloadPdfWhenInformeIsNotAssigned() throws Exception {
+        when(informeService.obtenerInformeAutorizado(10L))
+            .thenThrow(new SigconBusinessException(
+                ErrorCode.ACCESO_DENEGADO,
+                "Acceso denegado",
+                HttpStatus.FORBIDDEN
+            ));
+        when(informeService.findActiveInforme(10L)).thenReturn(informeEntity());
+        when(pdfInformeService.cargarPdf(any(Informe.class))).thenReturn(new ByteArrayInputStream(new byte[] { 1 }));
+
+        mockMvc.perform(get("/api/informes/10/pdf")
+                .with(httpBasic(CONTRACTOR_EMAIL, "contratista123")))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
     void notificationEndpointsUseI3ContractAndRequireAuthentication() throws Exception {
         when(notificacionService.listar(any(Pageable.class))).thenReturn(new PageImpl<>(Collections.emptyList()));
         when(notificacionService.contarNoLeidas()).thenReturn(new NotificacionesCountDto(2L));
@@ -389,6 +408,21 @@ class InformeSecurityTest {
         dto.setFechaFin(LocalDate.of(2026, 2, 28));
         dto.setEstado(EstadoInforme.BORRADOR);
         return dto;
+    }
+
+    private static Informe informeEntity() {
+        Contrato contrato = new Contrato();
+        contrato.setId(20L);
+        contrato.setNumero("OPS-2026-020");
+
+        Informe informe = new Informe();
+        informe.setId(10L);
+        informe.setNumero(1);
+        informe.setContrato(contrato);
+        informe.setEstado(EstadoInforme.APROBADO);
+        informe.setPdfRuta("pdfs/20/10/informe-1.pdf");
+        informe.setActivo(true);
+        return informe;
     }
 
     private static ActividadInformeDto actividadDto() {

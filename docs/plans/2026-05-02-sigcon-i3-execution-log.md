@@ -390,12 +390,65 @@ Notas:
 - `.claude/` permanece como carpeta local no versionada conocida.
 - Ruido no bloqueante: specs backend de resiliencia imprimen errores esperados en logs; specs frontend de perfil generan 404 de imagen simulada `/api/storage/firmas/ana.png`, sin fallo.
 
+## Hardening Post-Review I3 Implementado
+
+Motivo:
+
+- Revision integral detecto 3 hallazgos antes de considerar I3 cerrado para continuidad multi-modelo:
+  - PDF descargable por rol sin validar asignacion del contrato.
+  - Notificaciones in-app podian marcar rollback de la transaccion principal pese al `catch`.
+  - PDF institucional podia generarse con `Fecha de aprobacion: N/A`.
+
+Archivos modificados:
+
+- `sigcon-backend/src/main/java/co/gov/bogota/sed/sigcon/application/service/InformeService.java`
+- `sigcon-backend/src/main/java/co/gov/bogota/sed/sigcon/web/controller/InformePdfController.java`
+- `sigcon-backend/src/main/java/co/gov/bogota/sed/sigcon/application/service/NotificacionService.java`
+- `sigcon-backend/src/main/java/co/gov/bogota/sed/sigcon/application/service/InformeEstadoService.java`
+- `sigcon-backend/src/test/java/co/gov/bogota/sed/sigcon/web/InformeSecurityTest.java`
+- `sigcon-backend/src/test/java/co/gov/bogota/sed/sigcon/application/InformeEstadoServiceI3Test.java`
+- `sigcon-backend/src/test/java/co/gov/bogota/sed/sigcon/application/NotificacionServiceTest.java`
+
+Implementado:
+
+- `InformeService.obtenerInformeAutorizado(id)` reutiliza `CurrentUserService` + `assertCanViewInforme` para devolver la entidad solo si el usuario esta asignado o es admin.
+- `InformePdfController` descarga PDF usando `obtenerInformeAutorizado(id)` en vez de `findActiveInforme(id)`.
+- `NotificacionService.crear(...)` usa `@Transactional(propagation = REQUIRES_NEW)` para aislar fallos de notificacion del flujo de aprobacion.
+- `InformeEstadoService.aprobar(...)` asigna `fechaAprobacion` antes de `pdfInformeService.generarYPersistir(...)`, y la limpia si la generacion PDF falla antes de persistir el estado.
+
+Pruebas agregadas:
+
+- `InformeSecurityTest.contractorCannotDownloadPdfWhenInformeIsNotAssigned`
+- `InformeEstadoServiceI3Test.aprobarAsignaFechaAprobacionAntesDeGenerarPdf`
+- `NotificacionServiceTest.crearUsaTransaccionIndependienteParaNoMarcarRollbackDelFlujoPrincipal`
+
+Validaciones:
+
+```powershell
+cd sigcon-backend
+mvn test "-Dtest=InformeSecurityTest,InformeEstadoServiceI3Test,NotificacionServiceTest"
+mvn test
+mvn package -DskipTests
+
+cd sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false
+```
+
+Resultado:
+
+- Validacion backend acotada: 23 tests, 0 fallas, 0 errores.
+- `mvn test`: 97 tests, 0 fallas, 0 errores.
+- `mvn package -DskipTests`: build success; WAR generado en `sigcon-backend/target/sigcon-backend.war`.
+- WAR: `sigcon-backend.war`, 57,173,927 bytes, generado 2026-05-02 17:21.
+- `ng test`: 70 specs, 0 fallas.
+- Ruido no bloqueante esperado: logs de errores simulados en tests de resiliencia backend y 404 de imagen simulada `/api/storage/firmas/ana.png` en frontend.
+
 ## Proximo Punto De Retoma
 
-Incremento 3 queda cerrado metodologicamente. Antes de iniciar cualquier implementacion futura:
+Incremento 3 queda cerrado metodologicamente despues del hardening post-review. Antes de iniciar cualquier implementacion futura:
 
 1. Sincronizar: `git fetch origin && git pull --ff-only origin feat/sigcon-i3`.
-2. Revisar si el siguiente paso es hardening/review de I1-I3 o iniciar una spec nueva.
+2. Revisar si el siguiente paso es una revision final cruzada I1-I3 o iniciar una spec nueva.
 3. Si se inicia un incremento nuevo, crear primero spec/plan/execution log bajo `docs/specs` y `docs/plans`.
 4. Mantener fuera de SIGCON actual: firma criptografica avanzada, SECOP2, radicacion oficial externa y motor de pagos hasta que exista spec/plan aprobado.
 

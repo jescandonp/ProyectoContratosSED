@@ -114,6 +114,14 @@ public class InformeService {
         return buildDetalle(informe);
     }
 
+    @Transactional(readOnly = true)
+    public Informe obtenerInformeAutorizado(Long id) {
+        Informe informe = findActiveInforme(id);
+        Usuario usuario = currentUserService.getCurrentUser();
+        assertCanViewInforme(usuario, informe);
+        return informe;
+    }
+
     public InformeDetalleDto crearInforme(InformeRequest request) {
         Usuario usuario = currentUserService.getCurrentUser();
         if (usuario.getRol() != RolUsuario.CONTRATISTA) {

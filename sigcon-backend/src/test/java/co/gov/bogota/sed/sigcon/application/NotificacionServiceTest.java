@@ -23,7 +23,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -63,6 +66,18 @@ class NotificacionServiceTest {
         assertThat(result.isLeida()).isFalse();
         assertThat(result.getTitulo()).isNotEmpty();
         verify(notificacionRepository).save(any(Notificacion.class));
+    }
+
+    @Test
+    void crearUsaTransaccionIndependienteParaNoMarcarRollbackDelFlujoPrincipal() throws Exception {
+        Method crear = NotificacionService.class.getMethod(
+            "crear", Usuario.class, TipoEvento.class, Informe.class, String.class
+        );
+
+        Transactional transactional = crear.getAnnotation(Transactional.class);
+
+        assertThat(transactional).isNotNull();
+        assertThat(transactional.propagation()).isEqualTo(Propagation.REQUIRES_NEW);
     }
 
     @Test

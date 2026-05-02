@@ -43,7 +43,7 @@ public class InformePdfController {
     @PreAuthorize("hasAnyRole('CONTRATISTA', 'SUPERVISOR', 'ADMIN')")
     @Operation(summary = "Descarga el PDF institucional del informe aprobado")
     public ResponseEntity<InputStreamResource> descargarPdf(@PathVariable Long id) throws IOException {
-        Informe informe = informeService.findActiveInforme(id);
+        Informe informe = informeService.obtenerInformeAutorizado(id);
         InputStream inputStream = pdfInformeService.cargarPdf(informe);
         String filename = "informe-" + informe.getNumero() + ".pdf";
         return ResponseEntity.ok()

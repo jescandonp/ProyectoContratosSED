@@ -125,12 +125,19 @@ public class InformeEstadoService {
         assertState(informe, EstadoInforme.EN_REVISION);
         assertAssignedEmail(informe.getContrato().getSupervisor(), supervisorEmail);
 
+        LocalDateTime fechaAprobacion = LocalDateTime.now();
+        informe.setFechaAprobacion(fechaAprobacion);
+
         // Paso 2: generar PDF antes de cambiar estado (puede fallar)
-        pdfInformeService.generarYPersistir(informe);
+        try {
+            pdfInformeService.generarYPersistir(informe);
+        } catch (RuntimeException e) {
+            informe.setFechaAprobacion(null);
+            throw e;
+        }
 
         // Paso 3: persistir estado solo si PDF exitoso
         informe.setEstado(EstadoInforme.APROBADO);
-        informe.setFechaAprobacion(LocalDateTime.now());
         InformeDetalleDto detalle = saveAndBuildDetalle(informe);
 
         // Paso 4: efectos secundarios no criticos

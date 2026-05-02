@@ -29,6 +29,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -75,6 +76,22 @@ class InformeEstadoServiceI3Test {
         service.aprobar(50L, SUPERVISOR_EMAIL);
 
         verify(pdfInformeService).generarYPersistir(informe);
+        assertThat(informe.getEstado()).isEqualTo(EstadoInforme.APROBADO);
+    }
+
+    @Test
+    void aprobarAsignaFechaAprobacionAntesDeGenerarPdf() throws Exception {
+        Informe informe = informe(EstadoInforme.EN_REVISION);
+        when(informeService.findActiveInforme(50L)).thenReturn(informe);
+        when(informeRepository.save(any(Informe.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(informeService.buildDetalle(informe)).thenReturn(new InformeDetalleDto());
+        doAnswer(inv -> {
+            assertThat(informe.getFechaAprobacion()).isNotNull();
+            return null;
+        }).when(pdfInformeService).generarYPersistir(informe);
+
+        service.aprobar(50L, SUPERVISOR_EMAIL);
+
         assertThat(informe.getEstado()).isEqualTo(EstadoInforme.APROBADO);
     }
 

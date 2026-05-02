@@ -14,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -40,6 +41,7 @@ public class NotificacionService {
      * Crea una notificacion in-app para el destinatario indicado.
      * Llamado exclusivamente por EventoInformeService.
      */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Notificacion crear(Usuario destinatario, TipoEvento evento, Informe informe, String descripcion) {
         Notificacion n = new Notificacion();
         n.setUsuario(destinatario);
