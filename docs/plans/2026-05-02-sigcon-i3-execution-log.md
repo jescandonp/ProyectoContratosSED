@@ -46,7 +46,7 @@
 | Task 8 - Frontend models + services | ✅ done | Codex | `8608227` | Modelos/servicios Angular PDF + notificaciones; specs unitarios |
 | Task 9 - Frontend campana + centro notificaciones | ✅ done | Codex | `e6d4d4a` | Campana, overlay, centro paginado y ruta `/notificaciones` |
 | Task 10 - Frontend visor PDF + advertencia firma | ✅ done | Codex | `6a717a6` | Visor PDF, ruta, accion desde detalle, advertencia firma y DTO PDF backend |
-| Task 11 - Verificacion E2E + docs | ⏳ pending | — | — | — |
+| Task 11 - Verificacion E2E + docs | ✅ done | Codex | `2438de7`, `f2ed686` | Verificacion integral, seam auditorProvider, specs >=70 y ARRANQUE/README I3 |
 
 Leyenda: ⏳ pending, 🔄 in progress, ✅ done, ⏸ blocked, ⚠ deviation.
 
@@ -327,17 +327,76 @@ Resultado:
 - Auditoria backend/frontend de alcance I3: 0 coincidencias.
 - Ruido no bloqueante: un spec de perfil genera 404 de imagen simulada `/api/storage/firmas/ana.png`, sin fallo de test.
 
+## Task 11 Implementado
+
+Commits:
+
+- `2438de7 fix: close SIGCON I3 verification seams`
+- `f2ed686 docs: update SIGCON I3 startup guidance`
+
+Archivos modificados:
+
+- `sigcon-backend/src/main/java/co/gov/bogota/sed/sigcon/config/JpaAuditingConfig.java`
+- `sigcon-backend/src/test/java/co/gov/bogota/sed/sigcon/config/JpaAuditingConfigTest.java`
+- `sigcon-angular/src/app/features/informes/detalle/informe-detalle.component.spec.ts`
+- `sigcon-angular/src/app/features/informes/visor-pdf/visor-pdf.component.spec.ts`
+- `sigcon-angular/src/app/features/notificaciones/centro-notificaciones/centro-notificaciones.component.ts`
+- `sigcon-angular/src/app/features/notificaciones/centro-notificaciones/centro-notificaciones.component.spec.ts`
+- `sigcon-angular/src/app/features/notificaciones/notificaciones-menu/notificaciones-menu.component.ts`
+- `sigcon-angular/src/app/features/notificaciones/notificaciones-menu/notificaciones-menu.component.spec.ts`
+- `docs/ARRANQUE.md`
+- `README.md`
+
+Implementado:
+
+- Se agregaron 4 specs frontend reales para cumplir el umbral de cierre I3: 70 specs.
+- Se corrigio `JpaAuditingConfig` para eliminar fallback `"SYSTEM"` y usar `AUDITOR_NO_AUTENTICADO` en contextos anonimos/no autenticados.
+- Se agrego `JpaAuditingConfigTest` para fijar principal autenticado y fallback anonimo.
+- `docs/ARRANQUE.md` actualizado a estado I3 completado, alcance I3, DDL I1+I2+I3 y configuracion PDF/email.
+- `README.md` actualizado para apuntar a `feat/sigcon-i3` y execution log I3.
+
+Validaciones:
+
+```powershell
+cd sigcon-backend
+mvn test
+mvn package -DskipTests
+Get-ChildItem -Path sigcon-backend\target -Filter *.war | Select-Object Name,Length,LastWriteTime
+Get-ChildItem -Path sigcon-backend\src\main\java -Recurse -File | Select-String -Pattern '"SYSTEM"' | Where-Object { $_.Line -notmatch '//|/\*' }
+Get-ChildItem -Path sigcon-backend\src\main\java -Recurse -File | Select-String -Pattern "SECOP|MotorPagos|radicacion|PKcs11|firma.criptografica|PKCS|CAdES|XAdES"
+
+cd sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run build
+Get-ChildItem -Path sigcon-angular\src\app -Recurse -File | Select-String -Pattern "secop|motor-pagos|PKCS|CAdES|XAdES|regenerarPdf|regenerar-pdf"
+Select-String -Path sigcon-angular\src\app\app.routes.ts -Pattern "path:" | Format-Table
+```
+
+Resultado:
+
+- `mvn test`: 94 tests, 0 fallas, 0 errores.
+- `mvn package -DskipTests`: build success; WAR generado en `sigcon-backend/target/sigcon-backend.war`.
+- WAR: `sigcon-backend.war`, 57,173,672 bytes, generado 2026-05-02 17:01.
+- Auditoria `"SYSTEM"` runtime en backend main: 0 coincidencias.
+- Auditoria backend de alcance I3: 0 coincidencias para SECOP, motor de pagos, radicacion, PKCS, CAdES, XAdES.
+- `ng test`: 70 specs, 0 fallas.
+- `ng build`: build success; salida en `sigcon-angular/dist/sigcon-angular`.
+- Auditoria frontend de alcance I3: 0 coincidencias para SECOP, motor de pagos, PKCS, CAdES, XAdES o regeneracion de PDF.
+- Rutas frontend verificadas: 20 rutas incluyendo `/informes/:id/pdf` y `/notificaciones`; sin rutas futuras no planeadas.
+
+Notas:
+
+- `sigcon-angular/angular.json` mantiene un cambio local no relacionado (`cli.analytics`) y no fue incluido.
+- `.claude/` permanece como carpeta local no versionada conocida.
+- Ruido no bloqueante: specs backend de resiliencia imprimen errores esperados en logs; specs frontend de perfil generan 404 de imagen simulada `/api/storage/firmas/ana.png`, sin fallo.
+
 ## Proximo Punto De Retoma
 
-Continuar con **Task 11 — Verificacion E2E + Documentacion**.
-
-Antes de avanzar:
+Incremento 3 queda cerrado metodologicamente. Antes de iniciar cualquier implementacion futura:
 
 1. Sincronizar: `git fetch origin && git pull --ff-only origin feat/sigcon-i3`.
-2. Leer `docs/plans/2026-05-02-sigcon-i3-implementation-plan.md`, Task 11.
-3. Ejecutar verificacion integral backend/frontend.
-4. Revisar y actualizar `docs/ARRANQUE.md` y documentacion de estado si aplica.
-5. Confirmar que I3 no incluye firma criptografica avanzada, SECOP, radicacion oficial externa ni motor de pagos.
-6. Actualizar este log con resultados finales, commits y punto de retoma posterior a I3.
+2. Revisar si el siguiente paso es hardening/review de I1-I3 o iniciar una spec nueva.
+3. Si se inicia un incremento nuevo, crear primero spec/plan/execution log bajo `docs/specs` y `docs/plans`.
+4. Mantener fuera de SIGCON actual: firma criptografica avanzada, SECOP2, radicacion oficial externa y motor de pagos hasta que exista spec/plan aprobado.
 
 *Execution log creado 2026-05-02. Rama `feat/sigcon-i3` base commit `0658cef`.*
