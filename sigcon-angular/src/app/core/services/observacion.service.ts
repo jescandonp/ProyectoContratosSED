@@ -18,6 +18,10 @@ export class ObservacionService {
     return this.http.post<InformeDetalle>(`${this.informeBaseUrl}/${informeId}/devolver-revision`, request);
   }
 
+  aprobarInforme(informeId: number) {
+    return this.http.post<InformeDetalle>(`${this.informeBaseUrl}/${informeId}/aprobar`, null);
+  }
+
   devolverInforme(informeId: number, request: ObservacionRequest) {
     return this.http.post<InformeDetalle>(`${this.informeBaseUrl}/${informeId}/devolver`, request);
   }

@@ -45,6 +45,12 @@ describe('ObservacionService', () => {
     expect(returnFinalRequest.request.method).toBe('POST');
     expect(returnFinalRequest.request.body).toEqual(request);
     returnFinalRequest.flush(informeDetalle());
+
+    service.aprobarInforme(10).subscribe();
+    const approveRequest = http.expectOne('/api/informes/10/aprobar');
+    expect(approveRequest.request.method).toBe('POST');
+    expect(approveRequest.request.body).toBeNull();
+    approveRequest.flush(informeDetalle());
   });
 
   function informeDetalle() {
