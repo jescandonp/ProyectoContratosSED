@@ -296,23 +296,23 @@ git commit -m "feat: add SIGCON I2 informe DTOs, mappers, and CRUD services"
 - New: `application/service/InformeEstadoServiceTest.java`
 - Modify: relevant services to delegate transitions to `InformeEstadoService`
 
-- [ ] **Step 1: Implement transitions** as a single class with explicit guard methods:
+- [x] **Step 1: Implement transitions** as a single class with explicit guard methods:
 - `enviar(informeId, contratistaEmail)`: `BORRADOR|DEVUELTO → ENVIADO`, requires ≥1 actividad, sets `fechaUltimoEnvio`.
 - `aprobarRevision(informeId, revisorEmail, observacionOpcional)`: `ENVIADO → EN_REVISION`, only revisor asignado.
 - `devolverEnRevision(informeId, revisorEmail, observacion)`: `ENVIADO → DEVUELTO`, observacion obligatoria.
 - `aprobar(informeId, supervisorEmail)`: `EN_REVISION → APROBADO`, only supervisor asignado, sets `fechaAprobacion`. **Leaves `pdfRuta = null`** (I3 seam).
 - `devolverFinal(informeId, supervisorEmail, observacion)`: `EN_REVISION → DEVUELTO`, observacion obligatoria.
 
-- [ ] **Step 2: Error contract**:
+- [x] **Step 2: Error contract**:
 - Invalid transition → `TRANSICION_INVALIDA`.
 - Empty observacion when required → `OBSERVACION_REQUERIDA`.
 - Empty actividades on `enviar` → `ACTIVIDAD_REQUERIDA`.
 - Wrong role/principal → `ACCESO_DENEGADO` (reuse I1 code).
 - Aprobado is terminal → `INFORME_NO_EDITABLE`.
 
-- [ ] **Step 3: Tests** — Cover all 14 acceptance backend bullets in spec §7.
+- [x] **Step 3: Tests** — Cover all 14 acceptance backend bullets in spec §7.
 
-- [ ] **Step 4: Validate**
+- [x] **Step 4: Validate**
 
 ```powershell
 cd sigcon-backend
@@ -320,7 +320,7 @@ mvn test -Dtest=InformeEstadoServiceTest
 mvn test
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add sigcon-backend/src/main/java sigcon-backend/src/test/java
@@ -595,15 +595,15 @@ git commit -m "docs: complete SIGCON I2 — verify local flow and update docs"
 - [x] Actividades aceptan porcentaje 0–100; fuera de rango → `PORCENTAJE_INVALIDO`.
 - [x] Soportes URL aceptan `http://`/`https://`; otros → `SOPORTE_INVALIDO`.
 - [x] Documentos adicionales asociados al informe.
-- [ ] `BORRADOR → ENVIADO` con cero actividades → `ACTIVIDAD_REQUERIDA`.
-- [ ] Revisor lista solo `ENVIADO` asignados.
-- [ ] `ENVIADO → EN_REVISION` solo revisor asignado.
-- [ ] `ENVIADO → DEVUELTO` exige `OBSERVACION_REQUERIDA`.
-- [ ] Supervisor lista solo `EN_REVISION` supervisados.
-- [ ] `EN_REVISION → APROBADO` solo supervisor asignado; `pdfRuta` queda nulo.
-- [ ] `EN_REVISION → DEVUELTO` exige `OBSERVACION_REQUERIDA`.
+- [x] `BORRADOR → ENVIADO` con cero actividades → `ACTIVIDAD_REQUERIDA`.
+- [x] Revisor lista solo `ENVIADO` asignados.
+- [x] `ENVIADO → EN_REVISION` solo revisor asignado.
+- [x] `ENVIADO → DEVUELTO` exige `OBSERVACION_REQUERIDA`.
+- [x] Supervisor lista solo `EN_REVISION` supervisados.
+- [x] `EN_REVISION → APROBADO` solo supervisor asignado; `pdfRuta` queda nulo.
+- [x] `EN_REVISION → DEVUELTO` exige `OBSERVACION_REQUERIDA`.
 - [x] `APROBADO` es terminal (`INFORME_NO_EDITABLE`).
-- [ ] Transiciones invalidas → 409 `TRANSICION_INVALIDA`.
+- [x] Transiciones invalidas → 409 `TRANSICION_INVALIDA`.
 
 ### Frontend
 

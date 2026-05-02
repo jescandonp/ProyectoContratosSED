@@ -17,7 +17,7 @@
 
 - Rama activa: `feat/sigcon-i2`
 - Punto de partida: `feat/sigcon-i1` cerrada (`be26bbe docs: stamp Task 10 final commit SHA in execution log`).
-- Remoto: `origin/feat/sigcon-i2` (push pendiente al primer commit).
+- Remoto: `origin/feat/sigcon-i2`.
 - Cambio local no versionado conocido: `.claude/` queda fuera de Git por configuracion local.
 
 ## Ajustes Plan I2 Tras Cierre I1
@@ -42,7 +42,7 @@
 | Task 2 - Oracle schema I2 | ✅ done | Claude | `eece45a` | DDL apendizado bajo cabecera `===== INCREMENTO 2 =====`; seed con informe BORRADOR para OPS-2026-001 |
 | Task 3 - Backend domain (entities/enums/repos) | ✅ done | Claude | `4be9518` | 5 entidades + 3 enums + 5 repos + 5 tests pasan; mvn test 26/26 |
 | Task 4 - Backend DTOs/mappers/services CRUD | ✅ done | Codex | `07a02ce` | DTOs/mappers/services CRUD sin transiciones; 43 backend tests pasan |
-| Task 5 - State machine `InformeEstadoService` | ⏳ pending | — | — | — |
+| Task 5 - State machine `InformeEstadoService` | ✅ done | Codex | `2eebe24` | Transiciones I2 implementadas; 56 backend tests pasan |
 | Task 6 - Backend controllers/security/swagger | ⏳ pending | — | — | — |
 | Task 7 - Frontend models + services | ⏳ pending | — | — | — |
 | Task 8 - Informe form + detalle + preview | ⏳ pending | — | — | — |
@@ -77,9 +77,10 @@ Get-ChildItem -Path sigcon-angular\src\app -Recurse -File | Select-String -Patte
 ## Decisiones Y Notas Para El Siguiente Modelo
 
 - Task 4 extendio `DocumentStorageService` con `storeFile(String subdir, MultipartFile file)` y adapto `LocalDocumentStorageService`; `storeSignature(...)` queda intacto para I1.
+- Task 5 agrego `InformeEstadoService` como punto unico de transiciones. Incluye metodos canonicos `enviar`, `aprobarRevision`, `devolverRevision`, `aprobar`, `devolver`; tambien deja aliases `devolverEnRevision` y `devolverFinal` por coherencia con el texto del plan.
 - `db/00_setup.sql` se mantiene como archivo unico (PRD), pero las inserciones I2 van bajo cabecera explicita `-- ===== INCREMENTO 2 =====`.
 - En Task 12 hay una decision de scope: ADMIN read-only de informes vs. "proximamente". Default sugerido: "proximamente" para no inflar I2. Quien tome Task 12 debe documentar la decision aqui.
-- Codes de error nuevos (`INFORME_NO_ENCONTRADO`, `INFORME_NO_EDITABLE`, `TRANSICION_INVALIDA`, `OBSERVACION_REQUERIDA`, `ACTIVIDAD_REQUERIDA`, `PORCENTAJE_INVALIDO`, `SOPORTE_INVALIDO`, `DOCUMENTO_ADICIONAL_REQUERIDO`, `CONTRATO_NO_ACTIVO`) ya estan en `web.exception.ErrorCode`. `TRANSICION_INVALIDA` queda listo para uso en Task 5.
+- Codes de error nuevos (`INFORME_NO_ENCONTRADO`, `INFORME_NO_EDITABLE`, `TRANSICION_INVALIDA`, `OBSERVACION_REQUERIDA`, `ACTIVIDAD_REQUERIDA`, `PORCENTAJE_INVALIDO`, `SOPORTE_INVALIDO`, `DOCUMENTO_ADICIONAL_REQUERIDO`, `CONTRATO_NO_ACTIVO`) ya estan en `web.exception.ErrorCode`; Task 5 ya usa los contratos de transicion.
 - En `feat/sigcon-i1` aun no hay merge a `main`. I2 trabaja directamente sobre `feat/sigcon-i2` partiendo de `feat/sigcon-i1`. La estrategia de merge la decide el modelo que cierre I3 o el integrador final.
 - Inconsistencia documental detectada y corregida: `README.md` seguia indicando fase previa a implementacion I1; ahora remite al execution log activo y registra que I2 esta en `feat/sigcon-i2`.
 
@@ -181,18 +182,70 @@ Resultado:
 - Auditoria de alcance backend: solo aparecen referencias esperadas a `Informe.pdfRuta` heredadas de Task 3 como compatibilidad I3; no hay `PdfService`, notificaciones ni `/api/notificaciones`.
 - Auditoria de alcance frontend: 0 coincidencias.
 
+## Task 5 Implementado
+
+Commit funcional:
+
+- `2eebe24 feat: add SIGCON I2 informe state machine`
+
+Archivos creados/modificados:
+
+- `application/service/InformeEstadoService.java` — maquina de estados I2.
+- `test/java/.../application/InformeEstadoServiceTest.java` — 11 pruebas unitarias de transiciones y contratos de error.
+- `test/java/.../application/InformeServiceTest.java` — 2 pruebas adicionales para colas paginadas de revisor/supervisor.
+
+Transiciones implementadas:
+
+- `enviar(informeId, contratistaEmail)`: `BORRADOR|DEVUELTO -> ENVIADO`, exige al menos una actividad y setea `fechaUltimoEnvio`.
+- `aprobarRevision(informeId, revisorEmail, observacionOpcional)`: `ENVIADO -> EN_REVISION`, solo revisor asignado; registra observacion si se envia texto.
+- `devolverRevision(informeId, revisorEmail, observacion)`: `ENVIADO -> DEVUELTO`, solo revisor asignado y observacion obligatoria.
+- `aprobar(informeId, supervisorEmail)`: `EN_REVISION -> APROBADO`, solo supervisor asignado, setea `fechaAprobacion` y fuerza `pdfRuta = null`.
+- `devolver(informeId, supervisorEmail, observacion)`: `EN_REVISION -> DEVUELTO`, solo supervisor asignado y observacion obligatoria.
+- Aliases mantenidos por coherencia documental: `devolverEnRevision(...)` y `devolverFinal(...)`.
+
+Contratos de error cubiertos:
+
+- `ACTIVIDAD_REQUERIDA` para envio sin actividades.
+- `OBSERVACION_REQUERIDA` para devoluciones sin texto.
+- `ACCESO_DENEGADO` para principal no asignado al contrato.
+- `TRANSICION_INVALIDA` para estados fuente no permitidos.
+- `INFORME_NO_EDITABLE` para `APROBADO` terminal.
+
+Validaciones:
+
+```powershell
+cd sigcon-backend
+mvn test -Dtest=InformeEstadoServiceTest
+mvn test "-Dtest=InformeEstadoServiceTest,InformeServiceTest"
+mvn test -Dtest=*ServiceTest
+mvn test
+Get-ChildItem -Path sigcon-backend\src\main\java,sigcon-backend\src\test\java -Recurse -Include *.java | Select-String -Pattern "\bvar\b|List\.of|Map\.of|Set\.of|Optional\.orElseThrow\(\)"
+Get-ChildItem -Path sigcon-backend\src\main\java -Recurse -File | Select-String -Pattern "Pdf|notificacion|/api/notificaciones|MailService|SGCN_NOTIFICACIONES"
+Get-ChildItem -Path sigcon-angular\src\app -Recurse -File | Select-String -Pattern "/api/notificaciones|notificacion.service|pdf.service"
+```
+
+Resultado:
+
+- `InformeEstadoServiceTest`: 11 tests, 0 fallas, 0 errores.
+- `InformeEstadoServiceTest,InformeServiceTest`: 20 tests, 0 fallas, 0 errores.
+- `mvn test -Dtest=*ServiceTest`: 39 tests, 0 fallas, 0 errores.
+- `mvn test`: 56 tests, 0 fallas, 0 errores.
+- Compatibilidad Java 8: 0 coincidencias para `var`, `List.of`, `Map.of`, `Set.of`, `Optional.orElseThrow()`.
+- Auditoria de alcance backend: solo referencias esperadas a `Informe.pdfRuta` y `InformeEstadoService.setPdfRuta(null)`; no hay `PdfService`, notificaciones ni `/api/notificaciones`.
+- Auditoria de alcance frontend: 0 coincidencias.
+
 ## Proximo Punto De Retoma
 
-Continuar con **Task 5: State Machine — `InformeEstadoService`**.
+Continuar con **Task 6: Backend REST Controllers And Security**.
 
 Antes de avanzar:
 
 1. Sincronizar: `git fetch origin && git pull --ff-only origin feat/sigcon-i2`.
-2. Leer `docs/plans/2026-05-01-sigcon-i2-implementation-plan.md`, Task 5.
-3. Leer `docs/specs/2026-05-01-sigcon-i2-spec.md` §4.5, §4.7 y criterios backend §7.
-4. Implementar `InformeEstadoService` como unica clase de transiciones: `enviar`, `aprobarRevision`, `devolverRevision`, `aprobar`, `devolver`.
-5. Reusar `InformeService.findActiveInforme(...)`, `InformeService.assertCanViewInforme(...)`/pertenencia y `ObservacionService.registrar(...)`.
-6. No crear servicios PDF, notificaciones, endpoints `/api/notificaciones` ni generacion de archivos PDF; I2 deja `APROBADO` con `pdfRuta = null`.
-7. Cubrir todos los guard rails de estado: actividad requerida, observacion requerida, roles asignados, `APROBADO` terminal, transiciones invalidas con `TRANSICION_INVALIDA`.
-8. Validar con `mvn test -Dtest=InformeEstadoServiceTest`, `mvn test -Dtest=*ServiceTest` y `mvn test`.
-9. Registrar en este log archivos tocados, validaciones, commit y siguiente punto de retoma.
+2. Leer `docs/plans/2026-05-01-sigcon-i2-implementation-plan.md`, Task 6.
+3. Leer `docs/specs/2026-05-01-sigcon-i2-spec.md` §4.6, §4.7 y criterios frontend/backend relacionados con endpoints.
+4. Crear controllers I2: `InformeController`, `ActividadInformeController`, `SoporteAdjuntoController`, `DocumentoAdicionalInformeController`.
+5. Delegar transiciones exclusivamente a `InformeEstadoService`; no duplicar reglas de estado en controllers.
+6. Usar `Authentication.getName()` como email principal, coherente con I1/I2.
+7. Mantener endpoints bajo `/api/informes/**` y `/api/actividades/**`; no crear `/api/notificaciones`.
+8. Agregar MockMvc tests para seguridad/RBAC, endpoints no publicos y contrato de errores.
+9. Validar con `mvn test -Dtest=*ControllerTest,SigconBackendSecurityTest`, `mvn test`, auditoria de alcance, y actualizar este log con commit/siguiente retoma.
