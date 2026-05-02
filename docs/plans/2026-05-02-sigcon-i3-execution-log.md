@@ -44,7 +44,7 @@
 | Task 6 - Integracion estado + auditorProvider | ✅ done | Claude | `de63e28` | PDF/eventos en `InformeEstadoService`; auditorProvider corregido |
 | Task 7 - Backend controllers + security + Swagger | ✅ done | Codex | `875ff45` | Controllers PDF/notificaciones; RBAC y endpoints ajustados a spec |
 | Task 8 - Frontend models + services | ✅ done | Codex | `8608227` | Modelos/servicios Angular PDF + notificaciones; specs unitarios |
-| Task 9 - Frontend campana + centro notificaciones | ⏳ pending | — | — | — |
+| Task 9 - Frontend campana + centro notificaciones | ✅ done | Codex | `e6d4d4a` | Campana, overlay, centro paginado y ruta `/notificaciones` |
 | Task 10 - Frontend visor PDF + advertencia firma | ⏳ pending | — | — | — |
 | Task 11 - Verificacion E2E + docs | ⏳ pending | — | — | — |
 
@@ -225,18 +225,62 @@ Notas:
 - `.claude/` permanece como carpeta local no versionada conocida.
 - Pendiente tecnico detectado para siguientes tasks/cierre: confirmar si los DTO backend de informe deben exponer `pdfRuta`, `pdfGeneradoAt` y `pdfHash` para que la UI pueda mostrar estado PDF sin llamada adicional.
 
+## Task 9 Implementado
+
+Commit funcional:
+
+- `e6d4d4a feat: add SIGCON I3 notification center UI`
+
+Archivos creados:
+
+- `sigcon-angular/src/app/features/notificaciones/notificaciones-menu/notificaciones-menu.component.ts`
+- `sigcon-angular/src/app/features/notificaciones/notificaciones-menu/notificaciones-menu.component.spec.ts`
+- `sigcon-angular/src/app/features/notificaciones/centro-notificaciones/centro-notificaciones.component.ts`
+- `sigcon-angular/src/app/features/notificaciones/centro-notificaciones/centro-notificaciones.component.spec.ts`
+
+Archivos modificados:
+
+- `sigcon-angular/src/app/shared/components/topbar/topbar.component.ts`
+- `sigcon-angular/src/app/app.routes.ts`
+- `sigcon-angular/src/app/app.routes.spec.ts`
+
+Implementado:
+
+- Campana de notificaciones en topbar con icono `pi pi-bell`.
+- Badge oculto cuando `count = 0` y visible cuando hay no leidas.
+- Overlay con ultimas 5 notificaciones, enlace a centro y marcado como leida al hacer click.
+- Centro de notificaciones en `/notificaciones` con lista paginada, icono por tipo, fecha relativa y estado leida/no leida.
+- Click en fila marca como leida y navega a `/informes/{idInforme}` cuando aplica.
+- Accion "Marcar todas como leidas".
+
+Validaciones:
+
+```powershell
+cd sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run build
+Get-ChildItem -Path sigcon-angular\src\app -Recurse -File | Select-String -Pattern "secop|motor-pagos|PKCS|CAdES|XAdES|regenerarPdf|regenerar-pdf"
+```
+
+Resultado:
+
+- TDD RED inicial: specs fallaron porque no existian los componentes `NotificacionesMenuComponent` y `CentroNotificacionesComponent`.
+- `ng test`: 61 specs, 0 fallas.
+- `ng build`: build success; salida en `sigcon-angular/dist/sigcon-angular`.
+- Auditoria de alcance frontend: 0 coincidencias para SECOP, motor de pagos, PKCS, CAdES, XAdES o regeneracion de PDF.
+
 ## Proximo Punto De Retoma
 
-Continuar con **Task 9 — Frontend Campana + Centro De Notificaciones**.
+Continuar con **Task 10 — Frontend Visor PDF + Advertencia Firma En Perfil**.
 
 Antes de avanzar:
 
 1. Sincronizar: `git fetch origin && git pull --ff-only origin feat/sigcon-i3`.
-2. Leer `docs/plans/2026-05-02-sigcon-i3-implementation-plan.md`, Task 9.
-3. Revisar layout actual/topbar antes de insertar la campana.
-4. Crear componentes de campana y centro de notificaciones usando `NotificacionService`.
-5. Agregar ruta `/notificaciones` segun plan, sin crear rutas futuras.
-6. Escribir specs Jasmine para badge, polling/contador, lista paginada y acciones de marcado como leida.
+2. Leer `docs/plans/2026-05-02-sigcon-i3-implementation-plan.md`, Task 10.
+3. Revisar `features/informes/detalle`, `features/perfil` y `PdfInformeService`.
+4. Crear visor/descarga PDF sin regeneracion desde UI.
+5. Agregar advertencia de firma faltante en perfil solo para CONTRATISTA/SUPERVISOR segun datos disponibles.
+6. Escribir specs Jasmine para descarga PDF y advertencia de firma.
 7. Validar Angular test/build y actualizar este log con commit, resultados y siguiente retoma.
 
 *Execution log creado 2026-05-02. Rama `feat/sigcon-i3` base commit `0658cef`.*
