@@ -38,4 +38,26 @@ class DocumentStorageServiceTest {
             .isInstanceOfSatisfying(SigconBusinessException.class, exception ->
                 assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.FORMATO_IMAGEN_INVALIDO));
     }
+
+    @Test
+    void storesSupportFileUnderRequestedSubdir() throws Exception {
+        LocalDocumentStorageService service = new LocalDocumentStorageService(tempDir.toString());
+        MockMultipartFile file = new MockMultipartFile("file", "acta firmada.pdf", "application/pdf", new byte[] { 1 });
+
+        String reference = service.storeFile("soportes/10/50/7", file);
+
+        assertThat(reference).startsWith("soportes/10/50/7/");
+        assertThat(reference).endsWith("_acta_firmada.pdf");
+        assertThat(Files.exists(tempDir.resolve(reference.replace("/", java.io.File.separator)))).isTrue();
+    }
+
+    @Test
+    void rejectsSupportFilePathTraversal() {
+        LocalDocumentStorageService service = new LocalDocumentStorageService(tempDir.toString());
+        MockMultipartFile file = new MockMultipartFile("file", "soporte.pdf", "application/pdf", new byte[] { 1 });
+
+        assertThatThrownBy(() -> service.storeFile("../fuera", file))
+            .isInstanceOfSatisfying(SigconBusinessException.class, exception ->
+                assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.SOPORTE_INVALIDO));
+    }
 }

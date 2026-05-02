@@ -6,9 +6,14 @@ import co.gov.bogota.sed.sigcon.domain.enums.EstadoContrato;
 import co.gov.bogota.sed.sigcon.domain.enums.RolUsuario;
 import co.gov.bogota.sed.sigcon.domain.enums.TipoContrato;
 import co.gov.bogota.sed.sigcon.SigconBackendApplication;
+import co.gov.bogota.sed.sigcon.domain.repository.ActividadInformeRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.ContratoRepository;
+import co.gov.bogota.sed.sigcon.domain.repository.DocumentoAdicionalRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.DocumentoCatalogoRepository;
+import co.gov.bogota.sed.sigcon.domain.repository.InformeRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.ObligacionRepository;
+import co.gov.bogota.sed.sigcon.domain.repository.ObservacionRepository;
+import co.gov.bogota.sed.sigcon.domain.repository.SoporteAdjuntoRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.UsuarioRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,6 +77,22 @@ class SigconBackendSecurityTest {
 
     @MockBean
     private DocumentoCatalogoRepository documentoCatalogoRepository;
+
+    // I2 repositories — mocked to keep the I1 security context loadable without Oracle.
+    @MockBean
+    private InformeRepository informeRepository;
+
+    @MockBean
+    private ActividadInformeRepository actividadInformeRepository;
+
+    @MockBean
+    private SoporteAdjuntoRepository soporteAdjuntoRepository;
+
+    @MockBean
+    private DocumentoAdicionalRepository documentoAdicionalRepository;
+
+    @MockBean
+    private ObservacionRepository observacionRepository;
 
     @MockBean
     private JpaMetamodelMappingContext jpaMetamodelMappingContext;

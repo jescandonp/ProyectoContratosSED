@@ -37,6 +37,49 @@ public class LocalDocumentStorageService implements DocumentStorageService {
         return relativeReference;
     }
 
+    @Override
+    public String storeFile(String subdir, MultipartFile file) throws IOException {
+        if (file == null || file.isEmpty()) {
+            throw new SigconBusinessException(
+                ErrorCode.SOPORTE_INVALIDO,
+                "Archivo vacío o ausente",
+                HttpStatus.BAD_REQUEST
+            );
+        }
+        if (subdir == null || subdir.trim().isEmpty()) {
+            throw new SigconBusinessException(
+                ErrorCode.SOPORTE_INVALIDO,
+                "Subdirectorio requerido para almacenar el soporte",
+                HttpStatus.BAD_REQUEST
+            );
+        }
+        String safeName = sanitize(file.getOriginalFilename());
+        String relativeReference = subdir + "/" + UUID.randomUUID() + "_" + safeName;
+        Path target = rootPath.resolve(relativeReference).normalize();
+        if (!target.startsWith(rootPath)) {
+            throw new SigconBusinessException(
+                ErrorCode.SOPORTE_INVALIDO,
+                "Ruta de soporte inválida",
+                HttpStatus.BAD_REQUEST
+            );
+        }
+        Files.createDirectories(target.getParent());
+        file.transferTo(target.toFile());
+        return relativeReference;
+    }
+
+    private String sanitize(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return "soporte.bin";
+        }
+        String trimmed = name.trim();
+        int slash = Math.max(trimmed.lastIndexOf('/'), trimmed.lastIndexOf('\\'));
+        if (slash >= 0) {
+            trimmed = trimmed.substring(slash + 1);
+        }
+        return trimmed.replaceAll("[^A-Za-z0-9._-]", "_");
+    }
+
     private void validateSignature(MultipartFile file) {
         if (file == null || file.isEmpty() || file.getSize() > MAX_SIGNATURE_BYTES) {
             throw invalidFormat();
