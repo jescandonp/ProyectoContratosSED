@@ -46,7 +46,7 @@
 | Task 6 - Backend controllers/security/swagger | ✅ done | Codex | `9889e07` | Controllers REST I2 + RBAC + Swagger; 64 backend tests pasan |
 | Task 7 - Frontend models + services | ✅ done | Codex | `aa1ea19` | Modelos TS + services Angular I2; 15 frontend specs pasan |
 | Task 8 - Informe form + detalle + preview | ✅ done | Codex | `f40a95b` | Form, detalle y preview I2; 23 frontend specs pasan |
-| Task 9 - Corregir informe devuelto | ⏳ pending | — | — | — |
+| Task 9 - Corregir informe devuelto | ✅ done | Claude | `4ac95c2` | CorregirInformeComponent con panel de observaciones; 30 frontend specs pasan |
 | Task 10 - Cola de revision (REVISOR) | ⏳ pending | — | — | — |
 | Task 11 - Cola de aprobacion (SUPERVISOR) | ⏳ pending | — | — | — |
 | Task 12 - Activar placeholders I1 | ⏳ pending | — | — | — |
@@ -413,17 +413,64 @@ Resultado:
 - `npm run build`: build success; output en `sigcon-angular/dist/sigcon-angular`.
 - Auditoria de alcance frontend: 0 coincidencias para `/api/notificaciones`, `notificacion.service`, `PdfService`, `pdf.service`, `/api/pdf`.
 
+## Task 9 Implementado
+
+Commit funcional:
+
+- `4ac95c2 feat: add SIGCON I2 corregir informe screen`
+
+Archivos creados/modificados:
+
+- `features/informes/corregir/corregir-informe.component.ts` — componente de corrección de informe devuelto.
+- `features/informes/corregir/corregir-informe.component.spec.ts` — 6 specs cubriendo carga, observaciones, pre-llenado, bloqueo por estado inválido, guardado y reenvío.
+- `app.routes.ts` — agrega ruta `informes/:id/corregir` con `roleGuard(['CONTRATISTA'])`.
+- `app.routes.spec.ts` — actualiza superficie de rutas a 16 (Task 9).
+
+Implementado:
+
+- Formulario de corrección que reutiliza el layout de `InformeFormComponent` (actividades por obligación, soportes URL/archivo, documentos adicionales).
+- Pre-llenado del formulario con actividades y documentos existentes del informe cargado desde `GET /api/informes/{id}`.
+- Panel lateral con observaciones históricas (REVISOR/SUPERVISOR) destacadas visualmente con borde rojo.
+- Edición solo permitida cuando estado ∈ {`BORRADOR`, `DEVUELTO`}; estados inválidos muestran mensaje y bloquean el formulario.
+- Guardado de correcciones: `PUT /api/informes/{id}` + `PUT /api/informes/{id}/actividades/{actividadId}` para actividades existentes; `POST` para actividades nuevas.
+- Documentos adicionales nuevos (sin `idDocumento`) se agregan vía `POST /api/informes/{id}/documentos-adicionales`.
+- Confirmación explícita antes de reenviar (`POST /api/informes/{id}/enviar`).
+- Navegación de vuelta al detalle del informe al guardar o cancelar.
+
+Decisiones:
+
+- Se reutilizó el layout de `InformeFormComponent` sin duplicar lógica de validación; las diferencias clave son: pre-llenado desde informe existente, uso de `actualizar` en lugar de `crear` para actividades, y panel lateral de observaciones.
+- Los soportes existentes no se re-envían en la corrección (solo se agregan nuevos); eliminar soportes existentes queda fuera del scope de I2 (no hay endpoint de eliminación masiva en el flujo de corrección).
+- `SlicePipe` importado para formatear fechas de observaciones en el template.
+- La ruta `informes/:id/corregir` queda protegida para `CONTRATISTA`; el backend valida adicionalmente que el informe pertenezca al contratista autenticado.
+
+Validaciones:
+
+```powershell
+cd sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run build
+Get-ChildItem -Path sigcon-angular\src\app -Recurse -File | Select-String -Pattern "/api/notificaciones|notificacion.service|PdfService|pdf.service|/api/pdf"
+```
+
+Resultado:
+
+- `npm test -- --watch=false`: 30 specs, 0 fallas (23 anteriores + 6 nuevas de `CorregirInformeComponent` + 1 actualizada de `app.routes.spec`).
+- `npm run build`: build success; `corregir-informe-component` aparece como lazy chunk de 16.84 kB.
+- Auditoría de alcance frontend: 0 coincidencias para `/api/notificaciones`, `notificacion.service`, `PdfService`, `pdf.service`, `/api/pdf`.
+
 ## Proximo Punto De Retoma
 
-Continuar con **Task 9: Frontend — Corregir Informe Devuelto (Contratista)**.
+Continuar con **Task 10: Frontend — Cola de Revisión (REVISOR)**.
 
 Antes de avanzar:
 
 1. Sincronizar: `git fetch origin && git pull --ff-only origin feat/sigcon-i2`.
-2. Leer `docs/plans/2026-05-01-sigcon-i2-implementation-plan.md`, Task 9.
-3. Leer `docs/specs/2026-05-01-sigcon-i2-spec.md` §5.5 y criterios de correccion de informes devueltos.
-4. Reutilizar el layout y helpers de `features/informes/nuevo/informe-form.component.ts` cuando sea razonable, sin duplicar reglas innecesarias.
-5. Agregar ruta `informes/:id/corregir` y permitir edicion solo cuando estado sea `BORRADOR` o `DEVUELTO`.
-6. Mostrar observaciones historicas en panel lateral y mantener soportes/documentos dentro de la superficie REST existente.
-7. Mantener fuera de scope `/api/notificaciones`, `notificacion.service`, `pdf.service` y generacion real de PDF.
-8. Validar con tests/build Angular, auditoria de alcance, y actualizar este log con commit/siguiente retoma.
+2. Leer `docs/plans/2026-05-01-sigcon-i2-implementation-plan.md`, Task 10.
+3. Leer `docs/specs/2026-05-01-sigcon-i2-spec.md` §5 (cola de revisión) y §6 (seguridad por rol).
+4. Crear `features/revision/cola-revision.component.ts` con tabla paginada de informes `ENVIADO` para el revisor autenticado.
+5. Agregar ruta `revision/informes` con `roleGuard(['REVISOR'])` en `app.routes.ts`.
+6. Actualizar `shared/components/sidebar.component.ts` para mostrar entrada "Revisión" solo para REVISOR.
+7. Acciones de fila: "Aprobar revisión" → `POST /api/informes/{id}/aprobar-revision`; "Devolver" abre diálogo con observación obligatoria → `POST /api/informes/{id}/devolver-revision`.
+8. Mantener fuera de scope `/api/notificaciones`, `notificacion.service`, `pdf.service`.
+9. Validar con tests/build Angular, auditoría de alcance, y actualizar este log con commit/siguiente retoma.
