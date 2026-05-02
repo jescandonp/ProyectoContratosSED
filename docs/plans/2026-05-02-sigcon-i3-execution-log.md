@@ -36,7 +36,7 @@
 
 | Task | Estado | Modelo | Commit | Notas |
 |---|---|---|---|---|
-| Task 1 - Plan + execution log baseline | ✅ done | Claude | `(ver abajo)` | Plan promovido desde outline; ajustes I2 incorporados; decisiones tecnicas resueltas |
+| Task 1 - Plan + execution log baseline | ✅ done | Claude | `7c9ff1c` | Plan promovido desde outline; ajustes I2 incorporados; decisiones tecnicas resueltas |
 | Task 2 - Oracle DDL I3 | ⏳ pending | — | — | — |
 | Task 3 - Backend domain I3 | ⏳ pending | — | — | — |
 | Task 4 - Backend PDF service | ⏳ pending | — | — | — |
