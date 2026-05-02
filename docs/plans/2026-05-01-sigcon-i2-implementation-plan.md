@@ -375,13 +375,13 @@ git commit -m "feat: add SIGCON I2 informe REST controllers and security"
 - New: TS models under `core/models/` for informe, actividad-informe, soporte-adjunto, documento-adicional, observacion
 - New: TS services under `core/services/`
 
-- [ ] **Step 1: Create models** matching backend DTOs (1-to-1 fields, camelCase, nullable typing matches Java optionality).
+- [x] **Step 1: Create models** matching backend DTOs (1-to-1 fields, camelCase, nullable typing matches Java optionality).
 
-- [ ] **Step 2: Create services** using `HttpClient`, signal-based state where useful, and relative URLs `/api/...` (proxy handles dev forwarding).
+- [x] **Step 2: Create services** using `HttpClient`, signal-based state where useful, and relative URLs `/api/...` (proxy handles dev forwarding).
 
-- [ ] **Step 3: Unit tests** following `contrato.service.spec.ts` pattern — mock `HttpClient` and verify URLs/methods.
+- [x] **Step 3: Unit tests** following `contrato.service.spec.ts` pattern — mock `HttpClient` and verify URLs/methods.
 
-- [ ] **Step 4: Validate**
+- [x] **Step 4: Validate**
 
 ```powershell
 cd sigcon-angular
@@ -389,7 +389,7 @@ node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=f
 node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run build
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add sigcon-angular/src/app/core

@@ -44,7 +44,7 @@
 | Task 4 - Backend DTOs/mappers/services CRUD | ✅ done | Codex | `07a02ce` | DTOs/mappers/services CRUD sin transiciones; 43 backend tests pasan |
 | Task 5 - State machine `InformeEstadoService` | ✅ done | Codex | `2eebe24` | Transiciones I2 implementadas; 56 backend tests pasan |
 | Task 6 - Backend controllers/security/swagger | ✅ done | Codex | `9889e07` | Controllers REST I2 + RBAC + Swagger; 64 backend tests pasan |
-| Task 7 - Frontend models + services | ⏳ pending | — | — | — |
+| Task 7 - Frontend models + services | ✅ done | Codex | `aa1ea19` | Modelos TS + services Angular I2; 15 frontend specs pasan |
 | Task 8 - Informe form + detalle + preview | ⏳ pending | — | — | — |
 | Task 9 - Corregir informe devuelto | ⏳ pending | — | — | — |
 | Task 10 - Cola de revision (REVISOR) | ⏳ pending | — | — | — |
@@ -80,6 +80,7 @@ Get-ChildItem -Path sigcon-angular\src\app -Recurse -File | Select-String -Patte
 - Task 5 agrego `InformeEstadoService` como punto unico de transiciones. Incluye metodos canonicos `enviar`, `aprobarRevision`, `devolverRevision`, `aprobar`, `devolver`; tambien deja aliases `devolverEnRevision` y `devolverFinal` por coherencia con el texto del plan.
 - Task 6 agrego la superficie REST I2: `InformeController`, `ActividadInformeController`, `SoporteAdjuntoController`, `DocumentoAdicionalInformeController`. Las transiciones siguen delegadas exclusivamente a `InformeEstadoService`; los controllers no duplican reglas de estado.
 - `DevSecurityConfig` y `SecurityConfig` exponen `/api/informes/**` y `/api/actividades/**` con reglas por rol y `@PreAuthorize`. `/api/notificaciones` sigue inexistente.
+- Task 7 agrego models/services Angular en `core/` para consumir la superficie REST I2. `ObservacionService` no crea endpoint propio: encapsula las transiciones que llevan `ObservacionRequest` sobre `/api/informes/{id}/aprobar-revision`, `/devolver-revision` y `/devolver`.
 - `db/00_setup.sql` se mantiene como archivo unico (PRD), pero las inserciones I2 van bajo cabecera explicita `-- ===== INCREMENTO 2 =====`.
 - En Task 12 hay una decision de scope: ADMIN read-only de informes vs. "proximamente". Default sugerido: "proximamente" para no inflar I2. Quien tome Task 12 debe documentar la decision aqui.
 - Codes de error nuevos (`INFORME_NO_ENCONTRADO`, `INFORME_NO_EDITABLE`, `TRANSICION_INVALIDA`, `OBSERVACION_REQUERIDA`, `ACTIVIDAD_REQUERIDA`, `PORCENTAJE_INVALIDO`, `SOPORTE_INVALIDO`, `DOCUMENTO_ADICIONAL_REQUERIDO`, `CONTRATO_NO_ACTIVO`) ya estan en `web.exception.ErrorCode`; Task 5 ya usa los contratos de transicion.
@@ -305,17 +306,74 @@ Resultado:
 - Auditoria de alcance backend: solo referencias esperadas a `Informe.pdfRuta`/`InformeEstadoService.setPdfRuta(null)`; no hay `PdfService`, `notificacion.service` ni `/api/notificaciones`.
 - Auditoria de alcance frontend: no aplica en Task 6; no se tocaron archivos Angular.
 
+## Task 7 Implementado
+
+Commit funcional:
+
+- `aa1ea19 feat: add SIGCON I2 frontend core models and services`
+
+Archivos creados:
+
+- Models:
+  - `core/models/informe.model.ts`
+  - `core/models/actividad-informe.model.ts`
+  - `core/models/soporte-adjunto.model.ts`
+  - `core/models/documento-adicional.model.ts`
+  - `core/models/observacion.model.ts`
+- Services:
+  - `core/services/informe.service.ts`
+  - `core/services/actividad-informe.service.ts`
+  - `core/services/soporte-adjunto.service.ts`
+  - `core/services/documento-adicional.service.ts`
+  - `core/services/observacion.service.ts`
+- Tests:
+  - `core/services/informe.service.spec.ts`
+  - `core/services/actividad-informe.service.spec.ts`
+  - `core/services/soporte-adjunto.service.spec.ts`
+  - `core/services/documento-adicional.service.spec.ts`
+  - `core/services/observacion.service.spec.ts`
+
+Servicios implementados:
+
+- `InformeService`: `listarInformes`, `obtenerDetalle`, `crearInforme`, `actualizarInforme`, `enviarInforme`, `aprobarInforme`.
+- `ActividadInformeService`: `crear`, `actualizar`, `eliminar`.
+- `SoporteAdjuntoService`: `agregarUrl`, `agregarArchivo`, `eliminar`.
+- `DocumentoAdicionalService`: `agregar`, `eliminar`.
+- `ObservacionService`: transiciones con observacion (`aprobarRevision`, `devolverRevision`, `devolverInforme`) usando endpoints de `InformeController`.
+
+Decisiones:
+
+- No se agrego estado con signals en estos services porque son clientes HTTP delgados, igual que I1 (`ContratoService`, `UsuarioService`). El estado de pantalla se deja para las features de Task 8+.
+- `ObservacionService` no introduce `/api/observaciones`; respeta Task 6 y usa los endpoints existentes bajo `/api/informes/**`.
+- Los modelos aceptan `null` donde los mappers backend pueden omitir valores por relaciones nulas: contrato, usuarios, fechas de envio/aprobacion y campos derivados de catalogo/obligacion.
+
+Validaciones:
+
+```powershell
+cd sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run build
+Get-ChildItem -Path sigcon-angular\src\app -Recurse -File | Select-String -Pattern "/api/notificaciones|notificacion.service|pdf.service"
+```
+
+Resultado:
+
+- TDD RED inicial: Angular fallo por imports faltantes de los nuevos models/services, como se esperaba.
+- `npm test -- --watch=false`: 15 specs, 0 fallas.
+- `npm run build`: build success; output en `sigcon-angular/dist/sigcon-angular`.
+- Auditoria de alcance frontend: 0 coincidencias para `/api/notificaciones`, `notificacion.service`, `pdf.service`.
+
 ## Proximo Punto De Retoma
 
-Continuar con **Task 7: Frontend Models And Services**.
+Continuar con **Task 8: Frontend — Informe Form And Detalle (Contratista)**.
 
 Antes de avanzar:
 
 1. Sincronizar: `git fetch origin && git pull --ff-only origin feat/sigcon-i2`.
-2. Leer `docs/plans/2026-05-01-sigcon-i2-implementation-plan.md`, Task 7.
-3. Leer `docs/specs/2026-05-01-sigcon-i2-spec.md` §5 y los DTOs backend bajo `application/dto/informe`.
-4. Crear modelos TypeScript 1:1 para informes, actividades, soportes, documentos adicionales y observaciones.
-5. Crear services Angular bajo `sigcon-angular/src/app/core/services` usando URLs relativas `/api/informes/**` y `/api/actividades/**`.
-6. Seguir el workaround npm vigente: `node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" ...`.
-7. Mantener fuera de scope `/api/notificaciones`, `notificacion.service` y `pdf.service`.
-8. Validar con tests/build Angular y auditoria de alcance; actualizar este log con commit/siguiente retoma.
+2. Leer `docs/plans/2026-05-01-sigcon-i2-implementation-plan.md`, Task 8.
+3. Leer `docs/specs/2026-05-01-sigcon-i2-spec.md` §5.1-§5.4 y criterios frontend.
+4. Revisar prototipo `Prototipo/nuevo_informe_de_actividades_optimizado_sigcon/` (`screen.png` y `code.html`) y componentes I1 existentes para mantener patron visual.
+5. Implementar rutas `contratos/:contratoId/informes/nuevo`, `informes/:id`, `informes/:id/preview` y componentes de form/detalle/preview.
+6. Consumir `ContratoService`, `DocumentoCatalogoService`, `InformeService`, `ActividadInformeService`, `SoporteAdjuntoService`, `DocumentoAdicionalService`.
+7. Mantener fuera de scope `/api/notificaciones`, `notificacion.service`, `pdf.service` y generacion real de PDF.
+8. Validar con tests/build Angular, auditoria de alcance, y actualizar este log con commit/siguiente retoma.
