@@ -15,6 +15,9 @@ export interface InformeResumen {
   estado: EstadoInforme;
   fechaUltimoEnvio: string | null;
   fechaAprobacion: string | null;
+  pdfRuta?: string | null;
+  pdfGeneradoAt?: string | null;
+  pdfHash?: string | null;
 }
 
 export interface InformeDetalle extends InformeResumen {
