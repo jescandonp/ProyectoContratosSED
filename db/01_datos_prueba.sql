@@ -51,4 +51,32 @@ INSERT INTO SGCN_DOCS_CATALOGO (NOMBRE, DESCRIPCION, OBLIGATORIO, TIPO_CONTRATO)
 INSERT INTO SGCN_DOCS_CATALOGO (NOMBRE, DESCRIPCION, OBLIGATORIO, TIPO_CONTRATO) VALUES
   ('Constancia de afiliación EPS', 'Certificado vigente de afiliación a EPS', 0, 'OPS');
 
+-- ============================================================
+-- ===== INCREMENTO 2 =====
+-- SIGCON I2 — Datos de prueba para informes
+-- Spec: docs/specs/2026-05-01-sigcon-i2-spec.md §3.6
+-- ============================================================
+
+-- INFORME BORRADOR para OPS-2026-001 (ID_CONTRATO = 1, contratista juan.escandon)
+INSERT INTO SGCN_INFORMES (ID_CONTRATO, NUMERO, FECHA_INICIO, FECHA_FIN, ESTADO)
+VALUES (1, 1, DATE '2026-01-15', DATE '2026-02-15', 'BORRADOR');
+
+-- ACTIVIDADES — una por obligación (IDs 1, 2, 3 corresponden a OPS-2026-001)
+INSERT INTO SGCN_ACTIVIDADES (ID_INFORME, ID_OBLIGACION, DESCRIPCION, PORCENTAJE)
+VALUES (1, 1, 'Avance inicial en organización del archivo del primer trimestre', 25);
+INSERT INTO SGCN_ACTIVIDADES (ID_INFORME, ID_OBLIGACION, DESCRIPCION, PORCENTAJE)
+VALUES (1, 2, 'Radicación de comunicaciones internas durante enero', 30);
+INSERT INTO SGCN_ACTIVIDADES (ID_INFORME, ID_OBLIGACION, DESCRIPCION, PORCENTAJE)
+VALUES (1, 3, 'Asistencia a dos reuniones de seguimiento con actas', 20);
+
+-- SOPORTES — un URL y un ARCHIVO de ejemplo asociados a la primera actividad
+INSERT INTO SGCN_SOPORTES (ID_ACTIVIDAD, TIPO, NOMBRE, REFERENCIA)
+VALUES (1, 'URL', 'Drive — fotos del archivo', 'https://drive.example.org/sigcon/archivo-enero');
+INSERT INTO SGCN_SOPORTES (ID_ACTIVIDAD, TIPO, NOMBRE, REFERENCIA)
+VALUES (1, 'ARCHIVO', 'Inventario_archivo_enero.pdf', 'soportes/2026/01/informe-1/inventario.pdf');
+
+-- DOCUMENTO ADICIONAL — referencia a "Planilla de aportes seguridad social" (catalogo ID 1, obligatorio)
+INSERT INTO SGCN_DOCS_ADICIONALES (ID_INFORME, ID_CATALOGO, REFERENCIA)
+VALUES (1, 1, 'soportes/2026/01/informe-1/planilla-aportes.pdf');
+
 COMMIT;
