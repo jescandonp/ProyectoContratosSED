@@ -64,6 +64,14 @@ public class Informe {
     @Column(name = "PDF_RUTA", length = 500)
     private String pdfRuta;
 
+    /** I3: timestamp when the PDF was generated. Null until first approval. */
+    @Column(name = "PDF_GENERADO_AT")
+    private LocalDateTime pdfGeneradoAt;
+
+    /** I3: SHA-256 hash of the generated PDF bytes for immutability verification. */
+    @Column(name = "PDF_HASH", length = 128)
+    private String pdfHash;
+
     @Column(name = "ACTIVO", nullable = false)
     private Boolean activo = true;
 
@@ -156,6 +164,22 @@ public class Informe {
 
     public void setPdfRuta(String pdfRuta) {
         this.pdfRuta = pdfRuta;
+    }
+
+    public LocalDateTime getPdfGeneradoAt() {
+        return pdfGeneradoAt;
+    }
+
+    public void setPdfGeneradoAt(LocalDateTime pdfGeneradoAt) {
+        this.pdfGeneradoAt = pdfGeneradoAt;
+    }
+
+    public String getPdfHash() {
+        return pdfHash;
+    }
+
+    public void setPdfHash(String pdfHash) {
+        this.pdfHash = pdfHash;
     }
 
     public Boolean getActivo() {
