@@ -12,9 +12,12 @@ import co.gov.bogota.sed.sigcon.application.service.CurrentUserService;
 import co.gov.bogota.sed.sigcon.application.service.DocumentoAdicionalInformeService;
 import co.gov.bogota.sed.sigcon.application.service.DocumentoCatalogoService;
 import co.gov.bogota.sed.sigcon.application.service.DocumentStorageService;
+import co.gov.bogota.sed.sigcon.application.service.EmailNotificacionService;
+import co.gov.bogota.sed.sigcon.application.service.EventoInformeService;
 import co.gov.bogota.sed.sigcon.application.service.InformeEstadoService;
 import co.gov.bogota.sed.sigcon.application.service.InformePdfTemplateService;
 import co.gov.bogota.sed.sigcon.application.service.InformeService;
+import co.gov.bogota.sed.sigcon.application.service.NotificacionService;
 import co.gov.bogota.sed.sigcon.application.service.ObservacionService;
 import co.gov.bogota.sed.sigcon.application.service.PdfInformeService;
 import co.gov.bogota.sed.sigcon.application.service.ObligacionService;
@@ -118,6 +121,15 @@ class InformeSecurityTest {
 
     @MockBean
     private InformePdfTemplateService informePdfTemplateService;
+
+    @MockBean
+    private NotificacionService notificacionService;
+
+    @MockBean
+    private EventoInformeService eventoInformeService;
+
+    @MockBean
+    private EmailNotificacionService emailNotificacionService;
 
     @MockBean
     private JpaMetamodelMappingContext jpaMetamodelMappingContext;

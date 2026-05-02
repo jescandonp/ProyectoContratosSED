@@ -41,6 +41,17 @@ spring:
       ddl-auto: validate
     show-sql: false
 
+sigcon:
+  storage:
+    signatures-path: ${java.io.tmpdir}/sigcon
+  mail:
+    enabled: false
+    from: sigcon@educacionbogota.edu.co
+    graph-api-base-url: https://graph.microsoft.com/v1.0
+    tenant-id: ${AZURE_TENANT_ID:placeholder}
+    client-id: ${MAIL_CLIENT_ID:placeholder}
+    client-secret: ${MAIL_CLIENT_SECRET:placeholder}
+
 ---
 spring:
   config:
