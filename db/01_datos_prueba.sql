@@ -80,3 +80,16 @@ INSERT INTO SGCN_DOCS_ADICIONALES (ID_INFORME, ID_CATALOGO, REFERENCIA)
 VALUES (1, 1, 'soportes/2026/01/informe-1/planilla-aportes.pdf');
 
 COMMIT;
+
+-- ===== INCREMENTO 3 -- Seed notificaciones de prueba ==========
+-- Notificacion 1: para el contratista (ID 2) — informe enviado (simulado)
+INSERT INTO SGCN_NOTIFICACIONES (ID_USUARIO, TITULO, DESCRIPCION, TIPO_EVENTO, ID_INFORME, LEIDA)
+VALUES (2, 'Informe enviado para revisión',
+    'El informe No. 1 del contrato OPS-2026-001 (Ene 2026) ha sido enviado y está pendiente de revisión.',
+    'INFORME_ENVIADO', 1, 0);
+
+-- Notificacion 2: para el revisor (ID 3) — informe enviado
+INSERT INTO SGCN_NOTIFICACIONES (ID_USUARIO, TITULO, DESCRIPCION, TIPO_EVENTO, ID_INFORME, LEIDA)
+VALUES (3, 'Informe enviado para revisión',
+    'El informe No. 1 del contratista Juan Escandón (contrato OPS-2026-001, Ene 2026) está disponible para revisión.',
+    'INFORME_ENVIADO', 1, 0);
