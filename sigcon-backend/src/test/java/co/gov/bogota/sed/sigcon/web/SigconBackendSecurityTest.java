@@ -203,7 +203,12 @@ class SigconBackendSecurityTest {
     }
 
     @Test
-    void informesAreExposedInI2ButFutureNotificationsAreNot() throws Exception {
+    void informesAndNotificationsAreExposedThroughCurrentIncrementSecurityRules() throws Exception {
+        Usuario admin = usuario(1L, ADMIN_EMAIL, RolUsuario.ADMIN);
+        when(usuarioRepository.findByEmailAndActivoTrue(ADMIN_EMAIL)).thenReturn(Optional.of(admin));
+        when(notificacionRepository.findByUsuarioOrderByFechaDesc(eq(admin), any(Pageable.class)))
+            .thenReturn(new PageImpl<>(Collections.emptyList()));
+
         mockMvc.perform(get("/api/informes")
                 .with(httpBasic(ADMIN_EMAIL, "admin123")))
             .andExpect(status().isForbidden())
@@ -211,7 +216,7 @@ class SigconBackendSecurityTest {
 
         mockMvc.perform(get("/api/notificaciones")
                 .with(httpBasic(ADMIN_EMAIL, "admin123")))
-            .andExpect(status().isNotFound());
+            .andExpect(status().isOk());
     }
 
     private static Usuario usuario(Long id, String email, RolUsuario rol) {

@@ -6,6 +6,7 @@ import co.gov.bogota.sed.sigcon.application.dto.informe.DocumentoAdicionalDto;
 import co.gov.bogota.sed.sigcon.application.dto.informe.InformeDetalleDto;
 import co.gov.bogota.sed.sigcon.application.dto.informe.InformeResumenDto;
 import co.gov.bogota.sed.sigcon.application.dto.informe.SoporteAdjuntoDto;
+import co.gov.bogota.sed.sigcon.application.dto.notificacion.NotificacionesCountDto;
 import co.gov.bogota.sed.sigcon.application.service.ActividadInformeService;
 import co.gov.bogota.sed.sigcon.application.service.ContratoService;
 import co.gov.bogota.sed.sigcon.application.service.CurrentUserService;
@@ -51,6 +52,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -330,6 +332,39 @@ class InformeSecurityTest {
                 .with(httpBasic(ADMIN_EMAIL, "admin123")))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(10));
+    }
+
+    @Test
+    void reviewerCannotDownloadApprovedPdf() throws Exception {
+        mockMvc.perform(get("/api/informes/10/pdf")
+                .with(httpBasic(REVIEWER_EMAIL, "revisor123")))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void notificationEndpointsUseI3ContractAndRequireAuthentication() throws Exception {
+        when(notificacionService.listar(any(Pageable.class))).thenReturn(new PageImpl<>(Collections.emptyList()));
+        when(notificacionService.contarNoLeidas()).thenReturn(new NotificacionesCountDto(2L));
+
+        mockMvc.perform(get("/api/notificaciones"))
+            .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(get("/api/notificaciones")
+                .with(httpBasic(CONTRACTOR_EMAIL, "contratista123")))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/notificaciones/no-leidas/count")
+                .with(httpBasic(CONTRACTOR_EMAIL, "contratista123")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.count").value(2));
+
+        mockMvc.perform(patch("/api/notificaciones/1/leida")
+                .with(httpBasic(CONTRACTOR_EMAIL, "contratista123")))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(patch("/api/notificaciones/leidas")
+                .with(httpBasic(CONTRACTOR_EMAIL, "contratista123")))
+            .andExpect(status().isNoContent());
     }
 
     private static InformeResumenDto informeResumen() {

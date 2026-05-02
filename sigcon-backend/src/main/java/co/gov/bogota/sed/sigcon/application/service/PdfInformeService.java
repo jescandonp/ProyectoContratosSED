@@ -140,7 +140,7 @@ public class PdfInformeService {
         }
     }
 
-    /** Compatible con Java 8 (InputStream.readAllBytes() es Java 9+). */
+    /** Compatible con Java 8. */
     private static byte[] readAllBytes(InputStream is) throws java.io.IOException {
         java.io.ByteArrayOutputStream buffer = new java.io.ByteArrayOutputStream();
         byte[] chunk = new byte[4096];

@@ -88,10 +88,16 @@ public class EmailNotificacionService {
 
         Map<String, Object> message = new HashMap<>();
         message.put("subject", asunto);
-        message.put("body", Map.of("contentType", "HTML", "content", cuerpo));
-        message.put("toRecipients", Collections.singletonList(
-            Map.of("emailAddress", Map.of("address", destinatarioEmail))
-        ));
+        Map<String, Object> body = new HashMap<>();
+        body.put("contentType", "HTML");
+        body.put("content", cuerpo);
+        message.put("body", body);
+
+        Map<String, Object> emailAddress = new HashMap<>();
+        emailAddress.put("address", destinatarioEmail);
+        Map<String, Object> recipient = new HashMap<>();
+        recipient.put("emailAddress", emailAddress);
+        message.put("toRecipients", Collections.singletonList(recipient));
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("message", message);
