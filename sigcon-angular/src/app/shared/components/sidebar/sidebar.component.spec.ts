@@ -37,4 +37,24 @@ describe('SidebarComponent', () => {
 
     expect(fixture.nativeElement.textContent).toContain('Administracion');
   });
+
+  it('shows Revision entry only for REVISOR', () => {
+    devSession.loginAs('REVISOR');
+    fixture = TestBed.createComponent(SidebarComponent);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Revision');
+    expect(fixture.nativeElement.textContent).not.toContain('Aprobacion');
+    expect(fixture.nativeElement.textContent).not.toContain('Administracion');
+  });
+
+  it('shows Aprobacion entry only for SUPERVISOR', () => {
+    devSession.loginAs('SUPERVISOR');
+    fixture = TestBed.createComponent(SidebarComponent);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Aprobacion');
+    expect(fixture.nativeElement.textContent).not.toContain('Revision');
+    expect(fixture.nativeElement.textContent).not.toContain('Administracion');
+  });
 });

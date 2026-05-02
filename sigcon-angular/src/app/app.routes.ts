@@ -64,6 +64,13 @@ export const routes: Routes = [
         title: 'Corregir informe — SIGCON'
       },
       {
+        path: 'revision/informes',
+        canActivate: [roleGuard(['REVISOR'])],
+        loadComponent: () =>
+          import('./features/revision/cola-revision.component').then((m) => m.ColaRevisionComponent),
+        title: 'Cola de revisión — SIGCON'
+      },
+      {
         path: 'admin',
         canActivate: [roleGuard(['ADMIN'])],
         loadComponent: () =>

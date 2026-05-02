@@ -42,6 +42,14 @@ export class SidebarComponent {
       { label: 'Contratos', icon: 'pi-briefcase', route: '/contratos' }
     ];
 
+    if (this.authService.hasRole('REVISOR')) {
+      items.push({ label: 'Revision', icon: 'pi-check-circle', route: '/revision/informes' });
+    }
+
+    if (this.authService.hasRole('SUPERVISOR')) {
+      items.push({ label: 'Aprobacion', icon: 'pi-verified', route: '/aprobacion/informes' });
+    }
+
     if (this.authService.hasRole('ADMIN')) {
       items.push(
         { label: 'Administracion', icon: 'pi-th-large', route: '/admin' },

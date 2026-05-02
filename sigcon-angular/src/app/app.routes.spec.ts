@@ -1,10 +1,10 @@
 import { routes } from './app.routes';
 
 describe('app routes', () => {
-  it('exposes the exact I2 route surface implemented through Task 9', () => {
+  it('exposes the exact I2 route surface implemented through Task 10', () => {
     const paths = collectUrlPaths(routes);
 
-    expect(paths.length).toBe(16);
+    expect(paths.length).toBe(17);
     expect(paths).toEqual(jasmine.arrayWithExactContents([
       '',
       'login',
@@ -15,6 +15,7 @@ describe('app routes', () => {
       'informes/:id',
       'informes/:id/preview',
       'informes/:id/corregir',
+      'revision/informes',
       'admin',
       'admin/contratos',
       'admin/contratos/nuevo',
