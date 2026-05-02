@@ -47,6 +47,18 @@ describe('VisorPdfComponent', () => {
     expect(fixture.nativeElement.querySelector('[data-testid="download-pdf"]')).toBeNull();
   });
 
+  it('downloads the available PDF blob', () => {
+    spyOn(URL, 'createObjectURL').and.returnValue('blob:sigcon-pdf');
+    spyOn(URL, 'revokeObjectURL');
+
+    fixture = TestBed.createComponent(VisorPdfComponent);
+    fixture.detectChanges();
+    fixture.nativeElement.querySelector('[data-testid="download-pdf"]').click();
+
+    expect(URL.createObjectURL).toHaveBeenCalled();
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:sigcon-pdf');
+  });
+
   function sampleInformeDetalle(): InformeDetalle {
     return {
       id: 501,

@@ -20,6 +20,7 @@ import { NotificacionService } from '../../../core/services/notificacion.service
           class="rounded border border-[var(--color-outline-variant)] px-md py-sm text-sm font-semibold text-[var(--color-on-surface)] disabled:opacity-50"
           type="button"
           [disabled]="procesandoTodas()"
+          data-testid="marcar-todas"
           (click)="marcarTodas()"
         >
           Marcar todas como leidas

@@ -60,6 +60,17 @@ describe('InformeDetalleComponent', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/informes', 501, 'pdf']);
   });
 
+  it('hides PDF action for approved reports without generated PDF', () => {
+    component.informe.set({
+      ...sampleInformeDetalle(),
+      estado: 'APROBADO',
+      pdfRuta: null
+    });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="ver-pdf"]')).toBeNull();
+  });
+
   it('confirms before sending a draft report', () => {
     spyOn(window, 'confirm').and.returnValue(true);
 

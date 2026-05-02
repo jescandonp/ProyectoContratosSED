@@ -38,6 +38,7 @@ import { NotificacionService } from '../../../core/services/notificacion.service
             <button
               class="text-xs font-semibold text-[var(--color-primary)] hover:underline"
               type="button"
+              data-testid="ver-todas-notificaciones"
               (click)="verTodas()"
             >
               Ver todas

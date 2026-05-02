@@ -59,6 +59,17 @@ describe('NotificacionesMenuComponent', () => {
     expect(service.marcarLeida).toHaveBeenCalledWith(10);
   });
 
+  it('navigates to the notification center from the menu', () => {
+    fixture = TestBed.createComponent(NotificacionesMenuComponent);
+    fixture.detectChanges();
+
+    fixture.nativeElement.querySelector('[data-testid="notificaciones-toggle"]').click();
+    fixture.detectChanges();
+    fixture.nativeElement.querySelector('[data-testid="ver-todas-notificaciones"]').click();
+
+    expect(router.navigate).toHaveBeenCalledWith(['/notificaciones']);
+  });
+
   function notificacion(): Notificacion {
     return {
       id: 10,

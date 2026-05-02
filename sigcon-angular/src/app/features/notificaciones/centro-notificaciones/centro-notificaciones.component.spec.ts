@@ -42,6 +42,15 @@ describe('CentroNotificacionesComponent', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/informes', 50]);
   });
 
+  it('marks all notifications as read', () => {
+    fixture = TestBed.createComponent(CentroNotificacionesComponent);
+    fixture.detectChanges();
+
+    fixture.nativeElement.querySelector('[data-testid="marcar-todas"]').click();
+
+    expect(service.marcarTodasLeidas).toHaveBeenCalled();
+  });
+
   function notificacion(): Notificacion {
     return {
       id: 10,
