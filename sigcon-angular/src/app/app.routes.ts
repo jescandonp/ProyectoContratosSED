@@ -64,6 +64,11 @@ export const routes: Routes = [
         title: 'Corregir informe — SIGCON'
       },
       {
+        path: 'informes/:id/pdf',
+        loadComponent: () => import('./features/informes/visor-pdf/visor-pdf.component').then((m) => m.VisorPdfComponent),
+        title: 'PDF de informe — SIGCON'
+      },
+      {
         path: 'notificaciones',
         loadComponent: () =>
           import('./features/notificaciones/centro-notificaciones/centro-notificaciones.component').then(

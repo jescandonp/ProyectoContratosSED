@@ -47,6 +47,7 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -184,6 +185,27 @@ class InformeServiceTest {
 
         assertThat(page.getContent()).hasSize(1);
         verify(informeRepository).findByContratoSupervisorAndEstadoAndActivoTrue(eq(supervisor), eq(EstadoInforme.EN_REVISION), any());
+    }
+
+    @Test
+    void detalleExposesPdfMetadataForApprovedInforme() {
+        Usuario contratista = usuario(2L, RolUsuario.CONTRATISTA);
+        Informe informe = informe(50L, contrato(10L, contratista, EstadoContrato.EN_EJECUCION), EstadoInforme.APROBADO);
+        LocalDateTime pdfGeneradoAt = LocalDateTime.of(2026, 5, 2, 16, 0);
+        informe.setPdfRuta("pdfs/10/50/informe-1.pdf");
+        informe.setPdfGeneradoAt(pdfGeneradoAt);
+        informe.setPdfHash("abc123");
+        when(informeRepository.findByIdAndActivoTrue(50L)).thenReturn(Optional.of(informe));
+        when(currentUserService.getCurrentUser()).thenReturn(contratista);
+        when(actividadRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.emptyList());
+        when(documentoAdicionalRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.emptyList());
+        when(observacionRepository.findByInformeIdAndActivoTrueOrderByFechaAsc(50L)).thenReturn(Collections.emptyList());
+
+        InformeDetalleDto detalle = informeService.obtenerDetalle(50L);
+
+        assertThat(detalle.getPdfRuta()).isEqualTo("pdfs/10/50/informe-1.pdf");
+        assertThat(detalle.getPdfGeneradoAt()).isEqualTo(pdfGeneradoAt);
+        assertThat(detalle.getPdfHash()).isEqualTo("abc123");
     }
 
     @Test

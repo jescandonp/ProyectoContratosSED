@@ -15,6 +15,9 @@ public class InformeResumenDto {
     private EstadoInforme estado;
     private LocalDateTime fechaUltimoEnvio;
     private LocalDateTime fechaAprobacion;
+    private String pdfRuta;
+    private LocalDateTime pdfGeneradoAt;
+    private String pdfHash;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -34,4 +37,10 @@ public class InformeResumenDto {
     public void setFechaUltimoEnvio(LocalDateTime fechaUltimoEnvio) { this.fechaUltimoEnvio = fechaUltimoEnvio; }
     public LocalDateTime getFechaAprobacion() { return fechaAprobacion; }
     public void setFechaAprobacion(LocalDateTime fechaAprobacion) { this.fechaAprobacion = fechaAprobacion; }
+    public String getPdfRuta() { return pdfRuta; }
+    public void setPdfRuta(String pdfRuta) { this.pdfRuta = pdfRuta; }
+    public LocalDateTime getPdfGeneradoAt() { return pdfGeneradoAt; }
+    public void setPdfGeneradoAt(LocalDateTime pdfGeneradoAt) { this.pdfGeneradoAt = pdfGeneradoAt; }
+    public String getPdfHash() { return pdfHash; }
+    public void setPdfHash(String pdfHash) { this.pdfHash = pdfHash; }
 }

@@ -83,5 +83,8 @@ public class InformeMapper {
         dto.setEstado(informe.getEstado());
         dto.setFechaUltimoEnvio(informe.getFechaUltimoEnvio());
         dto.setFechaAprobacion(informe.getFechaAprobacion());
+        dto.setPdfRuta(informe.getPdfRuta());
+        dto.setPdfGeneradoAt(informe.getPdfGeneradoAt());
+        dto.setPdfHash(informe.getPdfHash());
     }
 }

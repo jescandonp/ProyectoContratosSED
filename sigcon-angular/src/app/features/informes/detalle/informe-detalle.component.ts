@@ -36,6 +36,16 @@ import { StatusChipComponent } from '../../../shared/components/status-chip/stat
               <button class="rounded border border-[var(--color-outline-variant)] px-md py-sm text-sm font-semibold text-[var(--color-on-surface)]" type="button" (click)="verPreview()">
                 Vista previa
               </button>
+              @if (i.estado === 'APROBADO' && i.pdfRuta) {
+                <button
+                  class="rounded bg-[var(--color-primary)] px-md py-sm text-sm font-semibold text-white"
+                  type="button"
+                  data-testid="ver-pdf"
+                  (click)="verPdf()"
+                >
+                  Ver / Descargar PDF
+                </button>
+              }
               @if (puedeEnviar(i.estado)) {
                 <button class="rounded bg-[var(--color-primary)] px-md py-sm text-sm font-semibold text-white" type="button" (click)="enviar()">
                   Enviar
@@ -172,6 +182,11 @@ export class InformeDetalleComponent implements OnInit {
   verPreview() {
     const informe = this.informe();
     if (informe) void this.router.navigate(['/informes', informe.id, 'preview']);
+  }
+
+  verPdf() {
+    const informe = this.informe();
+    if (informe) void this.router.navigate(['/informes', informe.id, 'pdf']);
   }
 
   enviar() {

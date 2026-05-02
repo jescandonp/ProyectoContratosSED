@@ -47,6 +47,19 @@ describe('InformeDetalleComponent', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/informes', 501, 'preview']);
   });
 
+  it('shows PDF action for approved reports with generated PDF', () => {
+    component.informe.set({
+      ...sampleInformeDetalle(),
+      estado: 'APROBADO',
+      pdfRuta: 'pdfs/10/501/informe-7.pdf'
+    });
+    fixture.detectChanges();
+
+    fixture.nativeElement.querySelector('[data-testid="ver-pdf"]').click();
+
+    expect(router.navigate).toHaveBeenCalledWith(['/informes', 501, 'pdf']);
+  });
+
   it('confirms before sending a draft report', () => {
     spyOn(window, 'confirm').and.returnValue(true);
 

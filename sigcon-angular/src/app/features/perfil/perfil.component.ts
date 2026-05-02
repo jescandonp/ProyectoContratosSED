@@ -84,6 +84,14 @@ import { UsuarioService } from '../../core/services/usuario.service';
             <p class="mb-md text-sm text-[var(--color-on-surface-variant)]">
               La firma se usará para firmar los informes aprobados. Sube una imagen JPG o PNG (máx. 2 MB).
             </p>
+            @if (!u.firmaImagen) {
+              <div
+                class="mb-md rounded border border-[var(--color-secondary-container)] bg-[var(--color-secondary-fixed)] px-sm py-xs text-sm font-semibold text-[var(--color-secondary)]"
+                data-testid="firma-warning"
+              >
+                Para que los informes puedan ser aprobados, debe cargar su firma digital.
+              </div>
+            }
           }
 
           <!-- Current signature preview -->
@@ -96,12 +104,6 @@ import { UsuarioService } from '../../core/services/usuario.service';
                 alt="Firma actual"
               />
             </div>
-          } @else {
-            @if (u.rol === 'CONTRATISTA' || u.rol === 'SUPERVISOR') {
-              <div class="mb-md rounded border border-[var(--color-secondary-container)] bg-[var(--color-secondary-fixed)] px-sm py-xs text-sm text-[var(--color-secondary)]">
-                ⚠ No tienes firma registrada. Es requerida para aprobar informes.
-              </div>
-            }
           }
 
           <!-- Upload -->
