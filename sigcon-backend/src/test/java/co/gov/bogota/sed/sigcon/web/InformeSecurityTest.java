@@ -13,8 +13,10 @@ import co.gov.bogota.sed.sigcon.application.service.DocumentoAdicionalInformeSer
 import co.gov.bogota.sed.sigcon.application.service.DocumentoCatalogoService;
 import co.gov.bogota.sed.sigcon.application.service.DocumentStorageService;
 import co.gov.bogota.sed.sigcon.application.service.InformeEstadoService;
+import co.gov.bogota.sed.sigcon.application.service.InformePdfTemplateService;
 import co.gov.bogota.sed.sigcon.application.service.InformeService;
 import co.gov.bogota.sed.sigcon.application.service.ObservacionService;
+import co.gov.bogota.sed.sigcon.application.service.PdfInformeService;
 import co.gov.bogota.sed.sigcon.application.service.ObligacionService;
 import co.gov.bogota.sed.sigcon.application.service.SoporteAdjuntoService;
 import co.gov.bogota.sed.sigcon.application.service.UsuarioService;
@@ -109,6 +111,13 @@ class InformeSecurityTest {
 
     @MockBean
     private DocumentoAdicionalInformeService documentoAdicionalInformeService;
+
+    // I3 beans — mocked to keep MockMvc context loadable without Oracle
+    @MockBean
+    private PdfInformeService pdfInformeService;
+
+    @MockBean
+    private InformePdfTemplateService informePdfTemplateService;
 
     @MockBean
     private JpaMetamodelMappingContext jpaMetamodelMappingContext;

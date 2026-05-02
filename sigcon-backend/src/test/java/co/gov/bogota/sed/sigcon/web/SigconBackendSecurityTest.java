@@ -11,6 +11,7 @@ import co.gov.bogota.sed.sigcon.domain.repository.ContratoRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.DocumentoAdicionalRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.DocumentoCatalogoRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.InformeRepository;
+import co.gov.bogota.sed.sigcon.domain.repository.NotificacionRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.ObligacionRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.ObservacionRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.SoporteAdjuntoRepository;
@@ -93,6 +94,10 @@ class SigconBackendSecurityTest {
 
     @MockBean
     private ObservacionRepository observacionRepository;
+
+    // I3 repositories — mocked to keep context loadable without Oracle.
+    @MockBean
+    private NotificacionRepository notificacionRepository;
 
     @MockBean
     private JpaMetamodelMappingContext jpaMetamodelMappingContext;

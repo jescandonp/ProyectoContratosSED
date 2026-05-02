@@ -8,7 +8,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -66,6 +68,39 @@ public class LocalDocumentStorageService implements DocumentStorageService {
         Files.createDirectories(target.getParent());
         file.transferTo(target.toFile());
         return relativeReference;
+    }
+
+    @Override
+    public String storeBytes(String subdir, String filename, byte[] bytes) throws IOException {
+        if (bytes == null || bytes.length == 0) {
+            throw new SigconBusinessException(
+                ErrorCode.PDF_GENERACION_FALLIDA,
+                "Contenido del PDF vacío",
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+        String safeFilename = sanitize(filename);
+        String relativeReference = subdir + "/" + safeFilename;
+        Path target = rootPath.resolve(relativeReference).normalize();
+        if (!target.startsWith(rootPath)) {
+            throw new SigconBusinessException(
+                ErrorCode.PDF_GENERACION_FALLIDA,
+                "Ruta de PDF inválida",
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+        Files.createDirectories(target.getParent());
+        Files.write(target, bytes);
+        return relativeReference;
+    }
+
+    @Override
+    public InputStream loadFile(String relativePath) throws IOException {
+        Path target = rootPath.resolve(relativePath).normalize();
+        if (!target.startsWith(rootPath) || !Files.exists(target)) {
+            throw new IOException("Archivo no encontrado: " + relativePath);
+        }
+        return new FileInputStream(target.toFile());
     }
 
     private String sanitize(String name) {
