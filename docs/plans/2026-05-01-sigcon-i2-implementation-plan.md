@@ -336,19 +336,19 @@ git commit -m "feat: add SIGCON I2 informe state machine"
 - Modify: `DevSecurityConfig`, `SecurityConfig` to expose `/api/informes/**`, `/api/actividades/**` with role rules
 - New: `InformeSecurityTest` (MockMvc, follows `SigconBackendSecurityTest` pattern)
 
-- [ ] **Step 1: Implement controllers** binding endpoints from spec §4.6. Use `@PreAuthorize` per role; map errors via existing `GlobalExceptionHandler`.
+- [x] **Step 1: Implement controllers** binding endpoints from spec §4.6. Use `@PreAuthorize` per role; map errors via existing `GlobalExceptionHandler`.
 
-- [ ] **Step 2: Update SpringDoc/Swagger annotations** so all I2 endpoints appear in `/swagger-ui.html`.
+- [x] **Step 2: Update SpringDoc/Swagger annotations** so all I2 endpoints appear in `/swagger-ui.html`.
 
-- [ ] **Step 3: Update SigconBackendApplicationTests exclusions** if needed so the smoke test still loads context without Oracle (mirror existing `application.service.*` and `web.controller.*` exclusion).
+- [x] **Step 3: Update SigconBackendApplicationTests exclusions** if needed so the smoke test still loads context without Oracle (mirror existing `application.service.*` and `web.controller.*` exclusion).
 
-- [ ] **Step 4: MockMvc tests** covering the 8 frontend acceptance bullets and rejecting:
+- [x] **Step 4: MockMvc tests** covering the 8 frontend acceptance bullets and rejecting:
 - POST `/api/informes` from REVISOR or SUPERVISOR → 403.
 - POST `/api/informes/{id}/aprobar` from CONTRATISTA → 403.
 - Transición invalida → 409 `TRANSICION_INVALIDA`.
 - `/api/informes` and `/api/actividades` are NOT public (require auth).
 
-- [ ] **Step 5: Validate**
+- [x] **Step 5: Validate**
 
 ```powershell
 cd sigcon-backend
@@ -360,7 +360,7 @@ Get-ChildItem -Path sigcon-backend\src\main\java -Recurse -File | Select-String 
 
 Expected: all tests pass; no I3 references.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add sigcon-backend/src/main/java sigcon-backend/src/test/java sigcon-backend/src/main/resources
@@ -620,8 +620,8 @@ git commit -m "docs: complete SIGCON I2 — verify local flow and update docs"
 
 - [ ] Flujo completo `BORRADOR → APROBADO` en `local-dev`.
 - [x] No hay PDF real ni notificaciones en producción de código.
-- [ ] Swagger documenta `/api/informes/**` y `/api/actividades/**`.
-- [x] I1 tests siguen pasando sin cambios.
+- [x] Swagger documenta `/api/informes/**` y `/api/actividades/**`.
+- [x] I1/I2 tests siguen pasando.
 
 ---
 
