@@ -64,6 +64,14 @@ export const routes: Routes = [
         title: 'Corregir informe — SIGCON'
       },
       {
+        path: 'notificaciones',
+        loadComponent: () =>
+          import('./features/notificaciones/centro-notificaciones/centro-notificaciones.component').then(
+            (m) => m.CentroNotificacionesComponent
+          ),
+        title: 'Notificaciones — SIGCON'
+      },
+      {
         path: 'revision/informes',
         canActivate: [roleGuard(['REVISOR'])],
         loadComponent: () =>

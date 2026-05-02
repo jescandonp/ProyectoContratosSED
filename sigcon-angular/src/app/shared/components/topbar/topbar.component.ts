@@ -1,12 +1,13 @@
 import { Component } from '@angular/core';
 
 import { AuthService } from '../../../core/auth/auth.service';
+import { NotificacionesMenuComponent } from '../../../features/notificaciones/notificaciones-menu/notificaciones-menu.component';
 import { StatusChipComponent } from '../status-chip/status-chip.component';
 
 @Component({
   selector: 'app-topbar',
   standalone: true,
-  imports: [StatusChipComponent],
+  imports: [StatusChipComponent, NotificacionesMenuComponent],
   template: `
     <header class="flex min-h-16 items-center justify-between border-b border-[var(--color-outline-variant)] bg-white px-lg">
       <div>
@@ -16,6 +17,7 @@ import { StatusChipComponent } from '../status-chip/status-chip.component';
 
       @if (authService.currentUser(); as user) {
         <div class="flex items-center gap-sm">
+          <app-notificaciones-menu />
           <app-status-chip [value]="user.rol" [label]="user.rol" tone="success" />
           <div class="text-right">
             <p class="m-0 text-sm font-semibold text-[var(--color-on-surface)]">{{ user.nombre }}</p>
