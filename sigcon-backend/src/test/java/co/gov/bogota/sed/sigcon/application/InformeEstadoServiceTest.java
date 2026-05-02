@@ -1,9 +1,11 @@
 package co.gov.bogota.sed.sigcon.application;
 
 import co.gov.bogota.sed.sigcon.application.dto.informe.InformeDetalleDto;
+import co.gov.bogota.sed.sigcon.application.service.EventoInformeService;
 import co.gov.bogota.sed.sigcon.application.service.InformeEstadoService;
 import co.gov.bogota.sed.sigcon.application.service.InformeService;
 import co.gov.bogota.sed.sigcon.application.service.ObservacionService;
+import co.gov.bogota.sed.sigcon.application.service.PdfInformeService;
 import co.gov.bogota.sed.sigcon.domain.entity.Contrato;
 import co.gov.bogota.sed.sigcon.domain.entity.Informe;
 import co.gov.bogota.sed.sigcon.domain.entity.Observacion;
@@ -40,12 +42,17 @@ class InformeEstadoServiceTest {
     @Mock private ActividadInformeRepository actividadRepository;
     @Mock private InformeService informeService;
     @Mock private ObservacionService observacionService;
+    @Mock private PdfInformeService pdfInformeService;
+    @Mock private EventoInformeService eventoInformeService;
 
     private InformeEstadoService service;
 
     @BeforeEach
     void setUp() {
-        service = new InformeEstadoService(informeRepository, actividadRepository, informeService, observacionService);
+        service = new InformeEstadoService(
+            informeRepository, actividadRepository, informeService, observacionService,
+            pdfInformeService, eventoInformeService
+        );
     }
 
     @Test
@@ -141,9 +148,10 @@ class InformeEstadoServiceTest {
     }
 
     @Test
-    void aprobarMovesEnRevisionToAprobadoWithNullPdfRuta() {
+    void aprobarMovesEnRevisionToAprobadoAndCallsPdfService() throws Exception {
+        // I3: aprobar() now delegates PDF management to PdfInformeService.generarYPersistir()
+        // instead of clearing pdfRuta directly.
         Informe informe = informe(EstadoInforme.EN_REVISION);
-        informe.setPdfRuta("no-debe-quedar.pdf");
         when(informeService.findActiveInforme(50L)).thenReturn(informe);
         when(informeRepository.save(any(Informe.class))).thenAnswer(inv -> inv.getArgument(0));
         when(informeService.buildDetalle(informe)).thenReturn(new InformeDetalleDto());
@@ -152,7 +160,7 @@ class InformeEstadoServiceTest {
 
         assertThat(informe.getEstado()).isEqualTo(EstadoInforme.APROBADO);
         assertThat(informe.getFechaAprobacion()).isNotNull();
-        assertThat(informe.getPdfRuta()).isNull();
+        verify(pdfInformeService).generarYPersistir(informe);
     }
 
     @Test
