@@ -57,6 +57,13 @@ export const routes: Routes = [
         title: 'Vista previa de informe — SIGCON'
       },
       {
+        path: 'informes/:id/corregir',
+        canActivate: [roleGuard(['CONTRATISTA'])],
+        loadComponent: () =>
+          import('./features/informes/corregir/corregir-informe.component').then((m) => m.CorregirInformeComponent),
+        title: 'Corregir informe — SIGCON'
+      },
+      {
         path: 'admin',
         canActivate: [roleGuard(['ADMIN'])],
         loadComponent: () =>
