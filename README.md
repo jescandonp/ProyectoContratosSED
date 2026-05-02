@@ -21,7 +21,7 @@ El proyecto se implementa por incrementos bajo SDD Spec-Anchored. El incremento 
 docs/plans/
 ```
 
-Al 2026-05-02 el trabajo activo esta sobre I2 en `feat/sigcon-i2`; confirmar el estado exacto en `docs/plans/2026-05-01-sigcon-i2-execution-log.md` antes de continuar.
+Al 2026-05-02 el trabajo activo esta sobre I3 en `feat/sigcon-i3`; confirmar el estado exacto en `docs/plans/2026-05-02-sigcon-i3-execution-log.md` antes de continuar.
 
 ## Estructura
 

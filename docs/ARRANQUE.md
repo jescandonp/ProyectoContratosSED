@@ -1,8 +1,8 @@
 # ARRANQUE SIGCON
 
-> Estado: Incremento 2 completado.
+> Estado: Incremento 3 completado.
 > Metodologia: Spec-Driven Development (SDD), nivel Spec-Anchored.
-> Ultima actualizacion: 2026-05-02 — cierre I2.
+> Ultima actualizacion: 2026-05-02 — cierre I3.
 
 ## Orden De Documentos
 
@@ -12,9 +12,30 @@
 4. PRD: `docs/specs/2026-04-30-sigcon-prd.md`
 5. Spec tecnica I1: `docs/specs/2026-04-30-sigcon-i1-spec.md`
 6. Spec tecnica I2: `docs/specs/2026-05-01-sigcon-i2-spec.md`
-7. Specs futuras de referencia: `docs/specs/2026-05-01-sigcon-i3-spec.md`
-8. Plan I2: `docs/plans/2026-05-01-sigcon-i2-implementation-plan.md`
-9. Log de ejecucion I2: `docs/plans/2026-05-01-sigcon-i2-execution-log.md`
+7. Spec tecnica I3: `docs/specs/2026-05-01-sigcon-i3-spec.md`
+8. Plan I3: `docs/plans/2026-05-02-sigcon-i3-implementation-plan.md`
+9. Log de ejecucion I3: `docs/plans/2026-05-02-sigcon-i3-execution-log.md`
+
+## Alcance I3 (implementado)
+
+Incluye:
+- Generacion de PDF institucional al aprobar informes.
+- PDF inmutable: si ya existe `pdfRuta`, no se regenera.
+- Metadatos PDF expuestos en API: `pdfRuta`, `pdfGeneradoAt`, `pdfHash`.
+- Descarga PDF desde `/api/informes/{id}/pdf`.
+- Vista Angular `/informes/:id/pdf` para descarga de informe aprobado.
+- Notificaciones in-app por eventos de informe.
+- Centro de notificaciones Angular en `/notificaciones`.
+- Campana de notificaciones en topbar con contador de no leidas.
+- Email simulado en `local-dev` y configurable para WebLogic.
+- Advertencia de firma faltante en perfil para CONTRATISTA/SUPERVISOR.
+
+Excluye:
+- Firma digital criptografica avanzada (PKCS#11, CAdES, XAdES).
+- Radicacion oficial externa.
+- Motor de pagos.
+- Integracion SECOP2.
+- Panel de administracion de notificaciones.
 
 ## Alcance I2 (implementado)
 
@@ -31,13 +52,6 @@ Incluye:
 - Boton "Nuevo Informe" habilitado en detalle de contrato para contratos `EN_EJECUCION`.
 - Card "Informes" activa en dashboard ADMIN (enlaza a lista de contratos).
 - Sidebar con entradas "Revision" (REVISOR) y "Aprobacion" (SUPERVISOR).
-
-Excluye (I3):
-- Generacion real de PDF institucional.
-- Firmas incrustadas en PDF.
-- Notificaciones email e in-app.
-- Centro de notificaciones.
-- Integracion SECOP2.
 
 ## Alcance I1 (implementado)
 
@@ -83,7 +97,7 @@ GRANT CREATE SESSION, CREATE TABLE, CREATE SEQUENCE, CREATE TRIGGER, CREATE INDE
 GRANT UNLIMITED TABLESPACE TO SED_SIGCON;
 ```
 
-### 2. Ejecutar DDL I1 + I2
+### 2. Ejecutar DDL I1 + I2 + I3
 
 ```powershell
 # Conectar con sqlplus y ejecutar en orden:
@@ -91,8 +105,33 @@ sqlplus SED_SIGCON/<password>@localhost:1521/XEPDB1 @db/00_setup.sql
 sqlplus SED_SIGCON/<password>@localhost:1521/XEPDB1 @db/01_datos_prueba.sql
 ```
 
-`db/00_setup.sql` contiene DDL de I1 e I2 bajo cabeceras `-- ===== INCREMENTO 1 =====` y `-- ===== INCREMENTO 2 =====`.
+`db/00_setup.sql` contiene DDL de I1, I2 e I3 bajo cabeceras `-- ===== INCREMENTO 1 =====`, `-- ===== INCREMENTO 2 =====` y `-- ===== INCREMENTO 3 =====`.
 `db/01_datos_prueba.sql` solo debe ejecutarse en ambientes de desarrollo local.
+
+## Configuracion I3: PDF Y Email
+
+### Local-dev
+
+| Propiedad | Valor local-dev |
+|---|---|
+| `sigcon.mail.enabled` | `false` |
+| Email | Envios simulados en logs; no requiere credenciales Azure |
+| PDF | Generado en `${java.io.tmpdir}/sigcon-test/pdfs/` |
+
+En local-dev no se debe configurar Microsoft Graph. Los eventos de email se registran en logs para facilitar pruebas sin dependencias externas.
+
+### WebLogic
+
+Configurar variables de entorno:
+
+| Variable / propiedad | Descripcion |
+|---|---|
+| `MAIL_FROM` | Cuenta remitente institucional |
+| `AZURE_TENANT_ID` | Tenant ID de Azure AD / Office 365 SED |
+| `MAIL_CLIENT_ID` | Client ID de la aplicacion Graph |
+| `MAIL_CLIENT_SECRET` | Client secret de la aplicacion Graph |
+| `sigcon.mail.enabled` | `true` |
+| `sigcon.storage.signatures-path` | Ruta compartida para firmas |
 
 ## Configuracion Local-Dev: Backend
 
@@ -204,9 +243,9 @@ Usuarios disponibles en `db/01_datos_prueba.sql` y en `DevSecurityConfig` / `Dev
 | `AZURE_TENANT_ID` | Tenant ID de Azure AD / Office 365 SED |
 | `SPRING_PROFILE` | `weblogic` |
 
-### Configuracion de correo I3 (futuro, no requerido en I1)
+### Configuracion de correo I3
 
-Para Incremento 3 (notificaciones email):
+Para notificaciones email:
 
 ```yaml
 # application.yml — perfil weblogic
