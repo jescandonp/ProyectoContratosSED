@@ -2,6 +2,7 @@ package co.gov.bogota.sed.sigcon.application;
 
 import co.gov.bogota.sed.sigcon.application.dto.informe.InformeRequest;
 import co.gov.bogota.sed.sigcon.application.dto.informe.InformeDetalleDto;
+import co.gov.bogota.sed.sigcon.application.dto.informe.InformeResumenDto;
 import co.gov.bogota.sed.sigcon.application.dto.informe.ActividadInformeRequest;
 import co.gov.bogota.sed.sigcon.application.dto.informe.SoporteAdjuntoDto;
 import co.gov.bogota.sed.sigcon.application.dto.informe.SoporteUrlRequest;
@@ -39,6 +40,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.mock.web.MockMultipartFile;
 
 import java.math.BigDecimal;
@@ -49,6 +53,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -149,6 +154,36 @@ class InformeServiceTest {
         assertThatThrownBy(() -> informeService.actualizarInforme(50L, informeRequest(10L)))
             .isInstanceOfSatisfying(SigconBusinessException.class, ex ->
                 assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.INFORME_NO_EDITABLE));
+    }
+
+    @Test
+    void revisorListsOnlyAssignedEnviados() {
+        Usuario revisor = usuario(3L, RolUsuario.REVISOR);
+        Informe informe = informe(50L, contrato(10L, usuario(2L, RolUsuario.CONTRATISTA), EstadoContrato.EN_EJECUCION), EstadoInforme.ENVIADO);
+        informe.getContrato().setRevisor(revisor);
+        when(currentUserService.getCurrentUser()).thenReturn(revisor);
+        when(informeRepository.findByContratoRevisorAndEstadoAndActivoTrue(eq(revisor), eq(EstadoInforme.ENVIADO), any()))
+            .thenReturn(new PageImpl<>(Collections.singletonList(informe)));
+
+        Page<InformeResumenDto> page = informeService.listarParaRevisor(PageRequest.of(0, 10));
+
+        assertThat(page.getContent()).hasSize(1);
+        verify(informeRepository).findByContratoRevisorAndEstadoAndActivoTrue(eq(revisor), eq(EstadoInforme.ENVIADO), any());
+    }
+
+    @Test
+    void supervisorListsOnlyAssignedEnRevision() {
+        Usuario supervisor = usuario(4L, RolUsuario.SUPERVISOR);
+        Informe informe = informe(50L, contrato(10L, usuario(2L, RolUsuario.CONTRATISTA), EstadoContrato.EN_EJECUCION), EstadoInforme.EN_REVISION);
+        informe.getContrato().setSupervisor(supervisor);
+        when(currentUserService.getCurrentUser()).thenReturn(supervisor);
+        when(informeRepository.findByContratoSupervisorAndEstadoAndActivoTrue(eq(supervisor), eq(EstadoInforme.EN_REVISION), any()))
+            .thenReturn(new PageImpl<>(Collections.singletonList(informe)));
+
+        Page<InformeResumenDto> page = informeService.listarParaSupervisor(PageRequest.of(0, 10));
+
+        assertThat(page.getContent()).hasSize(1);
+        verify(informeRepository).findByContratoSupervisorAndEstadoAndActivoTrue(eq(supervisor), eq(EstadoInforme.EN_REVISION), any());
     }
 
     @Test
