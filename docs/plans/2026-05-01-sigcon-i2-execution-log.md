@@ -49,7 +49,7 @@
 | Task 9 - Corregir informe devuelto | ✅ done | Claude | `4ac95c2` | CorregirInformeComponent con panel de observaciones; 30 frontend specs pasan |
 | Task 10 - Cola de revision (REVISOR) | ✅ done | Claude | `f9c81d5` | ColaRevisionComponent + sidebar REVISOR/SUPERVISOR; 39 frontend specs pasan |
 | Task 11 - Cola de aprobacion (SUPERVISOR) | ✅ done | Claude | `54b6fe7` | ColaAprobacionComponent + aprobarInforme en ObservacionService; 46 frontend specs pasan |
-| Task 12 - Activar placeholders I1 | ⏳ pending | — | — | — |
+| Task 12 - Activar placeholders I1 | ✅ done | Claude | `685a61b` | Historial de informes en detalle contrato; card Informes activa en admin; 53 specs pasan |
 | Task 13 - Verificacion E2E + docs | ⏳ pending | — | — | — |
 
 Leyenda: ⏳ pending, 🔄 in progress, ✅ done, ⏸ blocked, ⚠ deviation.
@@ -546,14 +546,55 @@ Resultado:
 - `npm run build`: build success; `cola-aprobacion-component` aparece como lazy chunk de 12.07 kB.
 - Auditoría de alcance frontend: 0 coincidencias.
 
+## Task 12 Implementado
+
+Commit funcional:
+
+- `685a61b feat: activate I1 informe placeholders for I2`
+
+Archivos creados/modificados:
+
+- `features/contratos/detalle/contrato-detalle.component.ts` — historial de informes activo con `GET /api/informes?contratoId=...`; botón "Nuevo Informe" habilitado para contratos `EN_EJECUCION`.
+- `features/contratos/detalle/contrato-detalle.component.spec.ts` — 4 specs nuevas cubriendo carga del contrato, carga del historial, estado vacío y visibilidad del botón.
+- `features/admin/dashboard/admin-dashboard.component.ts` — card "Informes" activada como enlace a `/contratos`.
+- `features/admin/dashboard/admin-dashboard.component.spec.ts` — 3 specs cubriendo renderizado de las 4 cards, que la card Informes es un `<a>` activo sin `opacity-60`, y que enlaza a `/contratos`.
+
+Implementado:
+
+- `ContratoDetalleComponent` ahora inyecta `InformeService` y carga el historial de informes del contrato al inicializar.
+- El botón "+ Nuevo Informe" es un `routerLink` a `/contratos/:id/informes/nuevo`, visible solo cuando `estado === 'EN_EJECUCION'`.
+- Cada informe del historial es un enlace a `/informes/:id` con chip de estado.
+- `RouterLink` importado en el componente para los enlaces del historial y el botón.
+
+Decisión Task 12 Step 2 (ADMIN):
+
+- La card "Informes" del admin dashboard se activó como enlace a `/contratos` (lista de contratos). Desde allí el ADMIN puede navegar al detalle de cualquier contrato y ver su historial de informes. Esta decisión evita crear una vista read-only de informes específica para ADMIN (que inflaría el scope de I2) y cumple el criterio de "quitar opacity-50 y activar la card". El ADMIN no puede aprobar ni devolver informes (spec §6), lo cual se respeta porque las acciones de aprobación/devolución están en las colas de REVISOR y SUPERVISOR.
+
+Validaciones:
+
+```powershell
+cd sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run build
+Get-ChildItem -Path sigcon-angular\src\app -Recurse -File | Select-String -Pattern "/api/notificaciones|notificacion.service|PdfService|pdf.service|/api/pdf"
+```
+
+Resultado:
+
+- `npm test -- --watch=false`: 53 specs, 0 fallas (46 anteriores + 4 nuevas de `ContratoDetalleComponent` + 3 nuevas de `AdminDashboardComponent`).
+- `npm run build`: build success; `contrato-detalle-component` crece de 11.08 kB a 9.21 kB (lazy chunk).
+- Auditoría de alcance frontend: 0 coincidencias.
+
 ## Proximo Punto De Retoma
 
-Continuar con **Task 12: Activar placeholders I1 (Detalle Contrato y Admin Dashboard)**.
+Continuar con **Task 13: Verificación E2E + Documentación**.
 
 Antes de avanzar:
 
 1. Sincronizar: `git fetch origin && git pull --ff-only origin feat/sigcon-i2`.
-2. Leer `docs/plans/2026-05-01-sigcon-i2-implementation-plan.md`, Task 12.
-3. En `features/contratos/detalle/contrato-detalle.component.ts`: reemplazar el botón "Nuevo Informe" deshabilitado con `routerLink` a `/contratos/{{c.id}}/informes/nuevo`; mostrar historial de informes del contrato con `GET /api/informes?contratoId=...`.
-4. En `features/admin/dashboard/admin-dashboard.component.ts`: decisión de scope — card "Informes" con "próximamente" (default del plan) o vista read-only. Documentar la decisión en el log.
-5. Validar con tests/build Angular, auditoría de alcance, y actualizar este log con commit/siguiente retoma.
+2. Ejecutar `mvn test` en backend y verificar que todos los tests I1+I2 pasan.
+3. Ejecutar `mvn clean package -DskipTests` y verificar que `sigcon-backend.war` se genera.
+4. Ejecutar `npm test -- --watch=false` y `npm run build` en frontend.
+5. Ejecutar auditoría de alcance (backend y frontend).
+6. Actualizar `docs/ARRANQUE.md` con sección I2.
+7. Cerrar el execution log con "Estado Final I2" y commit final.
