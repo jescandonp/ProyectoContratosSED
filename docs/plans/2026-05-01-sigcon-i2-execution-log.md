@@ -40,8 +40,8 @@
 |---|---|---|---|---|
 | Task 1 - Plan + execution log baseline | ✅ done | Claude | `ea33f5b` | Plan promovido desde outline; ajustes I1 incorporados; reglas multi-modelo agregadas |
 | Task 2 - Oracle schema I2 | ✅ done | Claude | `eece45a` | DDL apendizado bajo cabecera `===== INCREMENTO 2 =====`; seed con informe BORRADOR para OPS-2026-001 |
-| Task 3 - Backend domain (entities/enums/repos) | ⏳ pending | — | — | Disponible para el siguiente modelo |
-| Task 4 - Backend DTOs/mappers/services CRUD | ⏳ pending | — | — | — |
+| Task 3 - Backend domain (entities/enums/repos) | ✅ done | Claude | `4be9518` | 5 entidades + 3 enums + 5 repos + 5 tests pasan; mvn test 26/26 |
+| Task 4 - Backend DTOs/mappers/services CRUD | ⏳ pending | — | — | Disponible para el siguiente modelo |
 | Task 5 - State machine `InformeEstadoService` | ⏳ pending | — | — | — |
 | Task 6 - Backend controllers/security/swagger | ⏳ pending | — | — | — |
 | Task 7 - Frontend models + services | ⏳ pending | — | — | — |
@@ -106,19 +106,47 @@ Resultado: 36 coincidencias I2 en `00_setup.sql`, 6 lineas relevantes en `01_dat
 
 Pendiente: ejecutar los scripts contra una BD Oracle real local-dev cuando el modelo siguiente disponga de DBA/credenciales.
 
+## Task 3 Implementado
+
+Archivos creados:
+
+- Enums: `domain/enums/EstadoInforme.java`, `TipoSoporte.java`, `RolObservacion.java`.
+- Entidades: `domain/entity/Informe.java`, `ActividadInforme.java`, `SoporteAdjunto.java`, `DocumentoAdicional.java`, `Observacion.java`. Todas con `@EntityListeners(AuditingEntityListener.class)`, soft delete via `activo`, `SequenceGenerator(allocationSize=1)`.
+- Repositorios: `domain/repository/InformeRepository.java`, `ActividadInformeRepository.java`, `SoporteAdjuntoRepository.java`, `DocumentoAdicionalRepository.java`, `ObservacionRepository.java`. Firmas exactas del spec §4.3 mas un `findByContratoIdAndActivoTrue` extra que necesitara la pantalla de detalle de contrato (Task 12).
+- Test: `test/java/.../domain/InformeDomainMappingTest.java` con 5 metodos cubriendo mapeo a tablas, secuencias, ManyToOne, enums y nullability de `pdfRuta`.
+
+Decisiones I3 forward-compat:
+
+- `Informe.pdfRuta` queda `nullable=true` y sin handling en I2.
+- `Informe.fechaCreacion` y `Observacion.fecha` son `insertable=false, updatable=false` para que Oracle aplique `SYSTIMESTAMP` por DEFAULT.
+- `Informe.fechaUltimoEnvio` y `Informe.fechaAprobacion` se setean explicitamente en `InformeEstadoService` (Task 5).
+
+Validaciones:
+
+```powershell
+cd sigcon-backend
+mvn test -Dtest=InformeDomainMappingTest
+mvn test
+```
+
+Resultado:
+
+- `InformeDomainMappingTest`: 5/5 pasan.
+- `mvn test`: 26 tests, 0 fallas, 0 errores (21 I1 + 5 nuevos).
+
 ## Proximo Punto De Retoma
 
-Continuar con **Task 3: Backend Domain Layer (Entities, Enums, Repositories)**.
+Continuar con **Task 4: Backend Application Layer (DTOs, Mappers, Services CRUD Without Transitions)**.
 
 Antes de avanzar:
 
 1. Sincronizar: `git fetch origin && git pull --ff-only origin feat/sigcon-i2`.
-2. Leer `docs/plans/2026-05-01-sigcon-i2-implementation-plan.md`, Task 3.
-3. Leer `docs/specs/2026-05-01-sigcon-i2-spec.md` §4.1, §4.2, §4.3.
-4. Reusar patron de I1: ver `co.gov.bogota.sed.sigcon.domain.entity.Contrato` para auditoria/`activo`/relaciones.
-5. Crear enums `EstadoInforme`, `TipoSoporte`, `RolObservacion`.
-6. Crear entidades con `@EntityListeners(AuditingEntityListener.class)` y soft delete via `activo` boolean.
-7. Crear repositorios JPA con metodos exactos del spec §4.3.
-8. Replicar patron de `DomainModelMappingTest` para cubrir construccion/equals/hashCode/coverage de enums.
-9. Validar con `mvn test -Dtest=*DomainMappingTest` y `mvn test -DskipTests`.
+2. Leer `docs/plans/2026-05-01-sigcon-i2-implementation-plan.md`, Task 4.
+3. Leer `docs/specs/2026-05-01-sigcon-i2-spec.md` §4.4, §4.5, §4.7.
+4. Reusar patron de I1: `application/dto/contrato/ContratoDetalleDto.java`, `application/mapper/ContratoMapper.java`, `application/service/ContratoService.java`.
+5. Verificar firma actual de `LocalDocumentStorageService.save(...)`. Si no acepta subdirectorio (esperable en I1), extender el contrato `DocumentStorageService` con `save(byte[], String filename, String subdir)` o similar y migrar el unico consumidor (firma) sin romper su test.
+6. Crear DTOs (11 archivos), mappers (5 archivos), servicios CRUD (5 archivos) — **sin** transiciones de estado, eso queda para Task 5.
+7. Agregar codigos de error nuevos a `web/exception/ErrorCodes` (o equivalente existente desde I1 Task 5): `INFORME_NO_ENCONTRADO`, `INFORME_NO_EDITABLE`, `OBSERVACION_REQUERIDA`, `ACTIVIDAD_REQUERIDA`, `PORCENTAJE_INVALIDO`, `SOPORTE_INVALIDO`, `DOCUMENTO_ADICIONAL_REQUERIDO`, `CONTRATO_NO_ACTIVO`. (`TRANSICION_INVALIDA` se introduce en Task 5.)
+8. Tests Mockito para cada servicio cubriendo: pertenencia contratista, ACCESO_DENEGADO en contrato ajeno, soporte URL valido `http(s)://`, soporte ARCHIVO invoca `DocumentStorageService` con subdir.
+9. Validar con `mvn test -Dtest=*ServiceTest` y `mvn test`.
 10. Registrar en este log archivos tocados, validaciones y commit.
