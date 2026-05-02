@@ -41,7 +41,7 @@
 | Task 1 - Plan + execution log baseline | ✅ done | Claude | `ea33f5b` | Plan promovido desde outline; ajustes I1 incorporados; reglas multi-modelo agregadas |
 | Task 2 - Oracle schema I2 | ✅ done | Claude | `eece45a` | DDL apendizado bajo cabecera `===== INCREMENTO 2 =====`; seed con informe BORRADOR para OPS-2026-001 |
 | Task 3 - Backend domain (entities/enums/repos) | ✅ done | Claude | `4be9518` | 5 entidades + 3 enums + 5 repos + 5 tests pasan; mvn test 26/26 |
-| Task 4 - Backend DTOs/mappers/services CRUD | ⏳ pending | — | — | Disponible para el siguiente modelo |
+| Task 4 - Backend DTOs/mappers/services CRUD | ✅ done | Codex | `07a02ce` | DTOs/mappers/services CRUD sin transiciones; 43 backend tests pasan |
 | Task 5 - State machine `InformeEstadoService` | ⏳ pending | — | — | — |
 | Task 6 - Backend controllers/security/swagger | ⏳ pending | — | — | — |
 | Task 7 - Frontend models + services | ⏳ pending | — | — | — |
@@ -76,11 +76,12 @@ Get-ChildItem -Path sigcon-angular\src\app -Recurse -File | Select-String -Patte
 
 ## Decisiones Y Notas Para El Siguiente Modelo
 
-- Antes de Task 4, verificar firma actual de `LocalDocumentStorageService.save(...)`. Si no acepta subdir, extender interfaz y adaptar consumidor de firma de I1 antes de tocar soportes.
+- Task 4 extendio `DocumentStorageService` con `storeFile(String subdir, MultipartFile file)` y adapto `LocalDocumentStorageService`; `storeSignature(...)` queda intacto para I1.
 - `db/00_setup.sql` se mantiene como archivo unico (PRD), pero las inserciones I2 van bajo cabecera explicita `-- ===== INCREMENTO 2 =====`.
 - En Task 12 hay una decision de scope: ADMIN read-only de informes vs. "proximamente". Default sugerido: "proximamente" para no inflar I2. Quien tome Task 12 debe documentar la decision aqui.
-- Codes de error nuevos (`INFORME_NO_ENCONTRADO`, `INFORME_NO_EDITABLE`, `TRANSICION_INVALIDA`, `OBSERVACION_REQUERIDA`, `ACTIVIDAD_REQUERIDA`, `PORCENTAJE_INVALIDO`, `SOPORTE_INVALIDO`, `DOCUMENTO_ADICIONAL_REQUERIDO`, `CONTRATO_NO_ACTIVO`) se agregan en `web.exception.ErrorCodes` (ubicacion existente desde I1 Task 5).
+- Codes de error nuevos (`INFORME_NO_ENCONTRADO`, `INFORME_NO_EDITABLE`, `TRANSICION_INVALIDA`, `OBSERVACION_REQUERIDA`, `ACTIVIDAD_REQUERIDA`, `PORCENTAJE_INVALIDO`, `SOPORTE_INVALIDO`, `DOCUMENTO_ADICIONAL_REQUERIDO`, `CONTRATO_NO_ACTIVO`) ya estan en `web.exception.ErrorCode`. `TRANSICION_INVALIDA` queda listo para uso en Task 5.
 - En `feat/sigcon-i1` aun no hay merge a `main`. I2 trabaja directamente sobre `feat/sigcon-i2` partiendo de `feat/sigcon-i1`. La estrategia de merge la decide el modelo que cierre I3 o el integrador final.
+- Inconsistencia documental detectada y corregida: `README.md` seguia indicando fase previa a implementacion I1; ahora remite al execution log activo y registra que I2 esta en `feat/sigcon-i2`.
 
 ## Task 2 Implementado
 
@@ -134,19 +135,64 @@ Resultado:
 - `InformeDomainMappingTest`: 5/5 pasan.
 - `mvn test`: 26 tests, 0 fallas, 0 errores (21 I1 + 5 nuevos).
 
+## Task 4 Implementado
+
+Commit funcional:
+
+- `07a02ce feat: add SIGCON I2 informe DTOs, mappers, and CRUD services`
+
+Archivos creados/modificados:
+
+- DTOs I2: `application/dto/informe/*` con los 11 contratos de datos definidos en spec §4.4.
+- Mappers manuales: `InformeMapper`, `ActividadInformeMapper`, `SoporteAdjuntoMapper`, `DocumentoAdicionalMapper`, `ObservacionMapper`.
+- Servicios CRUD sin transiciones: `InformeService`, `ActividadInformeService`, `SoporteAdjuntoService`, `DocumentoAdicionalInformeService`, `ObservacionService`.
+- Storage: `DocumentStorageService.storeFile(...)` y `LocalDocumentStorageService.storeFile(...)` para soportes tipo `ARCHIVO`.
+- Errores I2 en `web.exception.ErrorCode`.
+- `SigconBackendSecurityTest` mockea repositorios I2 para mantener cargable el contexto local-dev sin Oracle.
+- Tests dedicados: `InformeServiceTest`, `ActividadInformeServiceTest`, `SoporteAdjuntoServiceTest`, `DocumentoAdicionalInformeServiceTest`, `ObservacionServiceTest`; `DocumentStorageServiceTest` cubre almacenamiento de soportes y bloqueo de path traversal.
+
+Cobertura cerrada en Task 4:
+
+- Contratista crea informe `BORRADOR` solo sobre contrato propio `EN_EJECUCION`.
+- Contrato ajeno retorna `ACCESO_DENEGADO`; contrato fuera de ejecucion retorna `CONTRATO_NO_ACTIVO`.
+- Informe `APROBADO` no es editable (`INFORME_NO_EDITABLE`).
+- Actividades validan porcentaje 0-100 (`PORCENTAJE_INVALIDO`).
+- Soportes URL aceptan solo `http://`/`https://` (`SOPORTE_INVALIDO`).
+- Soportes archivo delegan a `DocumentStorageService` con subdir `soportes/{contratoId}/{informeId}/{actividadId}`.
+- Documentos adicionales se asocian al informe usando catalogo activo.
+- Observaciones vacias retornan `OBSERVACION_REQUERIDA`; el uso transicional queda para Task 5.
+
+Validaciones:
+
+```powershell
+cd sigcon-backend
+mvn test -Dtest=*ServiceTest
+mvn test
+Get-ChildItem -Path sigcon-backend\src\main\java -Recurse -File | Select-String -Pattern "Pdf|notificacion|/api/notificaciones|MailService|SGCN_NOTIFICACIONES"
+Get-ChildItem -Path sigcon-angular\src\app -Recurse -File | Select-String -Pattern "/api/notificaciones|notificacion.service|pdf.service"
+Get-ChildItem -Path sigcon-backend\src\main\java,sigcon-backend\src\test\java -Recurse -Include *.java | Select-String -Pattern "\bvar\b|List\.of|Map\.of|Set\.of|Optional\.orElseThrow\(\)"
+```
+
+Resultado:
+
+- `mvn test -Dtest=*ServiceTest`: 26 tests, 0 fallas, 0 errores.
+- `mvn test`: 43 tests, 0 fallas, 0 errores.
+- Compatibilidad Java 8: 0 coincidencias para `var`, `List.of`, `Map.of`, `Set.of`, `Optional.orElseThrow()`.
+- Auditoria de alcance backend: solo aparecen referencias esperadas a `Informe.pdfRuta` heredadas de Task 3 como compatibilidad I3; no hay `PdfService`, notificaciones ni `/api/notificaciones`.
+- Auditoria de alcance frontend: 0 coincidencias.
+
 ## Proximo Punto De Retoma
 
-Continuar con **Task 4: Backend Application Layer (DTOs, Mappers, Services CRUD Without Transitions)**.
+Continuar con **Task 5: State Machine — `InformeEstadoService`**.
 
 Antes de avanzar:
 
 1. Sincronizar: `git fetch origin && git pull --ff-only origin feat/sigcon-i2`.
-2. Leer `docs/plans/2026-05-01-sigcon-i2-implementation-plan.md`, Task 4.
-3. Leer `docs/specs/2026-05-01-sigcon-i2-spec.md` §4.4, §4.5, §4.7.
-4. Reusar patron de I1: `application/dto/contrato/ContratoDetalleDto.java`, `application/mapper/ContratoMapper.java`, `application/service/ContratoService.java`.
-5. Verificar firma actual de `LocalDocumentStorageService.save(...)`. Si no acepta subdirectorio (esperable en I1), extender el contrato `DocumentStorageService` con `save(byte[], String filename, String subdir)` o similar y migrar el unico consumidor (firma) sin romper su test.
-6. Crear DTOs (11 archivos), mappers (5 archivos), servicios CRUD (5 archivos) — **sin** transiciones de estado, eso queda para Task 5.
-7. Agregar codigos de error nuevos a `web/exception/ErrorCodes` (o equivalente existente desde I1 Task 5): `INFORME_NO_ENCONTRADO`, `INFORME_NO_EDITABLE`, `OBSERVACION_REQUERIDA`, `ACTIVIDAD_REQUERIDA`, `PORCENTAJE_INVALIDO`, `SOPORTE_INVALIDO`, `DOCUMENTO_ADICIONAL_REQUERIDO`, `CONTRATO_NO_ACTIVO`. (`TRANSICION_INVALIDA` se introduce en Task 5.)
-8. Tests Mockito para cada servicio cubriendo: pertenencia contratista, ACCESO_DENEGADO en contrato ajeno, soporte URL valido `http(s)://`, soporte ARCHIVO invoca `DocumentStorageService` con subdir.
-9. Validar con `mvn test -Dtest=*ServiceTest` y `mvn test`.
-10. Registrar en este log archivos tocados, validaciones y commit.
+2. Leer `docs/plans/2026-05-01-sigcon-i2-implementation-plan.md`, Task 5.
+3. Leer `docs/specs/2026-05-01-sigcon-i2-spec.md` §4.5, §4.7 y criterios backend §7.
+4. Implementar `InformeEstadoService` como unica clase de transiciones: `enviar`, `aprobarRevision`, `devolverRevision`, `aprobar`, `devolver`.
+5. Reusar `InformeService.findActiveInforme(...)`, `InformeService.assertCanViewInforme(...)`/pertenencia y `ObservacionService.registrar(...)`.
+6. No crear servicios PDF, notificaciones, endpoints `/api/notificaciones` ni generacion de archivos PDF; I2 deja `APROBADO` con `pdfRuta = null`.
+7. Cubrir todos los guard rails de estado: actividad requerida, observacion requerida, roles asignados, `APROBADO` terminal, transiciones invalidas con `TRANSICION_INVALIDA`.
+8. Validar con `mvn test -Dtest=InformeEstadoServiceTest`, `mvn test -Dtest=*ServiceTest` y `mvn test`.
+9. Registrar en este log archivos tocados, validaciones, commit y siguiente punto de retoma.

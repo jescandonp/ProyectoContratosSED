@@ -256,31 +256,31 @@ git commit -m "feat: add SIGCON I2 domain model and repositories"
 - New: services `InformeService`, `ActividadInformeService`, `SoporteAdjuntoService`, `DocumentoAdicionalInformeService`, `ObservacionService`
 - New: `*ServiceTest` for each service
 
-- [ ] **Step 1: Create all DTOs** per spec §4.4.
+- [x] **Step 1: Create all DTOs** per spec §4.4.
 
-- [ ] **Step 2: Create mappers** following `ContratoMapper` pattern (manual mapping, no MapStruct).
+- [x] **Step 2: Create mappers** following `ContratoMapper` pattern (manual mapping, no MapStruct).
 
-- [ ] **Step 3: Implement services** for CRUD, listing, and pertenencia/role enforcement. **Do not implement state transitions yet** — that goes in Task 5.
+- [x] **Step 3: Implement services** for CRUD, listing, and pertenencia/role enforcement. **Do not implement state transitions yet** — that goes in Task 5.
 
-- [ ] **Step 4: Reuse `DocumentStorageService`** for `SoporteAdjuntoService.guardarArchivo()`. Add a method `save(byte[] content, String filename, String subdir)` to the interface if not already present, and adapt `LocalDocumentStorageService` accordingly.
+- [x] **Step 4: Reuse `DocumentStorageService`** for `SoporteAdjuntoService.agregarSoporteArchivo()`. Add a method `storeFile(String subdir, MultipartFile file)` to the interface if not already present, and adapt `LocalDocumentStorageService` accordingly.
 
-- [ ] **Step 5: Tests** — Mockito-based unit tests covering:
+- [x] **Step 5: Tests** — Mockito-based unit tests covering:
 - CONTRATISTA can list/create informes only on own active contracts.
 - ACCESO_DENEGADO when contratista accesses informe of another contract.
 - Soporte URL must be `http://` or `https://`; otherwise `SOPORTE_INVALIDO`.
 - Soporte archivo invokes `DocumentStorageService` with the right subdir.
 
-- [ ] **Step 6: Validate**
+- [x] **Step 6: Validate**
 
 ```powershell
 cd sigcon-backend
-mvn test -Dtest=Informe*ServiceTest
+mvn test -Dtest=*ServiceTest
 mvn test
 ```
 
 Expected: all new tests pass; total test count grows monotonically.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```powershell
 git add sigcon-backend/src/main/java sigcon-backend/src/test/java
@@ -590,11 +590,11 @@ git commit -m "docs: complete SIGCON I2 — verify local flow and update docs"
 
 ### Backend
 
-- [ ] Contratista crea informe `BORRADOR` sobre contrato activo propio.
-- [ ] Contratista no crea informe sobre contrato ajeno o inactivo (`ACCESO_DENEGADO` o `CONTRATO_NO_ACTIVO`).
-- [ ] Actividades aceptan porcentaje 0–100; fuera de rango → `PORCENTAJE_INVALIDO`.
-- [ ] Soportes URL aceptan `http://`/`https://`; otros → `SOPORTE_INVALIDO`.
-- [ ] Documentos adicionales asociados al informe.
+- [x] Contratista crea informe `BORRADOR` sobre contrato activo propio.
+- [x] Contratista no crea informe sobre contrato ajeno o inactivo (`ACCESO_DENEGADO` o `CONTRATO_NO_ACTIVO`).
+- [x] Actividades aceptan porcentaje 0–100; fuera de rango → `PORCENTAJE_INVALIDO`.
+- [x] Soportes URL aceptan `http://`/`https://`; otros → `SOPORTE_INVALIDO`.
+- [x] Documentos adicionales asociados al informe.
 - [ ] `BORRADOR → ENVIADO` con cero actividades → `ACTIVIDAD_REQUERIDA`.
 - [ ] Revisor lista solo `ENVIADO` asignados.
 - [ ] `ENVIADO → EN_REVISION` solo revisor asignado.
@@ -602,7 +602,7 @@ git commit -m "docs: complete SIGCON I2 — verify local flow and update docs"
 - [ ] Supervisor lista solo `EN_REVISION` supervisados.
 - [ ] `EN_REVISION → APROBADO` solo supervisor asignado; `pdfRuta` queda nulo.
 - [ ] `EN_REVISION → DEVUELTO` exige `OBSERVACION_REQUERIDA`.
-- [ ] `APROBADO` es terminal (`INFORME_NO_EDITABLE`).
+- [x] `APROBADO` es terminal (`INFORME_NO_EDITABLE`).
 - [ ] Transiciones invalidas → 409 `TRANSICION_INVALIDA`.
 
 ### Frontend
@@ -619,9 +619,9 @@ git commit -m "docs: complete SIGCON I2 — verify local flow and update docs"
 ### General
 
 - [ ] Flujo completo `BORRADOR → APROBADO` en `local-dev`.
-- [ ] No hay PDF real ni notificaciones en producción de código.
+- [x] No hay PDF real ni notificaciones en producción de código.
 - [ ] Swagger documenta `/api/informes/**` y `/api/actividades/**`.
-- [ ] I1 tests siguen pasando sin cambios.
+- [x] I1 tests siguen pasando sin cambios.
 
 ---
 

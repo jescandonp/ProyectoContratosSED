@@ -15,11 +15,13 @@ SIGCON es el Sistema de Gestion de Contratos para la Secretaria de Educacion del
 
 ## Estado
 
-El proyecto esta en fase previa a implementacion I1. La implementacion debe iniciar desde:
+El proyecto se implementa por incrementos bajo SDD Spec-Anchored. El incremento activo, la rama vigente, el ultimo punto de retoma y las validaciones obligatorias se consultan siempre en el execution log del incremento correspondiente:
 
 ```text
-docs/plans/2026-05-01-sigcon-i1-implementation-plan.md
+docs/plans/
 ```
+
+Al 2026-05-02 el trabajo activo esta sobre I2 en `feat/sigcon-i2`; confirmar el estado exacto en `docs/plans/2026-05-01-sigcon-i2-execution-log.md` antes de continuar.
 
 ## Estructura
 
@@ -37,7 +39,7 @@ ProyectoContratosSED/
 └── Spec-Driven Development (SDD)_ A Comprehensive Technical Guide.pdf
 ```
 
-Artefactos previstos por I1:
+Artefactos principales:
 
 - `db/`
 - `sigcon-backend/`
