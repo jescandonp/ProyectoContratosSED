@@ -406,22 +406,22 @@ git commit -m "feat: add SIGCON I2 frontend core models and services"
 - New: `features/informes/preview/informe-preview.component.ts`
 - Modify: `app.routes.ts` (add `contratos/:contratoId/informes/nuevo`, `informes/:id`, `informes/:id/preview`)
 
-- [ ] **Step 1:** Build the form following `Prototipo/nuevo_informe_de_actividades_optimizado_sigcon/` (screen.png + code.html). Iterate over the contract's obligaciones in order, allow descripcion/porcentaje per obligacion, attach soportes (URL or archivo), and load documentos adicionales from the OPS catalog.
+- [x] **Step 1:** Build the form following `Prototipo/nuevo_informe_de_actividades_optimizado_sigcon/` (screen.png + code.html). Iterate over the contract's obligaciones in order, allow descripcion/porcentaje per obligacion, attach soportes (URL or archivo), and load documentos adicionales from the OPS catalog.
 
-- [ ] **Step 2:** Save draft → `POST /api/informes` then `POST /api/informes/{id}/actividades` per row. Re-open from detail page when state is `BORRADOR`.
+- [x] **Step 2:** Save draft → `POST /api/informes` then `POST /api/informes/{id}/actividades` per row. Re-open from detail page when state is `BORRADOR`.
 
-- [ ] **Step 3:** Implement preview screen reading `GET /api/informes/{id}` and showing the same data in read-only PDF-like layout.
+- [x] **Step 3:** Implement preview screen reading `GET /api/informes/{id}` and showing the same data in read-only PDF-like layout.
 
-- [ ] **Step 4:** Confirm dialog before `POST /api/informes/{id}/enviar`.
+- [x] **Step 4:** Confirm dialog before `POST /api/informes/{id}/enviar`.
 
-- [ ] **Step 5: Validate**
+- [x] **Step 5: Validate**
 
 ```powershell
 node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false
 node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run build
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add sigcon-angular/src/app

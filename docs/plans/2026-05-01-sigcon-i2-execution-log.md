@@ -45,7 +45,7 @@
 | Task 5 - State machine `InformeEstadoService` | ✅ done | Codex | `2eebe24` | Transiciones I2 implementadas; 56 backend tests pasan |
 | Task 6 - Backend controllers/security/swagger | ✅ done | Codex | `9889e07` | Controllers REST I2 + RBAC + Swagger; 64 backend tests pasan |
 | Task 7 - Frontend models + services | ✅ done | Codex | `aa1ea19` | Modelos TS + services Angular I2; 15 frontend specs pasan |
-| Task 8 - Informe form + detalle + preview | ⏳ pending | — | — | — |
+| Task 8 - Informe form + detalle + preview | ✅ done | Codex | `f40a95b` | Form, detalle y preview I2; 23 frontend specs pasan |
 | Task 9 - Corregir informe devuelto | ⏳ pending | — | — | — |
 | Task 10 - Cola de revision (REVISOR) | ⏳ pending | — | — | — |
 | Task 11 - Cola de aprobacion (SUPERVISOR) | ⏳ pending | — | — | — |
@@ -363,17 +363,67 @@ Resultado:
 - `npm run build`: build success; output en `sigcon-angular/dist/sigcon-angular`.
 - Auditoria de alcance frontend: 0 coincidencias para `/api/notificaciones`, `notificacion.service`, `pdf.service`.
 
+## Task 8 Implementado
+
+Commit funcional:
+
+- `f40a95b feat: add SIGCON I2 informe form, detalle and preview screens`
+
+Archivos creados:
+
+- `features/informes/nuevo/informe-form.component.ts`
+- `features/informes/nuevo/informe-form.component.spec.ts`
+- `features/informes/detalle/informe-detalle.component.ts`
+- `features/informes/detalle/informe-detalle.component.spec.ts`
+- `features/informes/preview/informe-preview.component.ts`
+- `features/informes/preview/informe-preview.component.spec.ts`
+
+Archivos modificados:
+
+- `app.routes.ts`: agrega rutas `contratos/:contratoId/informes/nuevo`, `informes/:id`, `informes/:id/preview`.
+- `app.routes.spec.ts`: actualiza la superficie exacta de rutas I2 hasta Task 8.
+
+Implementado:
+
+- Formulario contratista para crear informe desde contrato, cargando obligaciones ordenadas y documentos OPS desde catalogo.
+- Guardado de borrador con `POST /api/informes`, actividades por obligacion con `POST /api/informes/{id}/actividades`, soportes URL/archivo y documentos adicionales.
+- Confirmacion antes de enviar, delegando en `POST /api/informes/{id}/enviar`.
+- Detalle de informe con actividades, soportes, documentos, actores, observaciones y accion de vista previa.
+- Preview read-only tipo documento, sin generacion real de PDF.
+
+Decisiones:
+
+- La ruta de nuevo informe queda protegida para `CONTRATISTA`; detalle y preview quedan autenticadas por el shell y delegan visibilidad fina al backend, porque esas pantallas tambien seran usadas por revision/supervision en Tasks 10-11.
+- No se activo el boton de nuevo informe dentro de `contrato-detalle.component.ts`; esa integracion de flujo queda para una task posterior del plan para no mezclar alcance.
+- La edicion/correccion de borradores/devueltos no se implementa aqui; Task 9 reutilizara el formulario con ruta `informes/:id/corregir`.
+
+Validaciones:
+
+```powershell
+cd sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run build
+Get-ChildItem -Path sigcon-angular\src\app -Recurse -File | Select-String -Pattern "/api/notificaciones|notificacion.service|PdfService|pdf.service|/api/pdf"
+```
+
+Resultado:
+
+- TDD RED inicial: Angular fallo por imports faltantes de `InformeFormComponent`, `InformeDetalleComponent`, `InformePreviewComponent`, como se esperaba.
+- `npm test -- --watch=false`: 23 specs, 0 fallas.
+- `npm run build`: build success; output en `sigcon-angular/dist/sigcon-angular`.
+- Auditoria de alcance frontend: 0 coincidencias para `/api/notificaciones`, `notificacion.service`, `PdfService`, `pdf.service`, `/api/pdf`.
+
 ## Proximo Punto De Retoma
 
-Continuar con **Task 8: Frontend — Informe Form And Detalle (Contratista)**.
+Continuar con **Task 9: Frontend — Corregir Informe Devuelto (Contratista)**.
 
 Antes de avanzar:
 
 1. Sincronizar: `git fetch origin && git pull --ff-only origin feat/sigcon-i2`.
-2. Leer `docs/plans/2026-05-01-sigcon-i2-implementation-plan.md`, Task 8.
-3. Leer `docs/specs/2026-05-01-sigcon-i2-spec.md` §5.1-§5.4 y criterios frontend.
-4. Revisar prototipo `Prototipo/nuevo_informe_de_actividades_optimizado_sigcon/` (`screen.png` y `code.html`) y componentes I1 existentes para mantener patron visual.
-5. Implementar rutas `contratos/:contratoId/informes/nuevo`, `informes/:id`, `informes/:id/preview` y componentes de form/detalle/preview.
-6. Consumir `ContratoService`, `DocumentoCatalogoService`, `InformeService`, `ActividadInformeService`, `SoporteAdjuntoService`, `DocumentoAdicionalService`.
+2. Leer `docs/plans/2026-05-01-sigcon-i2-implementation-plan.md`, Task 9.
+3. Leer `docs/specs/2026-05-01-sigcon-i2-spec.md` §5.5 y criterios de correccion de informes devueltos.
+4. Reutilizar el layout y helpers de `features/informes/nuevo/informe-form.component.ts` cuando sea razonable, sin duplicar reglas innecesarias.
+5. Agregar ruta `informes/:id/corregir` y permitir edicion solo cuando estado sea `BORRADOR` o `DEVUELTO`.
+6. Mostrar observaciones historicas en panel lateral y mantener soportes/documentos dentro de la superficie REST existente.
 7. Mantener fuera de scope `/api/notificaciones`, `notificacion.service`, `pdf.service` y generacion real de PDF.
 8. Validar con tests/build Angular, auditoria de alcance, y actualizar este log con commit/siguiente retoma.
