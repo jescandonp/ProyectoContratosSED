@@ -38,9 +38,9 @@
 
 | Task | Estado | Modelo | Commit | Notas |
 |---|---|---|---|---|
-| Task 1 - Plan + execution log baseline | 🔄 in progress | Claude | (pendiente) | Plan promovido desde outline; ajustes I1 incorporados |
-| Task 2 - Oracle schema I2 | ⏳ pending | — | — | — |
-| Task 3 - Backend domain (entities/enums/repos) | ⏳ pending | — | — | — |
+| Task 1 - Plan + execution log baseline | ✅ done | Claude | `ea33f5b` | Plan promovido desde outline; ajustes I1 incorporados; reglas multi-modelo agregadas |
+| Task 2 - Oracle schema I2 | ✅ done | Claude | `eece45a` | DDL apendizado bajo cabecera `===== INCREMENTO 2 =====`; seed con informe BORRADOR para OPS-2026-001 |
+| Task 3 - Backend domain (entities/enums/repos) | ⏳ pending | — | — | Disponible para el siguiente modelo |
 | Task 4 - Backend DTOs/mappers/services CRUD | ⏳ pending | — | — | — |
 | Task 5 - State machine `InformeEstadoService` | ⏳ pending | — | — | — |
 | Task 6 - Backend controllers/security/swagger | ⏳ pending | — | — | — |
@@ -82,16 +82,43 @@ Get-ChildItem -Path sigcon-angular\src\app -Recurse -File | Select-String -Patte
 - Codes de error nuevos (`INFORME_NO_ENCONTRADO`, `INFORME_NO_EDITABLE`, `TRANSICION_INVALIDA`, `OBSERVACION_REQUERIDA`, `ACTIVIDAD_REQUERIDA`, `PORCENTAJE_INVALIDO`, `SOPORTE_INVALIDO`, `DOCUMENTO_ADICIONAL_REQUERIDO`, `CONTRATO_NO_ACTIVO`) se agregan en `web.exception.ErrorCodes` (ubicacion existente desde I1 Task 5).
 - En `feat/sigcon-i1` aun no hay merge a `main`. I2 trabaja directamente sobre `feat/sigcon-i2` partiendo de `feat/sigcon-i1`. La estrategia de merge la decide el modelo que cierre I3 o el integrador final.
 
+## Task 2 Implementado
+
+Archivos tocados:
+
+- `db/00_setup.sql` — apendizada seccion I2 con `SGCN_INFORMES`, `SGCN_ACTIVIDADES`, `SGCN_SOPORTES`, `SGCN_DOCS_ADICIONALES`, `SGCN_OBSERVACIONES`, secuencias, indices y triggers `TRG_*_AUDIT`.
+- `db/01_datos_prueba.sql` — apendizado bloque I2: 1 informe BORRADOR sobre `OPS-2026-001`, 3 actividades (una por obligacion), 1 soporte URL + 1 soporte ARCHIVO, 1 documento adicional al catalogo obligatorio.
+
+Decisiones:
+
+- Archivo unico `00_setup.sql` se conserva (PRD), con cabecera explicita `-- ===== INCREMENTO 2 =====` para trazabilidad.
+- Las inserciones I2 asumen los IDs secuenciales generados por las inserciones I1: contrato `OPS-2026-001` = ID 1, obligaciones = 1, 2, 3, catalogo "Planilla aportes" = ID 1.
+- No se uso `SGCN_NOTIFICACIONES` ni columnas PDF nuevas (forward-compat I3).
+
+Validaciones:
+
+```powershell
+Select-String -Path db/00_setup.sql -Pattern "SGCN_INFORMES|SGCN_ACTIVIDADES|SGCN_SOPORTES|SGCN_DOCS_ADICIONALES|SGCN_OBSERVACIONES|TRG_INFORMES_AUDIT|SGCN_NOTIFICACIONES"
+Select-String -Path db/01_datos_prueba.sql -Pattern "SGCN_INFORMES|SGCN_ACTIVIDADES|BORRADOR|SGCN_NOTIFICACIONES"
+```
+
+Resultado: 36 coincidencias I2 en `00_setup.sql`, 6 lineas relevantes en `01_datos_prueba.sql`, 0 coincidencias de `SGCN_NOTIFICACIONES`.
+
+Pendiente: ejecutar los scripts contra una BD Oracle real local-dev cuando el modelo siguiente disponga de DBA/credenciales.
+
 ## Proximo Punto De Retoma
 
-Continuar con **Task 2: Oracle Schema Additions For I2**.
+Continuar con **Task 3: Backend Domain Layer (Entities, Enums, Repositories)**.
 
 Antes de avanzar:
 
-1. Leer `docs/plans/2026-05-01-sigcon-i2-implementation-plan.md`, Task 2.
-2. Leer `docs/specs/2026-05-01-sigcon-i2-spec.md` §3 para DDL exacto.
-3. Verificar que `db/00_setup.sql` actual termina con datos I1 (sin I2).
-4. Apendizar I2 con cabecera de seccion clara.
-5. Apendizar datos de prueba para informe `BORRADOR` sobre `OPS-2026-001`.
-6. Ejecutar la verificacion estatica indicada en el plan.
-7. Registrar en este log archivos tocados, validaciones, errores y commit resultante.
+1. Sincronizar: `git fetch origin && git pull --ff-only origin feat/sigcon-i2`.
+2. Leer `docs/plans/2026-05-01-sigcon-i2-implementation-plan.md`, Task 3.
+3. Leer `docs/specs/2026-05-01-sigcon-i2-spec.md` §4.1, §4.2, §4.3.
+4. Reusar patron de I1: ver `co.gov.bogota.sed.sigcon.domain.entity.Contrato` para auditoria/`activo`/relaciones.
+5. Crear enums `EstadoInforme`, `TipoSoporte`, `RolObservacion`.
+6. Crear entidades con `@EntityListeners(AuditingEntityListener.class)` y soft delete via `activo` boolean.
+7. Crear repositorios JPA con metodos exactos del spec §4.3.
+8. Replicar patron de `DomainModelMappingTest` para cubrir construccion/equals/hashCode/coverage de enums.
+9. Validar con `mvn test -Dtest=*DomainMappingTest` y `mvn test -DskipTests`.
+10. Registrar en este log archivos tocados, validaciones y commit.
