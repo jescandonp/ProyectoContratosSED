@@ -63,17 +63,20 @@ import { RouterLink } from '@angular/router';
           </div>
         </a>
 
-        <div class="flex flex-col gap-md rounded-xl border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] p-lg opacity-60">
+        <a
+          class="flex flex-col gap-md rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg no-underline transition-all hover:border-[var(--color-primary)] hover:shadow-md"
+          routerLink="/contratos"
+        >
           <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--color-outline)]">
             <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>
             </svg>
           </div>
           <div>
-            <p class="m-0 text-base font-semibold text-[var(--color-on-surface-variant)]">Informes</p>
-            <p class="mt-xs text-xs text-[var(--color-on-surface-variant)]">Disponible en Incremento 2</p>
+            <p class="m-0 text-base font-semibold text-[var(--color-on-surface)]">Informes</p>
+            <p class="mt-xs text-xs text-[var(--color-on-surface-variant)]">Consultar historial de informes por contrato</p>
           </div>
-        </div>
+        </a>
       </div>
     </div>
   `

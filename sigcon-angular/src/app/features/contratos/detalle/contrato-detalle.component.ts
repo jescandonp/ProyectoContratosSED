@@ -1,14 +1,16 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { ContratoDetalle } from '../../../core/models/contrato.model';
+import { InformeResumen } from '../../../core/models/informe.model';
 import { ContratoService } from '../../../core/services/contrato.service';
+import { InformeService } from '../../../core/services/informe.service';
 import { StatusChipComponent } from '../../../shared/components/status-chip/status-chip.component';
 
 @Component({
   selector: 'app-contrato-detalle',
   standalone: true,
-  imports: [StatusChipComponent],
+  imports: [StatusChipComponent, RouterLink],
   template: `
     <div class="space-y-lg">
 
@@ -88,26 +90,49 @@ import { StatusChipComponent } from '../../../shared/components/status-chip/stat
               }
             </div>
 
-            <!-- Historial de informes — placeholder I2 forward-compat -->
-            <div class="rounded-xl border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] p-lg">
+            <!-- Historial de informes -->
+            <div class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg">
               <div class="mb-md flex items-center justify-between">
                 <div class="flex items-center gap-sm">
-                  <span class="h-5 w-1 rounded-full bg-[var(--color-outline-variant)]"></span>
-                  <h3 class="m-0 text-base font-semibold text-[var(--color-on-surface-variant)]">Historial de Informes</h3>
+                  <span class="h-5 w-1 rounded-full bg-[var(--color-primary)]"></span>
+                  <h3 class="m-0 text-base font-semibold text-[var(--color-on-surface)]">Historial de Informes</h3>
                 </div>
-                <!-- Disabled: available in I2 -->
-                <button
-                  class="cursor-not-allowed rounded border border-[var(--color-outline-variant)] bg-white px-md py-xs text-sm font-semibold text-[var(--color-outline)] opacity-50"
-                  type="button"
-                  disabled
-                  title="Disponible en la siguiente versión del sistema"
-                >
-                  + Nuevo Informe
-                </button>
+                @if (contrato()?.estado === 'EN_EJECUCION') {
+                  <a
+                    class="rounded bg-[var(--color-primary)] px-md py-xs text-sm font-semibold text-white no-underline"
+                    [routerLink]="['/contratos', contrato()!.id, 'informes', 'nuevo']"
+                  >
+                    + Nuevo Informe
+                  </a>
+                }
               </div>
-              <p class="text-sm text-[var(--color-on-surface-variant)]">
-                Aún no se han registrado informes para este contrato. Los informes de actividades estarán disponibles próximamente.
-              </p>
+
+              @if (cargandoInformes()) {
+                <p class="text-sm text-[var(--color-on-surface-variant)]">Cargando informes...</p>
+              } @else if (informes().length === 0) {
+                <p class="text-sm text-[var(--color-on-surface-variant)]">
+                  Aún no se han registrado informes para este contrato.
+                </p>
+              } @else {
+                <ul class="m-0 list-none space-y-sm p-0">
+                  @for (informe of informes(); track informe.id) {
+                    <li>
+                      <a
+                        class="flex items-center justify-between gap-md rounded-lg border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] px-md py-sm text-sm no-underline hover:border-[var(--color-primary)]"
+                        [routerLink]="['/informes', informe.id]"
+                      >
+                        <span class="font-semibold text-[var(--color-on-surface)]">Informe No. {{ informe.numero }}</span>
+                        <span class="text-[var(--color-on-surface-variant)]">{{ informe.fechaInicio }} — {{ informe.fechaFin }}</span>
+                        <app-status-chip
+                          [value]="informe.estado"
+                          [label]="estadoInformeLabel(informe.estado)"
+                          [tone]="estadoInformeTone(informe.estado)"
+                        />
+                      </a>
+                    </li>
+                  }
+                </ul>
+              }
             </div>
           </div>
 
@@ -179,10 +204,13 @@ import { StatusChipComponent } from '../../../shared/components/status-chip/stat
 })
 export class ContratoDetalleComponent implements OnInit {
   readonly contrato = signal<ContratoDetalle | null>(null);
+  readonly informes = signal<InformeResumen[]>([]);
+  readonly cargandoInformes = signal(false);
   readonly error = signal('');
 
   constructor(
     private readonly contratoService: ContratoService,
+    private readonly informeService: InformeService,
     private readonly route: ActivatedRoute,
     private readonly router: Router
   ) {}
@@ -191,8 +219,22 @@ export class ContratoDetalleComponent implements OnInit {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     if (!id) { this.error.set('ID de contrato inválido.'); return; }
     this.contratoService.obtenerDetalle(id).subscribe({
-      next: (c) => this.contrato.set(c),
+      next: (c) => {
+        this.contrato.set(c);
+        this.cargarInformes(id);
+      },
       error: () => this.error.set('No se pudo cargar el contrato. Verifique que existe y tiene acceso.')
+    });
+  }
+
+  cargarInformes(contratoId: number) {
+    this.cargandoInformes.set(true);
+    this.informeService.listarInformes({ contratoId, size: 50 }).subscribe({
+      next: (page) => {
+        this.informes.set(page.content);
+        this.cargandoInformes.set(false);
+      },
+      error: () => this.cargandoInformes.set(false)
     });
   }
 
@@ -207,6 +249,21 @@ export class ContratoDetalleComponent implements OnInit {
     if (estado === 'EN_EJECUCION') return 'success';
     if (estado === 'LIQUIDADO') return 'warning';
     return 'neutral';
+  }
+
+  estadoInformeLabel(estado: string): string {
+    const map: Record<string, string> = {
+      BORRADOR: 'Borrador', ENVIADO: 'Enviado', EN_REVISION: 'En revisión',
+      DEVUELTO: 'Devuelto', APROBADO: 'Aprobado'
+    };
+    return map[estado] ?? estado;
+  }
+
+  estadoInformeTone(estado: string): 'neutral' | 'success' | 'warning' | 'danger' {
+    if (estado === 'APROBADO') return 'success';
+    if (estado === 'DEVUELTO') return 'danger';
+    if (estado === 'BORRADOR') return 'neutral';
+    return 'warning';
   }
 
   formatValor(valor: number): string {
