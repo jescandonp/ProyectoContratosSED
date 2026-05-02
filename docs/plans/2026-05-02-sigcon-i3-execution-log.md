@@ -45,7 +45,7 @@
 | Task 7 - Backend controllers + security + Swagger | ✅ done | Codex | `875ff45` | Controllers PDF/notificaciones; RBAC y endpoints ajustados a spec |
 | Task 8 - Frontend models + services | ✅ done | Codex | `8608227` | Modelos/servicios Angular PDF + notificaciones; specs unitarios |
 | Task 9 - Frontend campana + centro notificaciones | ✅ done | Codex | `e6d4d4a` | Campana, overlay, centro paginado y ruta `/notificaciones` |
-| Task 10 - Frontend visor PDF + advertencia firma | ⏳ pending | — | — | — |
+| Task 10 - Frontend visor PDF + advertencia firma | ✅ done | Codex | `6a717a6` | Visor PDF, ruta, accion desde detalle, advertencia firma y DTO PDF backend |
 | Task 11 - Verificacion E2E + docs | ⏳ pending | — | — | — |
 
 Leyenda: ⏳ pending, 🔄 in progress, ✅ done, ⏸ blocked, ⚠ deviation.
@@ -269,18 +269,75 @@ Resultado:
 - `ng build`: build success; salida en `sigcon-angular/dist/sigcon-angular`.
 - Auditoria de alcance frontend: 0 coincidencias para SECOP, motor de pagos, PKCS, CAdES, XAdES o regeneracion de PDF.
 
+## Task 10 Implementado
+
+Commit funcional:
+
+- `6a717a6 feat: add SIGCON I3 PDF viewer and signature warning`
+
+Archivos creados:
+
+- `sigcon-angular/src/app/features/informes/visor-pdf/visor-pdf.component.ts`
+- `sigcon-angular/src/app/features/informes/visor-pdf/visor-pdf.component.spec.ts`
+- `sigcon-angular/src/app/features/perfil/perfil.component.spec.ts`
+
+Archivos modificados:
+
+- `sigcon-angular/src/app/app.routes.ts`
+- `sigcon-angular/src/app/app.routes.spec.ts`
+- `sigcon-angular/src/app/features/informes/detalle/informe-detalle.component.ts`
+- `sigcon-angular/src/app/features/informes/detalle/informe-detalle.component.spec.ts`
+- `sigcon-angular/src/app/features/perfil/perfil.component.ts`
+- `sigcon-backend/src/main/java/co/gov/bogota/sed/sigcon/application/dto/informe/InformeResumenDto.java`
+- `sigcon-backend/src/main/java/co/gov/bogota/sed/sigcon/application/mapper/InformeMapper.java`
+- `sigcon-backend/src/test/java/co/gov/bogota/sed/sigcon/application/InformeServiceTest.java`
+
+Implementado:
+
+- Ruta `/informes/:id/pdf`.
+- `VisorPdfComponent` carga metadatos con `InformeService.obtenerDetalle(id)` y PDF con `PdfInformeService.descargar(id)`.
+- Boton "Descargar PDF" disponible solo cuando el Blob se obtuvo correctamente.
+- Mensaje institucional cuando el PDF no esta disponible: "El PDF no esta disponible. El informe debe estar en estado APROBADO."
+- Boton "Ver / Descargar PDF" en detalle solo cuando `estado === 'APROBADO'` y existe `pdfRuta`.
+- Advertencia de firma faltante en perfil para CONTRATISTA/SUPERVISOR sin `firmaImagen`.
+- DTO/mapping backend expone `pdfRuta`, `pdfGeneradoAt` y `pdfHash` para que la UI pueda detectar PDF generado.
+
+Validaciones:
+
+```powershell
+cd sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run build
+
+cd sigcon-backend
+mvn test -Dtest=InformeServiceTest
+mvn test
+
+Get-ChildItem -Path sigcon-backend\src\main\java -Recurse -File | Select-String -Pattern "SECOP|MotorPagos|radicacion|PKcs11|firma.criptografica|PKCS|CAdES|XAdES"
+Get-ChildItem -Path sigcon-angular\src\app -Recurse -File | Select-String -Pattern "secop|motor-pagos|PKCS|CAdES|XAdES|regenerarPdf|regenerar-pdf"
+```
+
+Resultado:
+
+- TDD RED inicial: specs fallaron porque no existia `VisorPdfComponent`.
+- `ng test`: 66 specs, 0 fallas.
+- `ng build`: build success; salida en `sigcon-angular/dist/sigcon-angular`.
+- `InformeServiceTest`: 10 tests, 0 fallas.
+- `mvn test`: 92 tests, 0 fallas.
+- Auditoria backend/frontend de alcance I3: 0 coincidencias.
+- Ruido no bloqueante: un spec de perfil genera 404 de imagen simulada `/api/storage/firmas/ana.png`, sin fallo de test.
+
 ## Proximo Punto De Retoma
 
-Continuar con **Task 10 — Frontend Visor PDF + Advertencia Firma En Perfil**.
+Continuar con **Task 11 — Verificacion E2E + Documentacion**.
 
 Antes de avanzar:
 
 1. Sincronizar: `git fetch origin && git pull --ff-only origin feat/sigcon-i3`.
-2. Leer `docs/plans/2026-05-02-sigcon-i3-implementation-plan.md`, Task 10.
-3. Revisar `features/informes/detalle`, `features/perfil` y `PdfInformeService`.
-4. Crear visor/descarga PDF sin regeneracion desde UI.
-5. Agregar advertencia de firma faltante en perfil solo para CONTRATISTA/SUPERVISOR segun datos disponibles.
-6. Escribir specs Jasmine para descarga PDF y advertencia de firma.
-7. Validar Angular test/build y actualizar este log con commit, resultados y siguiente retoma.
+2. Leer `docs/plans/2026-05-02-sigcon-i3-implementation-plan.md`, Task 11.
+3. Ejecutar verificacion integral backend/frontend.
+4. Revisar y actualizar `docs/ARRANQUE.md` y documentacion de estado si aplica.
+5. Confirmar que I3 no incluye firma criptografica avanzada, SECOP, radicacion oficial externa ni motor de pagos.
+6. Actualizar este log con resultados finales, commits y punto de retoma posterior a I3.
 
 *Execution log creado 2026-05-02. Rama `feat/sigcon-i3` base commit `0658cef`.*
