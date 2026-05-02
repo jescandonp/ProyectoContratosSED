@@ -198,10 +198,11 @@ class SigconBackendSecurityTest {
     }
 
     @Test
-    void futureIterationEndpointsAreNotExposedInI1() throws Exception {
+    void informesAreExposedInI2ButFutureNotificationsAreNot() throws Exception {
         mockMvc.perform(get("/api/informes")
                 .with(httpBasic(ADMIN_EMAIL, "admin123")))
-            .andExpect(status().isNotFound());
+            .andExpect(status().isForbidden())
+            .andExpect(jsonPath("$.error").value("ACCESO_DENEGADO"));
 
         mockMvc.perform(get("/api/notificaciones")
                 .with(httpBasic(ADMIN_EMAIL, "admin123")))

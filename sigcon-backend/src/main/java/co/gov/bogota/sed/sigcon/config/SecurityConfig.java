@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
@@ -12,6 +13,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 @Profile("weblogic")
 public class SecurityConfig {
 
@@ -28,6 +30,15 @@ public class SecurityConfig {
                 .antMatchers(HttpMethod.PUT, "/api/contratos/**").hasRole("ADMIN")
                 .antMatchers(HttpMethod.PATCH, "/api/contratos/**").hasRole("ADMIN")
                 .antMatchers(HttpMethod.DELETE, "/api/contratos/**").hasRole("ADMIN")
+                .antMatchers(HttpMethod.GET, "/api/informes/**").hasAnyRole("CONTRATISTA", "REVISOR", "SUPERVISOR", "ADMIN")
+                .antMatchers(HttpMethod.POST, "/api/informes/*/aprobar-revision").hasRole("REVISOR")
+                .antMatchers(HttpMethod.POST, "/api/informes/*/devolver-revision").hasRole("REVISOR")
+                .antMatchers(HttpMethod.POST, "/api/informes/*/aprobar").hasRole("SUPERVISOR")
+                .antMatchers(HttpMethod.POST, "/api/informes/*/devolver").hasRole("SUPERVISOR")
+                .antMatchers(HttpMethod.POST, "/api/informes/**").hasRole("CONTRATISTA")
+                .antMatchers(HttpMethod.PUT, "/api/informes/**").hasRole("CONTRATISTA")
+                .antMatchers(HttpMethod.DELETE, "/api/informes/**").hasRole("CONTRATISTA")
+                .antMatchers("/api/actividades/**").hasRole("CONTRATISTA")
                 .antMatchers(HttpMethod.GET, "/api/documentos-catalogo/**").authenticated()
                 .antMatchers("/api/documentos-catalogo/**").hasRole("ADMIN")
                 .antMatchers("/api/usuarios/**").hasRole("ADMIN")
