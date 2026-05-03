@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -65,12 +67,13 @@ public class EmailNotificacionService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        String body = "grant_type=client_credentials"
-            + "&client_id=" + mailProperties.getClientId()
-            + "&client_secret=" + mailProperties.getClientSecret()
-            + "&scope=https://graph.microsoft.com/.default";
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("grant_type", "client_credentials");
+        body.add("client_id", mailProperties.getClientId());
+        body.add("client_secret", mailProperties.getClientSecret());
+        body.add("scope", "https://graph.microsoft.com/.default");
 
-        HttpEntity<String> request = new HttpEntity<>(body, headers);
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
         @SuppressWarnings("unchecked")
         Map<String, Object> response = restTemplate.postForObject(tokenUrl, request, Map.class);
         if (response == null || !response.containsKey("access_token")) {

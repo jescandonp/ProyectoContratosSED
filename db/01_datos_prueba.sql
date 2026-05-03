@@ -93,3 +93,5 @@ INSERT INTO SGCN_NOTIFICACIONES (ID_USUARIO, TITULO, DESCRIPCION, TIPO_EVENTO, I
 VALUES (3, 'Informe enviado para revisión',
     'El informe No. 1 del contratista Juan Escandón (contrato OPS-2026-001, Ene 2026) está disponible para revisión.',
     'INFORME_ENVIADO', 1, 0);
+
+COMMIT;

@@ -130,7 +130,8 @@ Configurar variables de entorno:
 | `AZURE_TENANT_ID` | Tenant ID de Azure AD / Office 365 SED |
 | `MAIL_CLIENT_ID` | Client ID de la aplicacion Graph |
 | `MAIL_CLIENT_SECRET` | Client secret de la aplicacion Graph |
-| `sigcon.mail.enabled` | `true` |
+| `SIGCON_MAIL_ENABLED` | `true` por defecto en perfil `weblogic`; usar `false` solo para despliegues controlados sin envio real |
+| `GRAPH_API_BASE_URL` | Opcional; default `https://graph.microsoft.com/v1.0` |
 | `sigcon.storage.signatures-path` | Ruta compartida para firmas |
 
 ## Configuracion Local-Dev: Backend
@@ -251,8 +252,9 @@ Para notificaciones email:
 # application.yml — perfil weblogic
 sigcon:
   mail:
-    enabled: true
+    enabled: ${SIGCON_MAIL_ENABLED:true}
     from: ${MAIL_FROM}
+    graph-api-base-url: ${GRAPH_API_BASE_URL:https://graph.microsoft.com/v1.0}
     tenant-id: ${AZURE_TENANT_ID}
     client-id: ${MAIL_CLIENT_ID}
     client-secret: ${MAIL_CLIENT_SECRET}

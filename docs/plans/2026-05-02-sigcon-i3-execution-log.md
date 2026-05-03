@@ -443,9 +443,58 @@ Resultado:
 - `ng test`: 70 specs, 0 fallas.
 - Ruido no bloqueante esperado: logs de errores simulados en tests de resiliencia backend y 404 de imagen simulada `/api/storage/firmas/ana.png` en frontend.
 
+## Cierre Hallazgos Finales I1-I3
+
+Motivo:
+
+- Revision final cruzada I1-I3 detecto 3 hallazgos remanentes de cierre antes de continuidad:
+  - OAuth2 token request para Microsoft Graph armaba `application/x-www-form-urlencoded` por concatenacion manual.
+  - Perfil `weblogic` no declaraba configuracion `sigcon.mail.*`, dejando riesgo de email simulado por default.
+  - Seeds I3 de notificaciones quedaban despues del unico `COMMIT` del script local-dev.
+
+Archivos modificados:
+
+- `sigcon-backend/src/main/java/co/gov/bogota/sed/sigcon/application/service/EmailNotificacionService.java`
+- `sigcon-backend/src/test/java/co/gov/bogota/sed/sigcon/application/service/EmailNotificacionServiceTest.java`
+- `sigcon-backend/src/main/resources/application.yml`
+- `db/01_datos_prueba.sql`
+- `docs/ARRANQUE.md`
+
+Implementado:
+
+- `EmailNotificacionService.obtenerToken()` usa `LinkedMultiValueMap` para que `RestTemplate` serialice y codifique correctamente el form OAuth2.
+- Nueva prueba `EmailNotificacionServiceTest.obtenerTokenEnviaFormUrlEncodedSeguroParaSecretosConCaracteresReservados` cubre `client_id` y `client_secret` con caracteres reservados.
+- Perfil `weblogic` declara `sigcon.mail.enabled=${SIGCON_MAIL_ENABLED:true}`, `MAIL_FROM`, `GRAPH_API_BASE_URL`, `AZURE_TENANT_ID`, `MAIL_CLIENT_ID` y `MAIL_CLIENT_SECRET`.
+- `docs/ARRANQUE.md` queda alineado con las variables productivas de correo I3.
+- `db/01_datos_prueba.sql` agrega `COMMIT` final para persistir seeds I3 en clientes Oracle con autocommit desactivado.
+
+Validaciones:
+
+```powershell
+cd sigcon-backend
+mvn test "-Dtest=EmailNotificacionServiceTest"
+mvn test
+mvn package -DskipTests
+
+cd ..
+Get-Content sigcon-backend/src/main/resources/application.yml | Select-String -Pattern 'SIGCON_MAIL_ENABLED','GRAPH_API_BASE_URL','MAIL_CLIENT_SECRET' -Context 2,2
+Select-String -Path db/01_datos_prueba.sql -Pattern '^COMMIT;'
+Get-Item sigcon-backend/target/sigcon-backend.war | Select-Object Name,Length,LastWriteTime
+```
+
+Resultado:
+
+- Prueba roja inicial confirmo el defecto: body sin encoding (`client_id=client+id&client_secret=a+b&c=d`).
+- Prueba acotada despues del fix: 1 test, 0 fallas, 0 errores.
+- `mvn test`: 98 tests, 0 fallas, 0 errores.
+- `mvn package -DskipTests`: build success; WAR generado en `sigcon-backend/target/sigcon-backend.war`.
+- WAR: `sigcon-backend.war`, 57,174,107 bytes, generado 2026-05-03 11:52.
+- `application.yml` contiene configuracion mail explicita para perfil `weblogic`.
+- `db/01_datos_prueba.sql` contiene `COMMIT` en lineas 82 y 97; el segundo confirma seeds I3.
+
 ## Proximo Punto De Retoma
 
-Incremento 3 queda cerrado metodologicamente despues del hardening post-review. Antes de iniciar cualquier implementacion futura:
+Incremento 3 queda cerrado metodologicamente despues del hardening post-review y cierre de hallazgos finales. Antes de iniciar cualquier implementacion futura:
 
 1. Sincronizar: `git fetch origin && git pull --ff-only origin feat/sigcon-i3`.
 2. Revisar si el siguiente paso es una revision final cruzada I1-I3 o iniciar una spec nueva.

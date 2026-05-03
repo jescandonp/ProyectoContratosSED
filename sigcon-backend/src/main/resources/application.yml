@@ -73,3 +73,12 @@ spring:
         jwt:
           issuer-uri: https://login.microsoftonline.com/${AZURE_TENANT_ID}/v2.0
           jwk-set-uri: https://login.microsoftonline.com/${AZURE_TENANT_ID}/discovery/v2.0/keys
+
+sigcon:
+  mail:
+    enabled: ${SIGCON_MAIL_ENABLED:true}
+    from: ${MAIL_FROM}
+    graph-api-base-url: ${GRAPH_API_BASE_URL:https://graph.microsoft.com/v1.0}
+    tenant-id: ${AZURE_TENANT_ID}
+    client-id: ${MAIL_CLIENT_ID}
+    client-secret: ${MAIL_CLIENT_SECRET}
