@@ -90,27 +90,27 @@ interface ObligacionForm { id?: number; descripcion: string; orden: number; }
             <div class="space-y-xs">
               <label class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Contratista *</label>
               <select class="input-field" required [(ngModel)]="form.idContratista" name="idContratista">
-                <option [value]="null">— Seleccionar —</option>
+                <option [ngValue]="null">— Seleccionar —</option>
                 @for (u of contratistas(); track u.id) {
-                  <option [value]="u.id">{{ u.nombre }}</option>
+                  <option [ngValue]="u.id">{{ u.nombre }}</option>
                 }
               </select>
             </div>
             <div class="space-y-xs">
-              <label class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Revisor</label>
-              <select class="input-field" [(ngModel)]="form.idRevisor" name="idRevisor">
-                <option [value]="null">— Ninguno —</option>
+              <label class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Revisor *</label>
+              <select class="input-field" required [(ngModel)]="form.idRevisor" name="idRevisor">
+                <option [ngValue]="null">— Seleccionar —</option>
                 @for (u of revisores(); track u.id) {
-                  <option [value]="u.id">{{ u.nombre }}</option>
+                  <option [ngValue]="u.id">{{ u.nombre }}</option>
                 }
               </select>
             </div>
             <div class="space-y-xs">
-              <label class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Supervisor</label>
-              <select class="input-field" [(ngModel)]="form.idSupervisor" name="idSupervisor">
-                <option [value]="null">— Ninguno —</option>
+              <label class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Supervisor *</label>
+              <select class="input-field" required [(ngModel)]="form.idSupervisor" name="idSupervisor">
+                <option [ngValue]="null">— Seleccionar —</option>
                 @for (u of supervisores(); track u.id) {
-                  <option [value]="u.id">{{ u.nombre }}</option>
+                  <option [ngValue]="u.id">{{ u.nombre }}</option>
                 }
               </select>
             </div>
@@ -224,8 +224,8 @@ export class AdminContratoFormComponent implements OnInit {
     fechaInicio: '',
     fechaFin: '',
     idContratista: null as unknown as number,
-    idRevisor: null,
-    idSupervisor: null
+    idRevisor: null as unknown as number,
+    idSupervisor: null as unknown as number
   };
 
   private contratoId: number | null = null;
@@ -251,8 +251,8 @@ export class AdminContratoFormComponent implements OnInit {
           fechaInicio: c.fechaInicio,
           fechaFin: c.fechaFin,
           idContratista: c.contratista.id,
-          idRevisor: c.revisor?.id ?? null,
-          idSupervisor: c.supervisor?.id ?? null
+          idRevisor: (c.revisor?.id ?? null) as unknown as number,
+          idSupervisor: (c.supervisor?.id ?? null) as unknown as number
         };
         this.obligaciones.set(c.obligaciones.map((o: Obligacion) => ({ id: o.id, descripcion: o.descripcion, orden: o.orden })));
       });
@@ -279,12 +279,16 @@ export class AdminContratoFormComponent implements OnInit {
       : this.contratoService.crearContrato(this.form);
 
     obs.subscribe({
-      next: () => void this.router.navigate(['/admin/contratos']),
+      next: () => void this.router.navigate(['/admin/contratos'], {
+        state: { mensaje: this.esEdicion() ? 'Contrato actualizado correctamente.' : 'Contrato creado correctamente.' }
+      }),
       error: (err) => {
         this.guardando.set(false);
         const codigo = err?.error?.error ?? '';
         if (codigo === 'NUMERO_CONTRATO_DUPLICADO') {
           this.error.set('Ya existe un contrato con ese número.');
+        } else if (codigo === 'VALIDACION_FALLIDA' || codigo === 'USUARIO_NO_ENCONTRADO') {
+          this.error.set(err?.error?.mensaje ?? 'Seleccione contratista, revisor y supervisor para crear un contrato completo.');
         } else {
           this.error.set('Error al guardar el contrato. Verifique los datos e intente de nuevo.');
         }

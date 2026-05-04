@@ -30,6 +30,18 @@ import { StatusChipComponent } from '../../../shared/components/status-chip/stat
         </button>
       </div>
 
+      @if (mensaje()) {
+        <div class="rounded border border-[var(--color-primary)] bg-[var(--color-primary-container)] px-md py-sm text-sm text-[var(--color-on-primary-container)]">
+          {{ mensaje() }}
+        </div>
+      }
+
+      @if (error()) {
+        <div class="rounded border border-[var(--color-error-container)] bg-[var(--color-error-container)] px-md py-sm text-sm text-[var(--color-on-error-container)]">
+          {{ error() }}
+        </div>
+      }
+
       <!-- Filters -->
       <div class="flex flex-wrap gap-sm">
         <select
@@ -118,6 +130,8 @@ export class AdminContratosComponent implements OnInit {
   readonly pagina = signal<Page<ContratoResumen> | null>(null);
   readonly cargando = signal(true);
   readonly paginaActual = signal(0);
+  readonly error = signal('');
+  readonly mensaje = signal('');
 
   filtroEstado: EstadoContrato | '' = '';
 
@@ -126,16 +140,32 @@ export class AdminContratosComponent implements OnInit {
     private readonly router: Router
   ) {}
 
-  ngOnInit() { this.cargar(); }
+  ngOnInit() {
+    const state = history.state as { mensaje?: string };
+    this.mensaje.set(state?.mensaje ?? '');
+    this.cargar();
+  }
 
   cargar() {
     this.cargando.set(true);
+    this.error.set('');
     this.contratoService.listarContratos({
       page: this.paginaActual(), size: 15,
       estado: this.filtroEstado || undefined
     }).subscribe({
       next: (p) => { this.pagina.set(p); this.cargando.set(false); },
-      error: () => this.cargando.set(false)
+      error: (err) => {
+        this.cargando.set(false);
+        this.pagina.set(null);
+        const codigo = err?.error?.error ?? '';
+        if (codigo === 'USUARIO_NO_ENCONTRADO') {
+          this.error.set('La sesión local-dev no coincide con un usuario activo en SIGCON. Ejecute el seed local o cree el usuario autenticado en SGCN_USUARIOS.');
+        } else if (err?.status === 0) {
+          this.error.set('No se pudo conectar con el backend. Verifica que Spring Boot este iniciado en localhost:8080.');
+        } else {
+          this.error.set(err?.error?.mensaje ?? 'No se pudo cargar la lista de contratos.');
+        }
+      }
     });
   }
 

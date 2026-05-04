@@ -134,6 +134,34 @@ class ContratoServiceTest {
     }
 
     @Test
+    void creatingContractWithoutReviewerThrowsValidationError() {
+        ContratoRequest request = contratoRequest("OPS-2026-002");
+        request.setIdRevisor(null);
+        when(contratoRepository.findByNumeroAndActivoTrue("OPS-2026-002")).thenReturn(Optional.empty());
+        when(usuarioRepository.findByIdAndActivoTrue(2L)).thenReturn(Optional.of(usuario(2L, RolUsuario.CONTRATISTA)));
+
+        assertThatThrownBy(() -> contratoService.crearContrato(request))
+            .isInstanceOfSatisfying(SigconBusinessException.class, exception -> {
+                assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.USUARIO_NO_ENCONTRADO);
+                assertThat(exception.getStatus().value()).isEqualTo(400);
+            });
+    }
+
+    @Test
+    void creatingContractWithUserInWrongRoleThrowsValidationError() {
+        ContratoRequest request = contratoRequest("OPS-2026-003");
+        when(contratoRepository.findByNumeroAndActivoTrue("OPS-2026-003")).thenReturn(Optional.empty());
+        when(usuarioRepository.findByIdAndActivoTrue(2L)).thenReturn(Optional.of(usuario(2L, RolUsuario.CONTRATISTA)));
+        when(usuarioRepository.findByIdAndActivoTrue(3L)).thenReturn(Optional.of(usuario(3L, RolUsuario.SUPERVISOR)));
+
+        assertThatThrownBy(() -> contratoService.crearContrato(request))
+            .isInstanceOfSatisfying(SigconBusinessException.class, exception -> {
+                assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.USUARIO_NO_ENCONTRADO);
+                assertThat(exception.getStatus().value()).isEqualTo(400);
+            });
+    }
+
+    @Test
     void contractorCannotAccessForeignContractDetail() {
         Usuario contractor = usuario(2L, RolUsuario.CONTRATISTA);
         Contrato foreignContract = contrato(10L, usuario(99L, RolUsuario.CONTRATISTA));

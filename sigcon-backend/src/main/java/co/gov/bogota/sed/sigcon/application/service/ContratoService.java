@@ -141,19 +141,34 @@ public class ContratoService {
         contrato.setFechaInicio(request.getFechaInicio());
         contrato.setFechaFin(request.getFechaFin());
         contrato.setEstado(contrato.getEstado() == null ? EstadoContrato.EN_EJECUCION : contrato.getEstado());
-        contrato.setContratista(findActiveUsuario(request.getIdContratista()));
-        contrato.setRevisor(request.getIdRevisor() == null ? null : findActiveUsuario(request.getIdRevisor()));
-        contrato.setSupervisor(request.getIdSupervisor() == null ? null : findActiveUsuario(request.getIdSupervisor()));
+        contrato.setContratista(findActiveUsuario(request.getIdContratista(), RolUsuario.CONTRATISTA, "contratista"));
+        contrato.setRevisor(findActiveUsuario(request.getIdRevisor(), RolUsuario.REVISOR, "revisor"));
+        contrato.setSupervisor(findActiveUsuario(request.getIdSupervisor(), RolUsuario.SUPERVISOR, "supervisor"));
         contrato.setActivo(true);
     }
 
-    private Usuario findActiveUsuario(Long id) {
-        return usuarioRepository.findByIdAndActivoTrue(id)
+    private Usuario findActiveUsuario(Long id, RolUsuario expectedRole, String label) {
+        if (id == null) {
+            throw new SigconBusinessException(
+                ErrorCode.USUARIO_NO_ENCONTRADO,
+                "Debe seleccionar " + label + " del contrato",
+                HttpStatus.BAD_REQUEST
+            );
+        }
+        Usuario usuario = usuarioRepository.findByIdAndActivoTrue(id)
             .orElseThrow(() -> new SigconBusinessException(
                 ErrorCode.USUARIO_NO_ENCONTRADO,
                 "Usuario no encontrado",
                 HttpStatus.NOT_FOUND
             ));
+        if (usuario.getRol() != expectedRole) {
+            throw new SigconBusinessException(
+                ErrorCode.USUARIO_NO_ENCONTRADO,
+                "El usuario seleccionado no corresponde al rol " + expectedRole.name(),
+                HttpStatus.BAD_REQUEST
+            );
+        }
+        return usuario;
     }
 
     private void assertCanView(Usuario usuario, Contrato contrato) {

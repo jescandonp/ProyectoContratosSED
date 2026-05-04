@@ -540,3 +540,65 @@ Incremento 3 queda cerrado metodologicamente despues del hardening post-review y
 4. Mantener fuera de SIGCON actual: firma criptografica avanzada, SECOP2, radicacion oficial externa y motor de pagos hasta que exista spec/plan aprobado.
 
 *Execution log creado 2026-05-02. Rama `feat/sigcon-i3` base commit `0658cef`.*
+
+## Ajuste Durante Pruebas Funcionales De Contratos
+
+Motivo:
+
+- En prueba manual se creo el contrato `CO1.PCCNTR 8504408 - 2025` sin revisor.
+- La creacion persistio en Oracle, pero la UI no mostro confirmacion.
+- El listado de contratos no cargaba porque el usuario local-dev autenticado `admin@educacionbogota.edu.co` no existia como usuario activo en `SGCN_USUARIOS`; el frontend ocultaba ese error.
+
+Evidencia local:
+
+```sql
+select c.ID, c.NUMERO, c.ESTADO, c.ACTIVO, c.ID_CONTRATISTA, c.ID_REVISOR, c.ID_SUPERVISOR
+from SGCN_CONTRATOS c
+where c.NUMERO = 'CO1.PCCNTR 8504408 - 2025';
+```
+
+Resultado observado:
+
+- Contrato activo existe.
+- `ID_REVISOR` quedo nulo.
+- `GET /api/contratos?page=0&size=15` con basic auth local-dev devolvia `USUARIO_NO_ENCONTRADO`.
+
+Implementado:
+
+- Backend: `ContratoRequest` exige `idRevisor` e `idSupervisor`.
+- Backend: `ContratoService` valida que contratista, revisor y supervisor existan activos y correspondan a sus roles.
+- Frontend: formulario de contrato marca Revisor y Supervisor como obligatorios.
+- Frontend: despues de crear/editar contrato se muestra mensaje de confirmacion en el listado.
+- Frontend: el listado muestra error explicito si la sesion local-dev no existe en `SGCN_USUARIOS`.
+- DB local-dev: nuevo script `db/02_reparar_usuarios_local_dev.sql` repara de forma idempotente los cuatro usuarios esperados por `DevSecurityConfig` y `DevSessionService`.
+
+Validaciones:
+
+```powershell
+cd sigcon-backend
+mvn test -Dtest=ContratoServiceTest
+mvn test
+
+cd ../sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run build
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false --browsers=ChromeHeadless
+
+cd ..
+sqlplus -S SED_SIGCON/Sigcon2026Local1@localhost:1521/XEPDB1 @db/02_reparar_usuarios_local_dev.sql
+curl.exe -i -u "admin@educacionbogota.edu.co:admin123" "http://localhost:8080/api/contratos?page=0&size=15"
+```
+
+Resultado:
+
+- `ContratoServiceTest`: 9 tests, 0 fallas, 0 errores.
+- `mvn test`: 100 tests, 0 fallas, 0 errores.
+- `ng build`: build success; salida en `sigcon-angular/dist/sigcon-angular`.
+- `ng test`: 71 specs, 0 fallas.
+- Script Oracle local-dev: 4 filas fusionadas, `COMMIT` confirmado.
+- `GET /api/contratos?page=0&size=15` como Admin local-dev responde `200` y devuelve el contrato `CO1.PCCNTR 8504408 - 2025`.
+
+Proximo punto de retoma:
+
+- Refrescar la pantalla de contratos o reiniciar `ng serve` si estaba corriendo antes del cambio frontend.
+- Reintentar crear un contrato nuevo con contratista, revisor y supervisor seleccionados.
+- Revisar si el contrato `CO1.PCCNTR 8504408 - 2025` debe editarse para asignarle revisor antes de usarlo en flujos I2/I3.
