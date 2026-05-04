@@ -602,3 +602,47 @@ Proximo punto de retoma:
 - Refrescar la pantalla de contratos o reiniciar `ng serve` si estaba corriendo antes del cambio frontend.
 - Reintentar crear un contrato nuevo con contratista, revisor y supervisor seleccionados.
 - Revisar si el contrato `CO1.PCCNTR 8504408 - 2025` debe editarse para asignarle revisor antes de usarlo en flujos I2/I3.
+
+## Ajuste Durante Pruebas Funcionales De Obligaciones Contractuales
+
+Motivo:
+
+- En prueba manual del contrato `CO1.PCCNTR 8504408 - 2025`, el formulario de edicion mostro mensaje de actualizacion exitosa despues de agregar obligaciones contractuales.
+- Al ingresar nuevamente al contrato, las obligaciones no aparecian.
+
+Causa raiz:
+
+- `AdminContratoFormComponent.guardar()` solo llamaba `ContratoService.crearContrato/actualizarContrato`.
+- El modulo ya tenia `ObligacionService` y endpoints `/api/contratos/{contratoId}/obligaciones`, pero el formulario de contrato no los invocaba.
+- El mensaje de exito correspondia solo al guardado del contrato, no a la persistencia de obligaciones.
+
+Implementado:
+
+- `AdminContratoFormComponent` sincroniza obligaciones despues de crear/actualizar contrato:
+  - obligaciones nuevas -> `POST /api/contratos/{id}/obligaciones`;
+  - obligaciones existentes -> `PUT /api/contratos/{id}/obligaciones/{obligacionId}`;
+  - obligaciones eliminadas en pantalla -> `DELETE /api/contratos/{id}/obligaciones/{obligacionId}`.
+- Se filtran obligaciones vacias antes de enviar al backend para respetar `ObligacionRequest.descripcion @NotBlank`.
+- Si falla el guardado de contrato u obligaciones, no navega como exito y muestra error especifico.
+- Nueva prueba frontend `AdminContratoFormComponent` cubre que editar contrato y agregar obligacion invoca `ObligacionService.crear()`.
+
+Validaciones:
+
+```powershell
+cd sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run build
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false --browsers=ChromeHeadless --include src/app/features/admin/contratos/admin-contrato-form.component.spec.ts
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false --browsers=ChromeHeadless
+```
+
+Resultado:
+
+- `ng build`: build success; salida en `sigcon-angular/dist/sigcon-angular`.
+- Test acotado: 1 spec, 0 fallas.
+- Suite Angular: 72 specs, 0 fallas.
+
+Proximo punto de retoma:
+
+- Reiniciar `ng serve` o refrescar la app si el servidor Angular estaba corriendo con bundle anterior.
+- Volver a editar `CO1.PCCNTR 8504408 - 2025`, agregar obligaciones y guardar.
+- Reingresar al contrato y confirmar que las obligaciones aparecen listadas.

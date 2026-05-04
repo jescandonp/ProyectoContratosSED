@@ -1,11 +1,14 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 
 import { ContratoDetalle, ContratoRequest, TipoContrato } from '../../../core/models/contrato.model';
 import { Obligacion } from '../../../core/models/obligacion.model';
 import { Usuario } from '../../../core/models/usuario.model';
 import { ContratoService } from '../../../core/services/contrato.service';
+import { ObligacionService } from '../../../core/services/obligacion.service';
 import { UsuarioService } from '../../../core/services/usuario.service';
 
 interface ObligacionForm { id?: number; descripcion: string; orden: number; }
@@ -229,9 +232,11 @@ export class AdminContratoFormComponent implements OnInit {
   };
 
   private contratoId: number | null = null;
+  private originalObligacionIds = new Set<number>();
 
   constructor(
     private readonly contratoService: ContratoService,
+    private readonly obligacionService: ObligacionService,
     private readonly usuarioService: UsuarioService,
     private readonly route: ActivatedRoute,
     private readonly router: Router
@@ -255,6 +260,7 @@ export class AdminContratoFormComponent implements OnInit {
           idSupervisor: (c.supervisor?.id ?? null) as unknown as number
         };
         this.obligaciones.set(c.obligaciones.map((o: Obligacion) => ({ id: o.id, descripcion: o.descripcion, orden: o.orden })));
+        this.originalObligacionIds = new Set(c.obligaciones.map((o: Obligacion) => o.id));
       });
     }
     this.cargarUsuarios();
@@ -278,7 +284,9 @@ export class AdminContratoFormComponent implements OnInit {
       ? this.contratoService.actualizarContrato(this.contratoId!, this.form)
       : this.contratoService.crearContrato(this.form);
 
-    obs.subscribe({
+    obs.pipe(
+      switchMap((contrato) => this.sincronizarObligaciones(contrato.id).pipe(map(() => contrato)))
+    ).subscribe({
       next: () => void this.router.navigate(['/admin/contratos'], {
         state: { mensaje: this.esEdicion() ? 'Contrato actualizado correctamente.' : 'Contrato creado correctamente.' }
       }),
@@ -290,7 +298,7 @@ export class AdminContratoFormComponent implements OnInit {
         } else if (codigo === 'VALIDACION_FALLIDA' || codigo === 'USUARIO_NO_ENCONTRADO') {
           this.error.set(err?.error?.mensaje ?? 'Seleccione contratista, revisor y supervisor para crear un contrato completo.');
         } else {
-          this.error.set('Error al guardar el contrato. Verifique los datos e intente de nuevo.');
+          this.error.set('Error al guardar el contrato u obligaciones. Verifique los datos e intente de nuevo.');
         }
       }
     });
@@ -305,5 +313,28 @@ export class AdminContratoFormComponent implements OnInit {
       .subscribe((p) => this.revisores.set(p.content));
     this.usuarioService.listarUsuarios({ rol: 'SUPERVISOR', size: 100 })
       .subscribe((p) => this.supervisores.set(p.content));
+  }
+
+  private sincronizarObligaciones(contratoId: number) {
+    const obligacionesValidas = this.obligaciones()
+      .map((obligacion, index) => ({
+        ...obligacion,
+        descripcion: obligacion.descripcion.trim(),
+        orden: index + 1
+      }))
+      .filter((obligacion) => obligacion.descripcion.length > 0);
+
+    const idsVigentes = new Set(obligacionesValidas.filter((obligacion) => obligacion.id).map((obligacion) => obligacion.id!));
+    const eliminaciones = [...this.originalObligacionIds]
+      .filter((id) => !idsVigentes.has(id))
+      .map((id) => this.obligacionService.eliminar(contratoId, id));
+    const guardados = obligacionesValidas.map((obligacion) => {
+      const request = { descripcion: obligacion.descripcion, orden: obligacion.orden };
+      return obligacion.id
+        ? this.obligacionService.actualizar(contratoId, obligacion.id, request)
+        : this.obligacionService.crear(contratoId, request);
+    });
+    const operaciones = [...eliminaciones, ...guardados];
+    return operaciones.length === 0 ? of([]) : forkJoin(operaciones);
   }
 }
