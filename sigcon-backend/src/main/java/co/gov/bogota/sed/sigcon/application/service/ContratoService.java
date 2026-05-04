@@ -163,38 +163,19 @@ public class ContratoService {
                 HttpStatus.BAD_REQUEST
             );
         }
-        Usuario usuario = usuarioRepository.findByIdAndActivoTrue(id)
-            .orElseThrow(() -> new SigconBusinessException(
-                ErrorCode.USUARIO_NO_ENCONTRADO,
-                "Usuario no encontrado",
-                HttpStatus.NOT_FOUND
-            ));
-        if (usuario.getRol() != expectedRole) {
-            throw new SigconBusinessException(
-                ErrorCode.USUARIO_NO_ENCONTRADO,
-                "El usuario seleccionado no corresponde al rol " + expectedRole.name(),
-                HttpStatus.BAD_REQUEST
-            );
-        }
-        return usuario;
+        return findActiveUsuarioOpcional(id, expectedRole);
     }
 
     private Usuario findActiveUsuarioOpcional(Long id, RolUsuario expectedRole) {
-        if (id == null) {
-            return null;
-        }
+        if (id == null) return null;
         Usuario usuario = usuarioRepository.findByIdAndActivoTrue(id)
             .orElseThrow(() -> new SigconBusinessException(
-                ErrorCode.USUARIO_NO_ENCONTRADO,
-                "Usuario no encontrado",
-                HttpStatus.NOT_FOUND
-            ));
+                ErrorCode.USUARIO_NO_ENCONTRADO, "Usuario no encontrado", HttpStatus.NOT_FOUND));
         if (usuario.getRol() != expectedRole) {
             throw new SigconBusinessException(
                 ErrorCode.USUARIO_NO_ENCONTRADO,
                 "El usuario seleccionado no corresponde al rol " + expectedRole.name(),
-                HttpStatus.BAD_REQUEST
-            );
+                HttpStatus.BAD_REQUEST);
         }
         return usuario;
     }

@@ -32,9 +32,12 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Optional;
 
+import org.mockito.ArgumentCaptor;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -145,7 +148,9 @@ class ContratoServiceTest {
 
         contratoService.crearContrato(request);
 
-        verify(contratoRepository).save(any(Contrato.class));
+        ArgumentCaptor<Contrato> captor = ArgumentCaptor.forClass(Contrato.class);
+        verify(contratoRepository).save(captor.capture());
+        assertThat(captor.getValue().getRevisor()).isNull();
     }
 
     @Test
@@ -154,6 +159,8 @@ class ContratoServiceTest {
         request.setFechaFin(LocalDate.of(2025, 12, 31));
         request.setFechaInicio(LocalDate.of(2026, 1, 15));
         when(contratoRepository.findByNumeroAndActivoTrue("OPS-2026-007")).thenReturn(Optional.empty());
+        lenient().when(usuarioRepository.findByIdAndActivoTrue(2L)).thenReturn(Optional.of(usuario(2L, RolUsuario.CONTRATISTA)));
+        lenient().when(usuarioRepository.findByIdAndActivoTrue(4L)).thenReturn(Optional.of(usuario(4L, RolUsuario.SUPERVISOR)));
 
         assertThatThrownBy(() -> contratoService.crearContrato(request))
             .isInstanceOfSatisfying(SigconBusinessException.class, exception -> {
