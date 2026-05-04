@@ -218,13 +218,29 @@ export class AdminUsuariosComponent implements OnInit {
       next: () => { this.guardandoU.set(false); this.cerrarFormulario(); this.cargar(); },
       error: (err) => {
         this.guardandoU.set(false);
-        const c = err?.error?.error ?? '';
-        this.errorForm.set(c === 'EMAIL_DUPLICADO' ? 'El email ya está registrado.' : 'Error al guardar el usuario.');
+        this.errorForm.set(this.mensajeErrorGuardarUsuario(err));
       }
     });
   }
 
   toggleEstado(u: Usuario) {
     this.usuarioService.cambiarEstado(u.id, !u.activo).subscribe(() => this.cargar());
+  }
+
+  private mensajeErrorGuardarUsuario(err: any) {
+    const codigo = err?.error?.error ?? '';
+    if (err?.status === 0) {
+      return 'No se pudo conectar con el backend. Verifica que Spring Boot este iniciado en localhost:8080.';
+    }
+    if (err?.status === 401 || err?.status === 403) {
+      return 'No tienes permisos de administrador o la sesion expiro.';
+    }
+    if (codigo === 'EMAIL_DUPLICADO') {
+      return 'El email ya esta registrado.';
+    }
+    if (codigo === 'VALIDACION_FALLIDA') {
+      return err?.error?.mensaje ?? 'Revisa los campos obligatorios del usuario.';
+    }
+    return err?.error?.mensaje ?? 'Error al guardar el usuario.';
   }
 }

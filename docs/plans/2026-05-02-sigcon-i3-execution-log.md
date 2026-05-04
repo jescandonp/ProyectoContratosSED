@@ -492,6 +492,44 @@ Resultado:
 - `application.yml` contiene configuracion mail explicita para perfil `weblogic`.
 - `db/01_datos_prueba.sql` contiene `COMMIT` en lineas 82 y 97; el segundo confirma seeds I3.
 
+## Ajuste UX Durante Pruebas Funcionales I1
+
+Motivo:
+
+- Durante pruebas manuales del paso 1 de administracion, la pantalla `Nuevo usuario` mostraba solo `Error al guardar el usuario.`
+- Desde esta sesion no habia backend escuchando en `localhost:8080`, por lo que el caso de fallo de conexion/proxy quedaba indistinguible de validacion, permisos o duplicado.
+
+Archivos modificados:
+
+- `sigcon-angular/src/app/features/admin/usuarios/admin-usuarios.component.ts`
+- `sigcon-angular/src/app/features/admin/usuarios/admin-usuarios.component.spec.ts`
+
+Implementado:
+
+- `AdminUsuariosComponent` ahora distingue errores de guardado:
+  - `status === 0`: backend/proxy no disponible en `localhost:8080`.
+  - `401/403`: sesion sin permisos admin o expirada.
+  - `EMAIL_DUPLICADO`: email ya registrado.
+  - `VALIDACION_FALLIDA`: mensaje de validacion del backend.
+  - Fallback: mensaje backend si existe o error generico.
+- Se agrego prueba para el caso `status === 0` usando el mismo payload del flujo manual reportado.
+
+Validaciones:
+
+```powershell
+cd sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false --browsers=ChromeHeadless --include src/app/features/admin/usuarios/admin-usuarios.component.spec.ts
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false --browsers=ChromeHeadless
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run build
+```
+
+Resultado:
+
+- Prueba roja inicial confirmo el defecto: para `status: 0` mostraba `Error al guardar el usuario.`
+- Prueba acotada despues del fix: 1 test, 0 fallas.
+- `ng test`: 71 specs, 0 fallas.
+- `ng build`: build success; salida en `sigcon-angular/dist/sigcon-angular`.
+
 ## Proximo Punto De Retoma
 
 Incremento 3 queda cerrado metodologicamente despues del hardening post-review y cierre de hallazgos finales. Antes de iniciar cualquier implementacion futura:
