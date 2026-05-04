@@ -134,6 +134,14 @@ public class ContratoService {
     }
 
     private void applyRequest(Contrato contrato, ContratoRequest request) {
+        if (request.getFechaFin() != null && request.getFechaInicio() != null
+                && request.getFechaFin().isBefore(request.getFechaInicio())) {
+            throw new SigconBusinessException(
+                ErrorCode.FECHA_FIN_INVALIDA,
+                "La fecha fin no puede ser anterior a la fecha inicio",
+                HttpStatus.UNPROCESSABLE_ENTITY
+            );
+        }
         contrato.setNumero(request.getNumero());
         contrato.setObjeto(request.getObjeto());
         contrato.setTipo(request.getTipo());
@@ -142,7 +150,7 @@ public class ContratoService {
         contrato.setFechaFin(request.getFechaFin());
         contrato.setEstado(contrato.getEstado() == null ? EstadoContrato.EN_EJECUCION : contrato.getEstado());
         contrato.setContratista(findActiveUsuario(request.getIdContratista(), RolUsuario.CONTRATISTA, "contratista"));
-        contrato.setRevisor(findActiveUsuario(request.getIdRevisor(), RolUsuario.REVISOR, "revisor"));
+        contrato.setRevisor(findActiveUsuarioOpcional(request.getIdRevisor(), RolUsuario.REVISOR));
         contrato.setSupervisor(findActiveUsuario(request.getIdSupervisor(), RolUsuario.SUPERVISOR, "supervisor"));
         contrato.setActivo(true);
     }
@@ -154,6 +162,26 @@ public class ContratoService {
                 "Debe seleccionar " + label + " del contrato",
                 HttpStatus.BAD_REQUEST
             );
+        }
+        Usuario usuario = usuarioRepository.findByIdAndActivoTrue(id)
+            .orElseThrow(() -> new SigconBusinessException(
+                ErrorCode.USUARIO_NO_ENCONTRADO,
+                "Usuario no encontrado",
+                HttpStatus.NOT_FOUND
+            ));
+        if (usuario.getRol() != expectedRole) {
+            throw new SigconBusinessException(
+                ErrorCode.USUARIO_NO_ENCONTRADO,
+                "El usuario seleccionado no corresponde al rol " + expectedRole.name(),
+                HttpStatus.BAD_REQUEST
+            );
+        }
+        return usuario;
+    }
+
+    private Usuario findActiveUsuarioOpcional(Long id, RolUsuario expectedRole) {
+        if (id == null) {
+            return null;
         }
         Usuario usuario = usuarioRepository.findByIdAndActivoTrue(id)
             .orElseThrow(() -> new SigconBusinessException(

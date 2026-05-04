@@ -25,7 +25,6 @@ public class ContratoRequest {
     private LocalDate fechaFin;
     @NotNull
     private Long idContratista;
-    @NotNull
     private Long idRevisor;
     @NotNull
     private Long idSupervisor;

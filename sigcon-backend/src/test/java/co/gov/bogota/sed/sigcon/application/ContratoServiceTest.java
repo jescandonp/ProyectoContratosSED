@@ -134,16 +134,31 @@ class ContratoServiceTest {
     }
 
     @Test
-    void creatingContractWithoutReviewerThrowsValidationError() {
+    void creatingContractWithoutReviewerSucceeds() {
         ContratoRequest request = contratoRequest("OPS-2026-002");
         request.setIdRevisor(null);
         when(contratoRepository.findByNumeroAndActivoTrue("OPS-2026-002")).thenReturn(Optional.empty());
         when(usuarioRepository.findByIdAndActivoTrue(2L)).thenReturn(Optional.of(usuario(2L, RolUsuario.CONTRATISTA)));
+        when(usuarioRepository.findByIdAndActivoTrue(4L)).thenReturn(Optional.of(usuario(4L, RolUsuario.SUPERVISOR)));
+        Contrato saved = contrato(20L, usuario(2L, RolUsuario.CONTRATISTA));
+        when(contratoRepository.save(any(Contrato.class))).thenReturn(saved);
+
+        contratoService.crearContrato(request);
+
+        verify(contratoRepository).save(any(Contrato.class));
+    }
+
+    @Test
+    void creatingContractWithInvalidDateRangeThrowsValidationError() {
+        ContratoRequest request = contratoRequest("OPS-2026-007");
+        request.setFechaFin(LocalDate.of(2025, 12, 31));
+        request.setFechaInicio(LocalDate.of(2026, 1, 15));
+        when(contratoRepository.findByNumeroAndActivoTrue("OPS-2026-007")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> contratoService.crearContrato(request))
             .isInstanceOfSatisfying(SigconBusinessException.class, exception -> {
-                assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.USUARIO_NO_ENCONTRADO);
-                assertThat(exception.getStatus().value()).isEqualTo(400);
+                assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.FECHA_FIN_INVALIDA);
+                assertThat(exception.getStatus().value()).isEqualTo(422);
             });
     }
 
