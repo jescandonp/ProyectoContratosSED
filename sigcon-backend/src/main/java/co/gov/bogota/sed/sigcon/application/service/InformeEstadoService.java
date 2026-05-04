@@ -122,7 +122,12 @@ public class InformeEstadoService {
      */
     public InformeDetalleDto aprobar(Long informeId, String supervisorEmail) {
         Informe informe = informeService.findActiveInforme(informeId);
-        assertState(informe, EstadoInforme.EN_REVISION);
+        boolean sinRevisor = informe.getContrato().getRevisor() == null;
+        if (sinRevisor) {
+            assertState(informe, EstadoInforme.ENVIADO, EstadoInforme.EN_REVISION);
+        } else {
+            assertState(informe, EstadoInforme.EN_REVISION);
+        }
         assertAssignedEmail(informe.getContrato().getSupervisor(), supervisorEmail);
 
         LocalDateTime fechaAprobacion = LocalDateTime.now();
@@ -151,7 +156,12 @@ public class InformeEstadoService {
      */
     public InformeDetalleDto devolver(Long informeId, String supervisorEmail, String observacion) {
         Informe informe = informeService.findActiveInforme(informeId);
-        assertState(informe, EstadoInforme.EN_REVISION);
+        boolean sinRevisor = informe.getContrato().getRevisor() == null;
+        if (sinRevisor) {
+            assertState(informe, EstadoInforme.ENVIADO, EstadoInforme.EN_REVISION);
+        } else {
+            assertState(informe, EstadoInforme.EN_REVISION);
+        }
         assertAssignedEmail(informe.getContrato().getSupervisor(), supervisorEmail);
         requireObservation(observacion);
         observacionService.registrar(informe, RolObservacion.SUPERVISOR, observacion);
