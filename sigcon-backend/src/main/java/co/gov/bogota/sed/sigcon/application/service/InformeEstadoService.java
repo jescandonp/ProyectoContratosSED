@@ -181,7 +181,7 @@ public class InformeEstadoService {
         return informeService.buildDetalle(saved);
     }
 
-    private static void assertState(Informe informe, EstadoInforme expected) {
+    private static void assertState(Informe informe, EstadoInforme... allowed) {
         if (informe.getEstado() == EstadoInforme.APROBADO) {
             throw new SigconBusinessException(
                 ErrorCode.INFORME_NO_EDITABLE,
@@ -189,30 +189,14 @@ public class InformeEstadoService {
                 HttpStatus.CONFLICT
             );
         }
-        if (informe.getEstado() != expected) {
-            throw new SigconBusinessException(
-                ErrorCode.TRANSICION_INVALIDA,
-                "Transición de estado inválida",
-                HttpStatus.CONFLICT
-            );
+        for (EstadoInforme e : allowed) {
+            if (informe.getEstado() == e) return;
         }
-    }
-
-    private static void assertState(Informe informe, EstadoInforme expectedOne, EstadoInforme expectedTwo) {
-        if (informe.getEstado() == EstadoInforme.APROBADO) {
-            throw new SigconBusinessException(
-                ErrorCode.INFORME_NO_EDITABLE,
-                "El informe aprobado es terminal",
-                HttpStatus.CONFLICT
-            );
-        }
-        if (informe.getEstado() != expectedOne && informe.getEstado() != expectedTwo) {
-            throw new SigconBusinessException(
-                ErrorCode.TRANSICION_INVALIDA,
-                "Transición de estado inválida",
-                HttpStatus.CONFLICT
-            );
-        }
+        throw new SigconBusinessException(
+            ErrorCode.TRANSICION_INVALIDA,
+            "Transición de estado inválida",
+            HttpStatus.CONFLICT
+        );
     }
 
     private static void assertAssignedEmail(Usuario usuario, String principalEmail) {
