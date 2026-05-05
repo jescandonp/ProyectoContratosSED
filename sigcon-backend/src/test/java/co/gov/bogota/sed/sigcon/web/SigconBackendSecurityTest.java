@@ -43,6 +43,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -202,9 +203,49 @@ class SigconBackendSecurityTest {
             .andExpect(result -> assertThat(result.getResponse().getStatus()).isLessThan(400));
     }
 
+    // ── T4: PUT /api/admin/contratos/{id} ────────────────────────────────────
+
     @Test
-    void informesAndNotificationsAreExposedThroughCurrentIncrementSecurityRules() throws Exception {
+    void adminCanUpdateContract() throws Exception {
         Usuario admin = usuario(1L, ADMIN_EMAIL, RolUsuario.ADMIN);
+        Usuario contractor = usuario(2L, CONTRACTOR_EMAIL, RolUsuario.CONTRATISTA);
+        Usuario supervisor = usuario(4L, "supervisor1@educacionbogota.edu.co", RolUsuario.SUPERVISOR);
+        Contrato existing = contrato(10L, "OPS-2026-010", contractor);
+
+        when(contratoRepository.findByIdAndActivoTrue(10L)).thenReturn(Optional.of(existing));
+        when(contratoRepository.findByNumeroAndActivoTrue("OPS-2026-010-UPD")).thenReturn(Optional.empty());
+        when(usuarioRepository.findByEmailAndActivoTrue(ADMIN_EMAIL)).thenReturn(Optional.of(admin));
+        when(usuarioRepository.findByIdAndActivoTrue(2L)).thenReturn(Optional.of(contractor));
+        when(usuarioRepository.findByIdAndActivoTrue(4L)).thenReturn(Optional.of(supervisor));
+        when(contratoRepository.save(any(Contrato.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // JSON sin revisor (revisor es opcional en I4)
+        mockMvc.perform(put("/api/admin/contratos/10")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(contractJsonSinRevisor("OPS-2026-010-UPD"))
+                .with(httpBasic(ADMIN_EMAIL, "admin123")))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    void contractorCannotUpdateContractViaAdminEndpoint() throws Exception {
+        mockMvc.perform(put("/api/admin/contratos/10")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(validContractJson("OPS-2026-010"))
+                .with(httpBasic(CONTRACTOR_EMAIL, "contratista123")))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void unauthenticatedCannotUpdateContractViaAdminEndpoint() throws Exception {
+        mockMvc.perform(put("/api/admin/contratos/10")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(validContractJson("OPS-2026-010")))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void informesAndNotificationsAreExposedThroughCurrentIncrementSecurityRules() throws Exception {        Usuario admin = usuario(1L, ADMIN_EMAIL, RolUsuario.ADMIN);
         when(usuarioRepository.findByEmailAndActivoTrue(ADMIN_EMAIL)).thenReturn(Optional.of(admin));
         when(notificacionRepository.findByUsuarioOrderByFechaDesc(eq(admin), any(Pageable.class)))
             .thenReturn(new PageImpl<>(Collections.emptyList()));
@@ -255,6 +296,19 @@ class SigconBackendSecurityTest {
             + "\"fechaFin\":\"2026-12-31\","
             + "\"idContratista\":2,"
             + "\"idRevisor\":3,"
+            + "\"idSupervisor\":4"
+            + "}";
+    }
+
+    private static String contractJsonSinRevisor(String numero) {
+        return "{"
+            + "\"numero\":\"" + numero + "\","
+            + "\"objeto\":\"Objeto contractual\","
+            + "\"tipo\":\"OPS\","
+            + "\"valorTotal\":18000000,"
+            + "\"fechaInicio\":\"2026-01-15\","
+            + "\"fechaFin\":\"2026-12-31\","
+            + "\"idContratista\":2,"
             + "\"idSupervisor\":4"
             + "}";
     }

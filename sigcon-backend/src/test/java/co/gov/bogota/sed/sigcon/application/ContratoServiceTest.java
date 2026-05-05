@@ -195,6 +195,85 @@ class ContratoServiceTest {
                 assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ACCESO_DENEGADO));
     }
 
+    // ── T4: actualizarContrato ────────────────────────────────────────────────
+
+    @Test
+    void actualizarContratoExitoso() {
+        Contrato existing = contrato(10L, usuario(2L, RolUsuario.CONTRATISTA));
+        ContratoRequest request = contratoRequest("OPS-2026-010-UPD");
+        request.setIdRevisor(null);
+
+        when(contratoRepository.findByIdAndActivoTrue(10L)).thenReturn(Optional.of(existing));
+        when(contratoRepository.findByNumeroAndActivoTrue("OPS-2026-010-UPD")).thenReturn(Optional.empty());
+        when(usuarioRepository.findByIdAndActivoTrue(2L)).thenReturn(Optional.of(usuario(2L, RolUsuario.CONTRATISTA)));
+        when(usuarioRepository.findByIdAndActivoTrue(4L)).thenReturn(Optional.of(usuario(4L, RolUsuario.SUPERVISOR)));
+        when(contratoRepository.save(any(Contrato.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        contratoService.actualizarContrato(10L, request);
+
+        ArgumentCaptor<Contrato> captor = ArgumentCaptor.forClass(Contrato.class);
+        verify(contratoRepository).save(captor.capture());
+        assertThat(captor.getValue().getNumero()).isEqualTo("OPS-2026-010-UPD");
+        assertThat(captor.getValue().getRevisor()).isNull();
+    }
+
+    @Test
+    void actualizarContratoNumeroDuplicadoFalla() {
+        Contrato existing = contrato(10L, usuario(2L, RolUsuario.CONTRATISTA));
+        Contrato other = contrato(99L, usuario(2L, RolUsuario.CONTRATISTA));
+        ContratoRequest request = contratoRequest("OPS-2026-099");
+
+        when(contratoRepository.findByIdAndActivoTrue(10L)).thenReturn(Optional.of(existing));
+        when(contratoRepository.findByNumeroAndActivoTrue("OPS-2026-099")).thenReturn(Optional.of(other));
+
+        assertThatThrownBy(() -> contratoService.actualizarContrato(10L, request))
+            .isInstanceOfSatisfying(SigconBusinessException.class, ex ->
+                assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.NUMERO_CONTRATO_DUPLICADO));
+    }
+
+    @Test
+    void actualizarContratoAgregaRevisor() {
+        Contrato existing = contrato(10L, usuario(2L, RolUsuario.CONTRATISTA));
+        existing.setRevisor(null);
+        ContratoRequest request = contratoRequest("OPS-2026-010");
+        request.setIdRevisor(3L);
+
+        when(contratoRepository.findByIdAndActivoTrue(10L)).thenReturn(Optional.of(existing));
+        when(contratoRepository.findByNumeroAndActivoTrue("OPS-2026-010")).thenReturn(Optional.empty());
+        when(usuarioRepository.findByIdAndActivoTrue(2L)).thenReturn(Optional.of(usuario(2L, RolUsuario.CONTRATISTA)));
+        when(usuarioRepository.findByIdAndActivoTrue(3L)).thenReturn(Optional.of(usuario(3L, RolUsuario.REVISOR)));
+        when(usuarioRepository.findByIdAndActivoTrue(4L)).thenReturn(Optional.of(usuario(4L, RolUsuario.SUPERVISOR)));
+        when(contratoRepository.save(any(Contrato.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        contratoService.actualizarContrato(10L, request);
+
+        ArgumentCaptor<Contrato> captor = ArgumentCaptor.forClass(Contrato.class);
+        verify(contratoRepository).save(captor.capture());
+        assertThat(captor.getValue().getRevisor()).isNotNull();
+        assertThat(captor.getValue().getRevisor().getId()).isEqualTo(3L);
+    }
+
+    @Test
+    void actualizarContratoQuitaRevisor() {
+        Usuario revisor = usuario(3L, RolUsuario.REVISOR);
+        Contrato existing = contrato(10L, usuario(2L, RolUsuario.CONTRATISTA));
+        existing.setRevisor(revisor);
+        ContratoRequest request = contratoRequest("OPS-2026-010");
+        request.setIdRevisor(null);
+
+        when(contratoRepository.findByIdAndActivoTrue(10L)).thenReturn(Optional.of(existing));
+        when(contratoRepository.findByNumeroAndActivoTrue("OPS-2026-010")).thenReturn(Optional.empty());
+        when(usuarioRepository.findByIdAndActivoTrue(2L)).thenReturn(Optional.of(usuario(2L, RolUsuario.CONTRATISTA)));
+        when(usuarioRepository.findByIdAndActivoTrue(4L)).thenReturn(Optional.of(usuario(4L, RolUsuario.SUPERVISOR)));
+        when(contratoRepository.save(any(Contrato.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        contratoService.actualizarContrato(10L, request);
+
+        ArgumentCaptor<Contrato> captor = ArgumentCaptor.forClass(Contrato.class);
+        verify(contratoRepository).save(captor.capture());
+        assertThat(captor.getValue().getRevisor()).isNull();
+    }
+
     @Test
     void softDeleteMarksContractInactive() {
         Contrato contrato = contrato(10L, usuario(2L, RolUsuario.CONTRATISTA));

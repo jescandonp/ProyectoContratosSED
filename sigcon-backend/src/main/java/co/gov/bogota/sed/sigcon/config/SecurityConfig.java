@@ -25,6 +25,7 @@ public class SecurityConfig {
                 .antMatchers("/actuator/health").permitAll()
                 .antMatchers("/swagger-ui.html", "/api-docs/**", "/swagger-ui/**", "/webjars/**").permitAll()
                 .antMatchers("/api/usuarios/me", "/api/usuarios/me/**").authenticated()
+                .antMatchers("/api/admin/**").hasRole("ADMIN")
                 .antMatchers(HttpMethod.GET, "/api/contratos/**").hasAnyRole("CONTRATISTA", "REVISOR", "SUPERVISOR", "ADMIN")
                 .antMatchers(HttpMethod.POST, "/api/contratos/**").hasRole("ADMIN")
                 .antMatchers(HttpMethod.PUT, "/api/contratos/**").hasRole("ADMIN")
