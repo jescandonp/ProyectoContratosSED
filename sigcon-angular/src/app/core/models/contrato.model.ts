@@ -34,7 +34,7 @@ export interface ContratoRequest {
   fechaInicio: string;
   fechaFin: string;
   idContratista: number;
-  idRevisor: number;
+  idRevisor: number | null;
   idSupervisor: number;
 }
 

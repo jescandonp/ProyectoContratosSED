@@ -48,7 +48,10 @@ interface ObligacionForm { id?: number; descripcion: string; orden: number; }
           <div class="grid grid-cols-2 gap-md">
             <div class="space-y-xs">
               <label class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Número *</label>
-              <input class="input-field" type="text" required [(ngModel)]="form.numero" name="numero" [disabled]="esEdicion()" />
+              <input class="input-field" type="text" required [(ngModel)]="form.numero" name="numero" />
+              @if (errorNumero()) {
+                <p class="text-xs text-[var(--color-error)]">{{ errorNumero() }}</p>
+              }
             </div>
             <div class="space-y-xs">
               <label class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Tipo</label>
@@ -100,9 +103,9 @@ interface ObligacionForm { id?: number; descripcion: string; orden: number; }
               </select>
             </div>
             <div class="space-y-xs">
-              <label class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Revisor *</label>
-              <select class="input-field" required [(ngModel)]="form.idRevisor" name="idRevisor">
-                <option [ngValue]="null">— Seleccionar —</option>
+              <label class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Revisor (opcional)</label>
+              <select class="input-field" [(ngModel)]="form.idRevisor" name="idRevisor">
+                <option [ngValue]="null">— Sin revisor —</option>
                 @for (u of revisores(); track u.id) {
                   <option [ngValue]="u.id">{{ u.nombre }}</option>
                 }
@@ -214,6 +217,7 @@ export class AdminContratoFormComponent implements OnInit {
   readonly esEdicion = signal(false);
   readonly guardando = signal(false);
   readonly error = signal('');
+  readonly errorNumero = signal('');
   readonly contratistas = signal<Usuario[]>([]);
   readonly revisores = signal<Usuario[]>([]);
   readonly supervisores = signal<Usuario[]>([]);
@@ -227,7 +231,7 @@ export class AdminContratoFormComponent implements OnInit {
     fechaInicio: '',
     fechaFin: '',
     idContratista: null as unknown as number,
-    idRevisor: null as unknown as number,
+    idRevisor: null,
     idSupervisor: null as unknown as number
   };
 
@@ -256,8 +260,8 @@ export class AdminContratoFormComponent implements OnInit {
           fechaInicio: c.fechaInicio,
           fechaFin: c.fechaFin,
           idContratista: c.contratista.id,
-          idRevisor: (c.revisor?.id ?? null) as unknown as number,
-          idSupervisor: (c.supervisor?.id ?? null) as unknown as number
+          idRevisor: c.revisor?.id ?? null,
+          idSupervisor: c.supervisor?.id ?? null as unknown as number
         };
         this.obligaciones.set(c.obligaciones.map((o: Obligacion) => ({ id: o.id, descripcion: o.descripcion, orden: o.orden })));
         this.originalObligacionIds = new Set(c.obligaciones.map((o: Obligacion) => o.id));
@@ -279,9 +283,10 @@ export class AdminContratoFormComponent implements OnInit {
 
   guardar() {
     this.error.set('');
+    this.errorNumero.set('');
     this.guardando.set(true);
     const obs = this.esEdicion()
-      ? this.contratoService.actualizarContrato(this.contratoId!, this.form)
+      ? this.contratoService.actualizarContratoAdmin(this.contratoId!, this.form)
       : this.contratoService.crearContrato(this.form);
 
     obs.pipe(
@@ -294,9 +299,10 @@ export class AdminContratoFormComponent implements OnInit {
         this.guardando.set(false);
         const codigo = err?.error?.error ?? '';
         if (codigo === 'NUMERO_CONTRATO_DUPLICADO') {
+          this.errorNumero.set('Ya existe un contrato con ese número.');
           this.error.set('Ya existe un contrato con ese número.');
         } else if (codigo === 'VALIDACION_FALLIDA' || codigo === 'USUARIO_NO_ENCONTRADO') {
-          this.error.set(err?.error?.mensaje ?? 'Seleccione contratista, revisor y supervisor para crear un contrato completo.');
+          this.error.set(err?.error?.mensaje ?? 'Seleccione contratista y supervisor para crear un contrato completo.');
         } else {
           this.error.set('Error al guardar el contrato u obligaciones. Verifique los datos e intente de nuevo.');
         }

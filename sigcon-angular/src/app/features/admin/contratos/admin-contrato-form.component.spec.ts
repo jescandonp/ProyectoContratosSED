@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 
 import { ContratoService } from '../../../core/services/contrato.service';
 import { ObligacionService } from '../../../core/services/obligacion.service';
@@ -19,7 +19,8 @@ describe('AdminContratoFormComponent', () => {
     contratoService = jasmine.createSpyObj<ContratoService>('ContratoService', [
       'obtenerDetalle',
       'crearContrato',
-      'actualizarContrato'
+      'actualizarContrato',
+      'actualizarContratoAdmin'
     ]);
     obligacionService = jasmine.createSpyObj<ObligacionService>('ObligacionService', [
       'crear',
@@ -31,6 +32,7 @@ describe('AdminContratoFormComponent', () => {
 
     contratoService.obtenerDetalle.and.returnValue(of(contratoDetalle([])));
     contratoService.actualizarContrato.and.returnValue(of(contratoDetalle([])));
+    contratoService.actualizarContratoAdmin.and.returnValue(of(contratoDetalle([])));
     obligacionService.crear.and.returnValue(of({ id: 20, descripcion: 'Obligacion nueva', orden: 1 }));
     usuarioService.listarUsuarios.and.returnValue(of({ content: [], totalElements: 0, totalPages: 0, size: 100, number: 0, first: true, last: true }));
 
@@ -55,11 +57,70 @@ describe('AdminContratoFormComponent', () => {
 
     component.guardar();
 
-    expect(contratoService.actualizarContrato).toHaveBeenCalledWith(1, jasmine.objectContaining({ numero: 'CO1.PCCNTR 8504408 - 2025' }));
+    expect(contratoService.actualizarContratoAdmin).toHaveBeenCalledWith(1, jasmine.objectContaining({ numero: 'CO1.PCCNTR 8504408 - 2025' }));
     expect(obligacionService.crear).toHaveBeenCalledWith(1, { descripcion: 'Obligacion nueva', orden: 1 });
     expect(router.navigate).toHaveBeenCalledWith(['/admin/contratos'], {
       state: { mensaje: 'Contrato actualizado correctamente.' }
     });
+  });
+
+  // ── T7: H1 revisor opcional + H2 modo edicion ────────────────────────────
+
+  it('crea contrato sin revisor cuando idRevisor es null', () => {
+    // Fixture en modo creacion (sin id en ruta)
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [AdminContratoFormComponent],
+      providers: [
+        { provide: ContratoService, useValue: contratoService },
+        { provide: ObligacionService, useValue: obligacionService },
+        { provide: UsuarioService, useValue: usuarioService },
+        { provide: Router, useValue: router },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: new Map() } } }
+      ]
+    });
+    const fixtureCreacion = TestBed.createComponent(AdminContratoFormComponent);
+    const comp = fixtureCreacion.componentInstance;
+    contratoService.crearContrato.and.returnValue(of(contratoDetalle([])));
+    fixtureCreacion.detectChanges();
+
+    comp.form.numero = 'OPS-2026-NEW';
+    comp.form.objeto = 'Objeto nuevo';
+    comp.form.valorTotal = 5000000;
+    comp.form.fechaInicio = '2026-01-01';
+    comp.form.fechaFin = '2026-12-31';
+    comp.form.idContratista = 1;
+    comp.form.idRevisor = null;
+    comp.form.idSupervisor = 2;
+
+    comp.guardar();
+
+    expect(contratoService.crearContrato).toHaveBeenCalledWith(
+      jasmine.objectContaining({ idRevisor: null })
+    );
+  });
+
+  it('usa actualizarContratoAdmin al guardar en modo edicion', () => {
+    component.obligaciones.set([]);
+
+    component.guardar();
+
+    expect(contratoService.actualizarContratoAdmin).toHaveBeenCalledWith(
+      1,
+      jasmine.objectContaining({ numero: 'CO1.PCCNTR 8504408 - 2025' })
+    );
+    expect(contratoService.crearContrato).not.toHaveBeenCalled();
+  });
+
+  it('muestra error inline de numero duplicado al recibir 409', () => {
+    contratoService.actualizarContratoAdmin.and.returnValue(
+      throwError(() => ({ error: { error: 'NUMERO_CONTRATO_DUPLICADO', mensaje: 'Ya existe' } }))
+    );
+
+    component.guardar();
+
+    expect(component.errorNumero()).toBe('Ya existe un contrato con ese número.');
+    expect(component.error()).toBe('Ya existe un contrato con ese número.');
   });
 
   function contratoDetalle(obligaciones: { id: number; descripcion: string; orden: number }[]) {

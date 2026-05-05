@@ -33,6 +33,10 @@ export class ContratoService {
     return this.http.put<ContratoDetalle>(`${this.baseUrl}/${id}`, request);
   }
 
+  actualizarContratoAdmin(id: number, request: ContratoRequest) {
+    return this.http.put<ContratoDetalle>(`/api/admin/contratos/${id}`, request);
+  }
+
   cambiarEstado(id: number, estado: EstadoContrato) {
     return this.http.patch<void>(`${this.baseUrl}/${id}/estado`, { estado });
   }
