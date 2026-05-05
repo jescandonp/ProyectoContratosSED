@@ -385,3 +385,73 @@ Entrar como `CONTRATISTA`.
 | Supervisor no puede aprobar desde ENVIADO | Contrato tiene revisor asignado | Verificar `contrato.revisor` en BD |
 | Campo revisor sigue siendo obligatorio en el form | Cache del navegador o build desactualizado | Limpiar caché y reconstruir |
 | 409 al crear contrato sin revisor | Backend no actualizado a I4 | Verificar que `feat/sigcon-i4` está desplegado |
+
+---
+
+## 13. Incremento 5 — Edición de Actividades en Informe BORRADOR
+
+> Rama: `feat/sigcon-i5`  
+> Fecha: 2026-05-04
+
+### 13.1 Editar descripción de actividad
+
+1. Autenticarse como CONTRATISTA.
+2. Navegar a un informe en estado **BORRADOR**.
+3. Verificar que las tarjetas de actividad muestran campos editables (textarea de descripción, input de porcentaje).
+4. Modificar la descripción de una actividad.
+5. Hacer clic en **"Guardar actividad"**.
+6. Verificar que la descripción actualizada se muestra en la tarjeta.
+
+### 13.2 Editar porcentaje de avance
+
+1. En la misma pantalla, modificar el porcentaje de una actividad (0–100).
+2. Guardar. Verificar que el porcentaje actualizado se muestra.
+
+### 13.3 Agregar soporte URL
+
+1. En la tarjeta de una actividad, ingresar URL en el campo "URL soporte".
+2. Hacer clic en **"Guardar actividad"**.
+3. Verificar que el soporte aparece en la lista de soportes de la actividad.
+
+### 13.4 Eliminar soporte existente
+
+1. Hacer clic en **×** junto a un soporte existente.
+2. Verificar que el soporte desaparece de la lista.
+
+### 13.5 Agregar documento adicional
+
+1. En la sección "Documentos adicionales", seleccionar tipo de documento del catálogo.
+2. Ingresar referencia.
+3. Hacer clic en **"Agregar"**.
+4. Verificar que el documento aparece en la lista.
+
+### 13.6 Eliminar documento adicional
+
+1. Hacer clic en **×** junto a un documento adicional existente.
+2. Verificar que desaparece de la lista.
+
+### 13.7 Solo lectura en otros estados
+
+| Estado | Comportamiento esperado |
+|--------|------------------------|
+| ENVIADO | Sin campos editables, sin botones de guardar/eliminar |
+| EN_REVISION | Sin campos editables |
+| DEVUELTO | Sin campos editables (usa `CorregirInformeComponent`) |
+| APROBADO | Sin campos editables |
+
+### 13.8 Validaciones
+
+| Acción | Resultado esperado |
+|--------|-------------------|
+| Guardar actividad con descripción vacía | Error inline: "La descripcion no puede estar vacia." |
+| Guardar actividad con porcentaje > 100 | Error inline: "El porcentaje debe estar entre 0 y 100." |
+| Agregar documento sin seleccionar tipo | Error inline: "Seleccione el tipo de documento e ingrese la referencia." |
+
+### Diagnóstico de errores comunes I5
+
+| Síntoma | Causa probable | Solución |
+|---------|---------------|----------|
+| 403 al guardar actividad | Contratista no es propietario del informe | Verificar usuario autenticado |
+| 409 al guardar actividad | Informe no está en BORRADOR | Recargar la página |
+| Campos no editables en BORRADOR | Build desactualizado | Limpiar caché y reconstruir |
+| Soporte no aparece tras guardar | Error silencioso en la recarga | Verificar consola del navegador |
