@@ -1,0 +1,308 @@
+<div class="space-y-lg">
+  <nav class="flex items-center gap-xs text-sm text-[var(--color-on-surface-variant)]">
+    <button class="text-[var(--color-primary)] hover:underline" type="button" (click)="volverAContratos()">Contratos</button>
+    <span>/</span>
+    <span>{{ informe()?.contratoNumero ?? 'Informe' }}</span>
+  </nav>
+
+  @if (error()) {
+    <div class="rounded-xl border border-[var(--color-error-container)] bg-[var(--color-error-container)] px-lg py-md text-sm text-[var(--color-on-error-container)]">
+      {{ error() }}
+    </div>
+  }
+
+  @if (informe(); as i) {
+    <section class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg">
+      <div class="flex flex-col gap-md lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <p class="m-0 text-xs font-bold uppercase tracking-wider text-[var(--color-primary)]">{{ i.contratoNumero }}</p>
+          <h2 class="m-0 mt-xs text-2xl font-bold text-[var(--color-on-surface)]">Informe No. {{ i.numero }}</h2>
+
+          @if (periodoEditable(i.estado)) {
+            <div class="mt-sm flex flex-wrap items-end gap-sm" data-testid="periodo-editable">
+              <div class="space-y-xs">
+                <label class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Fecha inicio</label>
+                <input class="h-9 rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface-bright)] px-sm text-sm outline-none focus:border-[var(--color-primary)]"
+                  type="date" [(ngModel)]="periodoFechaInicio" name="periodoFechaInicio" data-testid="input-fecha-inicio" />
+              </div>
+              <div class="space-y-xs">
+                <label class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Fecha fin</label>
+                <input class="h-9 rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface-bright)] px-sm text-sm outline-none focus:border-[var(--color-primary)]"
+                  type="date" [(ngModel)]="periodoFechaFin" name="periodoFechaFin" data-testid="input-fecha-fin" />
+              </div>
+              <button class="rounded bg-[var(--color-primary)] px-md py-xs text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+                type="button" [disabled]="guardandoPeriodo()" (click)="guardarPeriodo()" data-testid="btn-guardar-periodo">
+                {{ guardandoPeriodo() ? 'Guardando...' : 'Guardar periodo' }}
+              </button>
+              @if (errorPeriodo()) {
+                <p class="w-full text-xs text-[var(--color-error)]">{{ errorPeriodo() }}</p>
+              }
+            </div>
+          } @else {
+            <p class="m-0 mt-xs text-sm text-[var(--color-on-surface-variant)]">{{ i.fechaInicio }} a {{ i.fechaFin }}</p>
+          }
+        </div>
+        <div class="flex flex-wrap items-center gap-sm">
+          <app-status-chip [value]="i.estado" [label]="estadoLabel(i.estado)" [tone]="estadoTone(i.estado)" />
+          <button class="rounded border border-[var(--color-outline-variant)] px-md py-sm text-sm font-semibold text-[var(--color-on-surface)]" type="button" (click)="verPreview()">
+            Vista previa
+          </button>
+          @if (i.estado === 'APROBADO' && i.pdfRuta) {
+            <button class="rounded bg-[var(--color-primary)] px-md py-sm text-sm font-semibold text-white" type="button" data-testid="ver-pdf" (click)="verPdf()">
+              Ver / Descargar PDF
+            </button>
+          }
+          @if (puedeEnviar(i.estado)) {
+            <button class="rounded bg-[var(--color-primary)] px-md py-sm text-sm font-semibold text-white" type="button" (click)="enviar()">
+              Enviar
+            </button>
+          }
+        </div>
+      </div>
+    </section>
+
+    <div class="grid grid-cols-1 gap-lg lg:grid-cols-3">
+      <section class="space-y-lg lg:col-span-2">
+
+        <!-- Actividades -->
+        <div class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg">
+          <div class="mb-md flex items-center gap-sm">
+            <span class="h-5 w-1 rounded-full bg-[var(--color-primary)]"></span>
+            <h3 class="m-0 text-base font-semibold text-[var(--color-on-surface)]">Actividades reportadas</h3>
+          </div>
+          <div class="space-y-md">
+            @for (actividad of i.actividades; track actividad.id) {
+              @if (esBorrador(i.estado)) {
+                <!-- Tarjeta editable (BORRADOR) -->
+                <article class="rounded-lg border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] p-md" data-testid="actividad-editable">
+                  <div class="mb-sm flex items-start gap-sm">
+                    <span class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)] text-xs font-bold text-white">
+                      {{ actividad.ordenObligacion ?? '-' }}
+                    </span>
+                    <div>
+                      <p class="m-0 text-sm font-semibold text-[var(--color-on-surface)]">{{ actividad.descripcionObligacion ?? 'Obligacion contractual' }}</p>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 gap-md lg:grid-cols-[1fr_10rem]">
+                    <label class="block">
+                      <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Actividad realizada *</span>
+                      <textarea class="min-h-24 w-full resize-y rounded border border-[var(--color-outline-variant)] bg-white px-sm py-xs text-sm outline-none focus:border-[var(--color-primary)]"
+                        [attr.data-testid]="'input-descripcion-' + actividad.id"
+                        [ngModel]="getEstadoActividad(actividad.id)?.descripcion ?? ''"
+                        (ngModelChange)="actualizarEstadoActividad(actividad.id, { descripcion: $event })"
+                      ></textarea>
+                    </label>
+                    <label class="block">
+                      <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Avance %</span>
+                      <input class="w-full rounded border border-[var(--color-outline-variant)] bg-white px-sm py-xs text-sm outline-none focus:border-[var(--color-primary)]"
+                        type="number" min="0" max="100"
+                        [attr.data-testid]="'input-porcentaje-' + actividad.id"
+                        [ngModel]="getEstadoActividad(actividad.id)?.porcentaje ?? 0"
+                        (ngModelChange)="actualizarEstadoActividad(actividad.id, { porcentaje: toNumber($event) })"
+                      />
+                    </label>
+                  </div>
+
+                  <!-- Soportes existentes -->
+                  @if (actividad.soportes.length > 0) {
+                    <div class="mt-sm flex flex-wrap gap-xs">
+                      @for (soporte of actividad.soportes; track soporte.id) {
+                        <span class="flex items-center gap-xs rounded border border-[var(--color-outline-variant)] bg-white px-sm py-xs text-xs text-[var(--color-on-surface)]">
+                          {{ soporte.nombre }} · {{ soporte.tipo }}
+                          <button class="ml-xs text-[var(--color-error)] hover:opacity-70" type="button"
+                            [attr.data-testid]="'btn-eliminar-soporte-' + soporte.id"
+                            (click)="eliminarSoporte(actividad.id, soporte.id)">×</button>
+                        </span>
+                      }
+                    </div>
+                  }
+
+                  <!-- Agregar soporte -->
+                  <div class="mt-md grid grid-cols-1 gap-sm lg:grid-cols-3">
+                    <label class="block">
+                      <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Nombre soporte</span>
+                      <input class="w-full rounded border border-[var(--color-outline-variant)] bg-white px-sm py-xs text-sm"
+                        type="text"
+                        [ngModel]="getEstadoActividad(actividad.id)?.soporteNombre ?? ''"
+                        (ngModelChange)="actualizarEstadoActividad(actividad.id, { soporteNombre: $event })"
+                      />
+                    </label>
+                    <label class="block">
+                      <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">URL soporte</span>
+                      <input class="w-full rounded border border-[var(--color-outline-variant)] bg-white px-sm py-xs text-sm"
+                        type="url"
+                        [attr.data-testid]="'input-soporte-url-' + actividad.id"
+                        [ngModel]="getEstadoActividad(actividad.id)?.soporteUrl ?? ''"
+                        (ngModelChange)="actualizarEstadoActividad(actividad.id, { soporteUrl: $event })"
+                      />
+                    </label>
+                    <label class="block">
+                      <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Archivo</span>
+                      <input class="w-full rounded border border-[var(--color-outline-variant)] bg-white px-sm py-xs text-sm"
+                        type="file"
+                        [attr.data-testid]="'input-soporte-archivo-' + actividad.id"
+                        (change)="seleccionarArchivoActividad(actividad.id, $event)"
+                      />
+                    </label>
+                  </div>
+
+                  @if (getEstadoActividad(actividad.id)?.error) {
+                    <p class="mt-sm text-xs text-[var(--color-error)]" [attr.data-testid]="'error-actividad-' + actividad.id">
+                      {{ getEstadoActividad(actividad.id)?.error }}
+                    </p>
+                  }
+
+                  <div class="mt-sm flex justify-end">
+                    <button class="rounded bg-[var(--color-primary)] px-md py-xs text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+                      type="button"
+                      [disabled]="getEstadoActividad(actividad.id)?.guardando"
+                      [attr.data-testid]="'btn-guardar-actividad-' + actividad.id"
+                      (click)="guardarActividad(actividad.id)">
+                      {{ getEstadoActividad(actividad.id)?.guardando ? 'Guardando...' : 'Guardar actividad' }}
+                    </button>
+                  </div>
+                </article>
+              } @else {
+                <!-- Tarjeta solo lectura -->
+                <article class="rounded-lg border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] p-md">
+                  <div class="mb-sm flex items-start gap-sm">
+                    <span class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)] text-xs font-bold text-white">
+                      {{ actividad.ordenObligacion ?? '-' }}
+                    </span>
+                    <div>
+                      <p class="m-0 text-sm font-semibold text-[var(--color-on-surface)]">{{ actividad.descripcionObligacion ?? 'Obligacion contractual' }}</p>
+                      <p class="m-0 mt-xs text-sm text-[var(--color-on-surface-variant)]">{{ actividad.descripcion }}</p>
+                    </div>
+                    <span class="ml-auto rounded-full bg-white px-sm py-xs text-xs font-bold text-[var(--color-primary)]">{{ actividad.porcentaje }}%</span>
+                  </div>
+                  @if (actividad.soportes.length > 0) {
+                    <div class="mt-sm flex flex-wrap gap-xs">
+                      @for (soporte of actividad.soportes; track soporte.id) {
+                        <span class="rounded border border-[var(--color-outline-variant)] bg-white px-sm py-xs text-xs text-[var(--color-on-surface)]">
+                          {{ soporte.nombre }} · {{ soporte.tipo }}
+                        </span>
+                      }
+                    </div>
+                  }
+                </article>
+              }
+            }
+          </div>
+        </div>
+
+        <!-- Documentos adicionales -->
+        <div class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg">
+          <div class="mb-md flex items-center gap-sm">
+            <span class="h-5 w-1 rounded-full bg-[var(--color-secondary-container)]"></span>
+            <h3 class="m-0 text-base font-semibold text-[var(--color-on-surface)]">Documentos adicionales</h3>
+          </div>
+          @if (esBorrador(i.estado)) {
+            <!-- Modo edicion documentos -->
+            @if (i.documentosAdicionales.length === 0) {
+              <p class="m-0 text-sm text-[var(--color-on-surface-variant)]">Sin documentos adicionales registrados.</p>
+            } @else {
+              <ul class="m-0 list-none space-y-sm p-0">
+                @for (doc of i.documentosAdicionales; track doc.id) {
+                  <li class="flex items-center justify-between gap-md rounded-lg border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] px-md py-sm text-sm">
+                    <span class="font-semibold text-[var(--color-on-surface)]">{{ doc.nombreCatalogo ?? 'Documento' }}</span>
+                    <span class="text-[var(--color-on-surface-variant)]">{{ doc.referencia }}</span>
+                    <button class="ml-sm text-[var(--color-error)] hover:opacity-70" type="button"
+                      [attr.data-testid]="'btn-eliminar-documento-' + doc.id"
+                      (click)="eliminarDocumentoAdicional(doc.id)">×</button>
+                  </li>
+                }
+              </ul>
+            }
+            <!-- Formulario agregar documento -->
+            <div class="mt-md grid grid-cols-1 gap-sm lg:grid-cols-[1fr_1fr_auto] lg:items-end">
+              <label class="block">
+                <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Tipo de documento</span>
+                <select class="h-9 w-full rounded border border-[var(--color-outline-variant)] bg-white px-sm text-sm"
+                  [ngModel]="nuevoDocIdCatalogo()"
+                  (ngModelChange)="nuevoDocIdCatalogo.set($event ? +$event : null)">
+                  <option [ngValue]="null">-- Seleccionar --</option>
+                  @for (cat of catalogoDocumentos(); track cat.id) {
+                    <option [ngValue]="cat.id">{{ cat.nombre }}</option>
+                  }
+                </select>
+              </label>
+              <label class="block">
+                <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Referencia</span>
+                <input class="h-9 w-full rounded border border-[var(--color-outline-variant)] bg-white px-sm text-sm"
+                  type="text"
+                  [ngModel]="nuevoDocReferencia()"
+                  (ngModelChange)="nuevoDocReferencia.set($event)"
+                />
+              </label>
+              <button class="h-9 rounded bg-[var(--color-primary)] px-md text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+                type="button"
+                [disabled]="guardandoDocumento()"
+                data-testid="btn-agregar-documento"
+                (click)="agregarDocumentoAdicional()">
+                {{ guardandoDocumento() ? '...' : 'Agregar' }}
+              </button>
+            </div>
+            @if (errorDocumento()) {
+              <p class="mt-xs text-xs text-[var(--color-error)]">{{ errorDocumento() }}</p>
+            }
+          } @else {
+            <!-- Modo solo lectura documentos -->
+            @if (i.documentosAdicionales.length === 0) {
+              <p class="m-0 text-sm text-[var(--color-on-surface-variant)]">Sin documentos adicionales registrados.</p>
+            } @else {
+              <ul class="m-0 list-none space-y-sm p-0">
+                @for (doc of i.documentosAdicionales; track doc.id) {
+                  <li class="flex items-center justify-between gap-md rounded-lg border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] px-md py-sm text-sm">
+                    <span class="font-semibold text-[var(--color-on-surface)]">{{ doc.nombreCatalogo ?? 'Documento' }}</span>
+                    <span class="text-[var(--color-on-surface-variant)]">{{ doc.referencia }}</span>
+                  </li>
+                }
+              </ul>
+            }
+          }
+        </div>
+      </section>
+
+      <aside class="space-y-lg">
+        <div class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg">
+          <h3 class="mb-md text-base font-semibold text-[var(--color-on-surface)]">Actores</h3>
+          <dl class="space-y-md text-sm">
+            <div>
+              <dt class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Contratista</dt>
+              <dd class="m-0 mt-xs text-[var(--color-on-surface)]">{{ i.contratista?.nombre ?? 'No asignado' }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Supervisor</dt>
+              <dd class="m-0 mt-xs text-[var(--color-on-surface)]">{{ i.supervisor?.nombre ?? 'No asignado' }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Revisor</dt>
+              <dd class="m-0 mt-xs text-[var(--color-on-surface)]">{{ i.revisor?.nombre ?? 'No asignado' }}</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg">
+          <h3 class="mb-md text-base font-semibold text-[var(--color-on-surface)]">Observaciones</h3>
+          @if (i.observaciones.length === 0) {
+            <p class="m-0 text-sm text-[var(--color-on-surface-variant)]">Sin observaciones registradas.</p>
+          } @else {
+            <ul class="m-0 list-none space-y-sm p-0">
+              @for (observacion of i.observaciones; track observacion.id) {
+                <li class="rounded-lg border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] p-sm text-sm">
+                  <p class="m-0 font-semibold text-[var(--color-on-surface)]">{{ observacion.autorRol }}</p>
+                  <p class="m-0 mt-xs text-[var(--color-on-surface-variant)]">{{ observacion.texto }}</p>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      </aside>
+    </div>
+  } @else if (!error()) {
+    <div class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-xl text-center text-sm text-[var(--color-on-surface-variant)]">
+      Cargando informe...
+    </div>
+  }
+</div>
