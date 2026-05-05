@@ -360,9 +360,47 @@ class InformeSecurityTest {
             .andExpect(status().isForbidden());
     }
 
+    // ── T5: PATCH /api/informes/{id} ─────────────────────────────────────────
+
     @Test
-    void notificationEndpointsUseI3ContractAndRequireAuthentication() throws Exception {
-        when(notificacionService.listar(any(Pageable.class))).thenReturn(new PageImpl<>(Collections.emptyList()));
+    void contractorCanPatchInformePeriodo() throws Exception {
+        when(informeService.actualizar(eq(10L), any())).thenReturn(informeDetalle());
+
+        mockMvc.perform(patch("/api/informes/10")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(validPeriodoJson())
+                .with(httpBasic(CONTRACTOR_EMAIL, "contratista123")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(10));
+    }
+
+    @Test
+    void unauthenticatedCannotPatchInformePeriodo() throws Exception {
+        mockMvc.perform(patch("/api/informes/10")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(validPeriodoJson()))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void patchInformeNoEditableReturnsConflict() throws Exception {
+        when(informeService.actualizar(eq(10L), any()))
+            .thenThrow(new SigconBusinessException(
+                ErrorCode.INFORME_NO_EDITABLE,
+                "El informe no es editable en su estado actual",
+                HttpStatus.CONFLICT
+            ));
+
+        mockMvc.perform(patch("/api/informes/10")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(validPeriodoJson())
+                .with(httpBasic(CONTRACTOR_EMAIL, "contratista123")))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.error").value("INFORME_NO_EDITABLE"));
+    }
+
+    @Test
+    void notificationEndpointsUseI3ContractAndRequireAuthentication() throws Exception {        when(notificacionService.listar(any(Pageable.class))).thenReturn(new PageImpl<>(Collections.emptyList()));
         when(notificacionService.contarNoLeidas()).thenReturn(new NotificacionesCountDto(2L));
 
         mockMvc.perform(get("/api/notificaciones"))
@@ -477,6 +515,13 @@ class InformeSecurityTest {
         return "{"
             + "\"idCatalogo\":30,"
             + "\"referencia\":\"Radicado 123\""
+            + "}";
+    }
+
+    private static String validPeriodoJson() {
+        return "{"
+            + "\"fechaInicio\":\"2026-02-01\","
+            + "\"fechaFin\":\"2026-02-28\""
             + "}";
     }
 }

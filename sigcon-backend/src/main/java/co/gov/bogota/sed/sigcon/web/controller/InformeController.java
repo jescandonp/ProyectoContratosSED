@@ -3,6 +3,7 @@ package co.gov.bogota.sed.sigcon.web.controller;
 import co.gov.bogota.sed.sigcon.application.dto.informe.InformeDetalleDto;
 import co.gov.bogota.sed.sigcon.application.dto.informe.InformeRequest;
 import co.gov.bogota.sed.sigcon.application.dto.informe.InformeResumenDto;
+import co.gov.bogota.sed.sigcon.application.dto.informe.InformeUpdateDto;
 import co.gov.bogota.sed.sigcon.application.dto.informe.ObservacionRequest;
 import co.gov.bogota.sed.sigcon.application.service.InformeEstadoService;
 import co.gov.bogota.sed.sigcon.application.service.InformeService;
@@ -18,6 +19,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -87,6 +89,15 @@ public class InformeController {
     @Operation(summary = "Actualiza un informe editable")
     public InformeDetalleDto actualizarInforme(@PathVariable Long id, @Valid @RequestBody InformeRequest request) {
         return informeService.actualizarInforme(id, request);
+    }
+
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasAnyRole('CONTRATISTA', 'REVISOR', 'SUPERVISOR', 'ADMIN')")
+    @Operation(summary = "Actualiza el periodo de un informe en BORRADOR o DEVUELTO",
+               description = "Solo el contratista propietario puede modificar el periodo. "
+                   + "El control de propietario y estado se realiza en el servicio.")
+    public InformeDetalleDto actualizarPeriodo(@PathVariable Long id, @Valid @RequestBody InformeUpdateDto dto) {
+        return informeService.actualizar(id, dto);
     }
 
     @PostMapping("/{id}/enviar")

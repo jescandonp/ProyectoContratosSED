@@ -4,9 +4,9 @@ import co.gov.bogota.sed.sigcon.application.dto.informe.InformeRequest;
 import co.gov.bogota.sed.sigcon.application.dto.informe.InformeDetalleDto;
 import co.gov.bogota.sed.sigcon.application.dto.informe.InformeResumenDto;
 import co.gov.bogota.sed.sigcon.application.dto.informe.ActividadInformeRequest;
+import co.gov.bogota.sed.sigcon.application.dto.informe.InformeUpdateDto;
 import co.gov.bogota.sed.sigcon.application.dto.informe.SoporteAdjuntoDto;
-import co.gov.bogota.sed.sigcon.application.dto.informe.SoporteUrlRequest;
-import co.gov.bogota.sed.sigcon.application.mapper.ActividadInformeMapper;
+import co.gov.bogota.sed.sigcon.application.dto.informe.SoporteUrlRequest;import co.gov.bogota.sed.sigcon.application.mapper.ActividadInformeMapper;
 import co.gov.bogota.sed.sigcon.application.mapper.DocumentoAdicionalMapper;
 import co.gov.bogota.sed.sigcon.application.mapper.InformeMapper;
 import co.gov.bogota.sed.sigcon.application.mapper.ObservacionMapper;
@@ -270,8 +270,104 @@ class InformeServiceTest {
         assertThat(dto.getReferencia()).isEqualTo("soportes/10/50/7/abc_documento.pdf");
     }
 
-    private static Usuario usuario(Long id, RolUsuario rol) {
-        Usuario u = new Usuario();
+    // ── T5: actualizar (PATCH periodo) ───────────────────────────────────────
+
+    @Test
+    void actualizarInformeBorradorExitoso() {
+        Usuario contratista = usuario(2L, RolUsuario.CONTRATISTA);
+        Informe informe = informe(50L, contrato(10L, contratista, EstadoContrato.EN_EJECUCION), EstadoInforme.BORRADOR);
+        when(informeRepository.findByIdAndActivoTrue(50L)).thenReturn(Optional.of(informe));
+        when(currentUserService.getCurrentUser()).thenReturn(contratista);
+        when(informeRepository.save(any(Informe.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(actividadRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.emptyList());
+        when(documentoAdicionalRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.emptyList());
+        when(observacionRepository.findByInformeIdAndActivoTrueOrderByFechaAsc(50L)).thenReturn(Collections.emptyList());
+
+        InformeUpdateDto dto = informeUpdateDto(LocalDate.of(2026, 2, 1), LocalDate.of(2026, 2, 28));
+        InformeDetalleDto result = informeService.actualizar(50L, dto);
+
+        assertThat(result).isNotNull();
+        verify(informeRepository).save(any(Informe.class));
+    }
+
+    @Test
+    void actualizarInformeDevueltoExitoso() {
+        Usuario contratista = usuario(2L, RolUsuario.CONTRATISTA);
+        Informe informe = informe(50L, contrato(10L, contratista, EstadoContrato.EN_EJECUCION), EstadoInforme.DEVUELTO);
+        when(informeRepository.findByIdAndActivoTrue(50L)).thenReturn(Optional.of(informe));
+        when(currentUserService.getCurrentUser()).thenReturn(contratista);
+        when(informeRepository.save(any(Informe.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(actividadRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.emptyList());
+        when(documentoAdicionalRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.emptyList());
+        when(observacionRepository.findByInformeIdAndActivoTrueOrderByFechaAsc(50L)).thenReturn(Collections.emptyList());
+
+        InformeUpdateDto dto = informeUpdateDto(LocalDate.of(2026, 3, 1), LocalDate.of(2026, 3, 31));
+        InformeDetalleDto result = informeService.actualizar(50L, dto);
+
+        assertThat(result).isNotNull();
+        verify(informeRepository).save(any(Informe.class));
+    }
+
+    @Test
+    void actualizarInformeEnviadoFalla() {
+        Usuario contratista = usuario(2L, RolUsuario.CONTRATISTA);
+        Informe informe = informe(50L, contrato(10L, contratista, EstadoContrato.EN_EJECUCION), EstadoInforme.ENVIADO);
+        when(informeRepository.findByIdAndActivoTrue(50L)).thenReturn(Optional.of(informe));
+        when(currentUserService.getCurrentUser()).thenReturn(contratista);
+
+        InformeUpdateDto dto = informeUpdateDto(LocalDate.of(2026, 2, 1), LocalDate.of(2026, 2, 28));
+
+        assertThatThrownBy(() -> informeService.actualizar(50L, dto))
+            .isInstanceOfSatisfying(SigconBusinessException.class, ex ->
+                assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.INFORME_NO_EDITABLE));
+    }
+
+    @Test
+    void actualizarInformeAprobadoFalla() {
+        Usuario contratista = usuario(2L, RolUsuario.CONTRATISTA);
+        Informe informe = informe(50L, contrato(10L, contratista, EstadoContrato.EN_EJECUCION), EstadoInforme.APROBADO);
+        when(informeRepository.findByIdAndActivoTrue(50L)).thenReturn(Optional.of(informe));
+        when(currentUserService.getCurrentUser()).thenReturn(contratista);
+
+        InformeUpdateDto dto = informeUpdateDto(LocalDate.of(2026, 2, 1), LocalDate.of(2026, 2, 28));
+
+        assertThatThrownBy(() -> informeService.actualizar(50L, dto))
+            .isInstanceOfSatisfying(SigconBusinessException.class, ex ->
+                assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.INFORME_NO_EDITABLE));
+    }
+
+    @Test
+    void actualizarInformeContratistaIncorrectoFalla() {
+        Usuario contratistaPropietario = usuario(2L, RolUsuario.CONTRATISTA);
+        Usuario contratistaOtro = usuario(99L, RolUsuario.CONTRATISTA);
+        Informe informe = informe(50L, contrato(10L, contratistaPropietario, EstadoContrato.EN_EJECUCION), EstadoInforme.BORRADOR);
+        when(informeRepository.findByIdAndActivoTrue(50L)).thenReturn(Optional.of(informe));
+        when(currentUserService.getCurrentUser()).thenReturn(contratistaOtro);
+
+        InformeUpdateDto dto = informeUpdateDto(LocalDate.of(2026, 2, 1), LocalDate.of(2026, 2, 28));
+
+        assertThatThrownBy(() -> informeService.actualizar(50L, dto))
+            .isInstanceOfSatisfying(SigconBusinessException.class, ex ->
+                assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.ACCESO_DENEGADO));
+    }
+
+    @Test
+    void actualizarInformeFechaFinInvalidaFalla() {
+        Usuario contratista = usuario(2L, RolUsuario.CONTRATISTA);
+        Informe informe = informe(50L, contrato(10L, contratista, EstadoContrato.EN_EJECUCION), EstadoInforme.BORRADOR);
+        when(informeRepository.findByIdAndActivoTrue(50L)).thenReturn(Optional.of(informe));
+        when(currentUserService.getCurrentUser()).thenReturn(contratista);
+
+        InformeUpdateDto dto = informeUpdateDto(LocalDate.of(2026, 3, 1), LocalDate.of(2026, 2, 1));
+
+        assertThatThrownBy(() -> informeService.actualizar(50L, dto))
+            .isInstanceOfSatisfying(SigconBusinessException.class, ex -> {
+                assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.FECHA_FIN_INVALIDA);
+                assertThat(ex.getStatus().value()).isEqualTo(422);
+            });
+    }
+
+    private static Usuario usuario(Long id, RolUsuario rol) {        Usuario u = new Usuario();
         u.setId(id);
         u.setEmail("u" + id + "@educacionbogota.edu.co");
         u.setNombre("Usuario " + id);
@@ -313,5 +409,12 @@ class InformeServiceTest {
         r.setFechaInicio(LocalDate.of(2026, 1, 1));
         r.setFechaFin(LocalDate.of(2026, 1, 31));
         return r;
+    }
+
+    private static InformeUpdateDto informeUpdateDto(LocalDate inicio, LocalDate fin) {
+        InformeUpdateDto dto = new InformeUpdateDto();
+        dto.setFechaInicio(inicio);
+        dto.setFechaFin(fin);
+        return dto;
     }
 }
