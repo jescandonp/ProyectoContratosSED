@@ -7,7 +7,7 @@
 > **Rama:** `feat/sigcon-i5`  
 > **Base:** `feat/sigcon-i4` HEAD `7b61d09`  
 > **Inicio:** 2026-05-04  
-> **Estado:** 🔄 EN PROGRESO
+> **Estado:** ✅ CERRADO — 2026-05-04
 
 ---
 
@@ -19,9 +19,9 @@ Gap identificado en pruebas funcionales de I4: `InformeDetalleComponent` muestra
 
 | Tarea | Descripción | Estado | Commit |
 |-------|-------------|--------|--------|
-| T1 | Rama `feat/sigcon-i5` | ⬜ pendiente | — |
-| T2 | Lógica del componente (TypeScript) | ⬜ pendiente | — |
-| T3 | Template + tests + docs | ⬜ pendiente | — |
+| T1 | Rama `feat/sigcon-i5` | ✅ completo | rama creada desde `7b61d09` |
+| T2 | Lógica del componente (TypeScript) | ✅ completo | `2f13d84` |
+| T3 | Template + tests + docs | ✅ completo | `dddf92d` + `d2e31f8` |
 
 **Leyenda:** ✅ completo | 🔄 en progreso | ⬜ pendiente | ❌ bloqueado
 
@@ -38,11 +38,37 @@ Gap identificado en pruebas funcionales de I4: `InformeDetalleComponent` muestra
 
 ## Registro de Ejecución
 
-*(Se irá completando durante la implementación)*
+### 2026-05-04 — I5 completado
+
+- T1: Rama `feat/sigcon-i5` creada desde `feat/sigcon-i4` HEAD `7b61d09`.
+- T2 `2f13d84`: `InformeDetalleComponent` refactorizado con:
+  - Interfaz `ActividadEditState` (descripcion, porcentaje, guardando, error, soportes).
+  - `Map<number, ActividadEditState>` indexado por `actividad.id`.
+  - Metodos: `guardarActividad`, `eliminarSoporte`, `agregarDocumentoAdicional`, `eliminarDocumentoAdicional`.
+  - Template separado en `informe-detalle.component.html` con modo dual (editable en BORRADOR, solo lectura en otros estados).
+  - Servicios inyectados: `ActividadInformeService`, `SoporteAdjuntoService`, `DocumentoAdicionalService`, `DocumentoCatalogoService`.
+- T3 `dddf92d` + `d2e31f8`:
+  - 12 tests nuevos en `informe-detalle.component.spec.ts`.
+  - Test existente `loads and renders the report detail` adaptado al nuevo modo edicion.
+  - Seccion 13 agregada a `docs/GUIA_PRUEBAS_FUNCIONALES.md`.
+- Validacion final: **90 specs, 0 fallos** ✅
 
 ---
 
-## Reglas de Este Incremento
+## Proximo Punto de Retoma
+
+**Incremento 5 cerrado.** No hay punto de retoma pendiente.
+
+## Metricas de Cierre
+
+| Metrica | Meta | Resultado |
+|---------|------|-----------|
+| Backend tests | Sin regresion (123) | **123** ✅ |
+| Frontend specs | >= 90, 0 fallos | **90** ✅ |
+| Nuevos tests I5 | >= 12 | **12** ✅ |
+| Tests existentes InformeDetalleComponent | 8 pasan | **8** ✅ (adaptado 1) |
+| Endpoints nuevos | 0 | **0** ✅ |
+| DDL changes | 0 | **0** ✅ |
 
 1. **Autoridad:** CONSTITUTION → ARCHITECTURE → PRD → spec I5 → plan I5 → código.
 2. **Solo frontend** — ningún archivo de backend se modifica.
@@ -55,6 +81,6 @@ Gap identificado en pruebas funcionales de I4: `InformeDetalleComponent` muestra
 
 ---
 
-## Próximo Punto de Retoma
+## Proximo Punto de Retoma
 
-**Incremento 5 en progreso.** Iniciar por T1 (crear rama `feat/sigcon-i5`).
+**Incremento 5 cerrado.** No hay punto de retoma pendiente.
