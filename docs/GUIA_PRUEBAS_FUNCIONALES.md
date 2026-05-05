@@ -325,3 +325,63 @@ Antes de declarar el ciclo manual como aprobado:
 - Backend sigue respondiendo `UP`.
 - Frontend no muestra errores bloqueantes en consola.
 - Cualquier desviacion queda registrada con pasos de reproduccion.
+
+---
+
+## 12. Incremento 4 — Hallazgos Funcionales
+
+> Rama: `feat/sigcon-i4`  
+> Fecha: 2026-05-04
+
+### 12.1 H1 — Revisor Opcional (Flujo Sin Revisor)
+
+Entrar como `ADMIN`. Crear un contrato sin seleccionar revisor.
+
+| ID | Accion | Datos | Esperado |
+|---|---|---|---|
+| I4-H1-01 | Crear contrato sin revisor | Campo "Revisor (opcional)" vacío | Contrato creado, campo revisor = Sin revisor |
+| I4-H1-02 | Verificar detalle del contrato | Contrato recién creado | Revisor muestra "No asignado" |
+| I4-H1-03 | Contratista crea informe | Contrato sin revisor | Informe en BORRADOR |
+| I4-H1-04 | Contratista envía informe | Informe en BORRADOR | Estado pasa a ENVIADO |
+| I4-H1-05 | Supervisor aprueba desde ENVIADO | Informe en ENVIADO, sin revisor | Estado pasa a APROBADO (sin pasar por EN_REVISION) |
+| I4-H1-06 | Supervisor devuelve desde ENVIADO | Informe en ENVIADO, sin revisor | Estado pasa a DEVUELTO con observación |
+| I4-H1-07 | Contrato CON revisor — flujo sin cambios | Contrato existente con revisor | Flujo I1-I3 idéntico (regresión) |
+| I4-H1-08 | Revisor intenta actuar en contrato sin revisor | `POST /api/informes/{id}/aprobar-revision` | 403 ACCESO_DENEGADO |
+
+### 12.2 H2 — Contrato Editable
+
+Entrar como `ADMIN`.
+
+| ID | Accion | Datos | Esperado |
+|---|---|---|---|
+| I4-H2-01 | Editar número de contrato | Nuevo número único | Contrato actualizado, número cambiado |
+| I4-H2-02 | Editar número duplicado | Número de otro contrato activo | Error 409 con mensaje inline |
+| I4-H2-03 | Agregar revisor a contrato sin revisor | Seleccionar revisor en el form | Contrato actualizado con revisor asignado |
+| I4-H2-04 | Quitar revisor de contrato con revisor | Seleccionar "Sin revisor" | Contrato actualizado sin revisor |
+| I4-H2-05 | Cambiar supervisor | Seleccionar otro supervisor | Nuevo supervisor puede actuar en informes activos |
+| I4-H2-06 | Editar fechas del contrato | Fecha fin < fecha inicio | Error 422 FECHA_FIN_INVALIDA |
+| I4-H2-07 | Rol CONTRATISTA intenta editar contrato | `PUT /api/admin/contratos/{id}` | 403 Forbidden |
+| I4-H2-08 | Cancelar edición | Click en "Cancelar" | Valores originales restaurados, sin llamada HTTP |
+
+### 12.3 H3 — Informe Editable (Periodo)
+
+Entrar como `CONTRATISTA`.
+
+| ID | Accion | Datos | Esperado |
+|---|---|---|---|
+| I4-H3-01 | Editar periodo en BORRADOR | Nuevas fechas válidas | Periodo actualizado, vista actualizada sin recargar |
+| I4-H3-02 | Editar periodo en DEVUELTO | Nuevas fechas válidas | Periodo actualizado |
+| I4-H3-03 | Fecha fin < fecha inicio | fechaFin anterior a fechaInicio | Error 422 con mensaje inline |
+| I4-H3-04 | Informe en ENVIADO | Abrir detalle | Campos de periodo en solo lectura (sin botón "Guardar periodo") |
+| I4-H3-05 | Informe en EN_REVISION | Abrir detalle | Campos de periodo en solo lectura |
+| I4-H3-06 | Informe en APROBADO | Abrir detalle | Campos de periodo en solo lectura |
+| I4-H3-07 | Contratista B intenta editar informe de contratista A | `PATCH /api/informes/{id}` | 403 ACCESO_DENEGADO |
+
+### 12.4 Diagnóstico de Errores Comunes I4
+
+| Síntoma | Causa probable | Solución |
+|---------|---------------|----------|
+| 403 al editar contrato como ADMIN | Endpoint incorrecto (usando `/api/contratos/{id}` en vez de `/api/admin/contratos/{id}`) | Verificar que el frontend usa `actualizarContratoAdmin` |
+| Supervisor no puede aprobar desde ENVIADO | Contrato tiene revisor asignado | Verificar `contrato.revisor` en BD |
+| Campo revisor sigue siendo obligatorio en el form | Cache del navegador o build desactualizado | Limpiar caché y reconstruir |
+| 409 al crear contrato sin revisor | Backend no actualizado a I4 | Verificar que `feat/sigcon-i4` está desplegado |
