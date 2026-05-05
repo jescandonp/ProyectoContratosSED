@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 
-import { InformeDetalle, InformeRequest, InformeResumen } from '../models/informe.model';
+import { InformeDetalle, InformeRequest, InformeResumen, InformeUpdateDto } from '../models/informe.model';
 import { Page } from '../models/page.model';
 
 interface ListarInformesParams {
@@ -38,6 +38,10 @@ export class InformeService {
 
   aprobarInforme(id: number) {
     return this.http.post<InformeDetalle>(`${this.baseUrl}/${id}/aprobar`, null);
+  }
+
+  actualizarPeriodo(id: number, dto: InformeUpdateDto) {
+    return this.http.patch<InformeDetalle>(`${this.baseUrl}/${id}`, dto);
   }
 
   private toHttpParams(params: ListarInformesParams) {

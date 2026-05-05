@@ -34,3 +34,8 @@ export interface InformeRequest {
   fechaInicio: string;
   fechaFin: string;
 }
+
+export interface InformeUpdateDto {
+  fechaInicio: string;
+  fechaFin: string;
+}

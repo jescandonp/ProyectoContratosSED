@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 
 import { InformeDetalle } from '../../../core/models/informe.model';
 import { InformeService } from '../../../core/services/informe.service';
@@ -13,10 +13,15 @@ describe('InformeDetalleComponent', () => {
   let router: jasmine.SpyObj<Router>;
 
   beforeEach(async () => {
-    informeService = jasmine.createSpyObj<InformeService>('InformeService', ['obtenerDetalle', 'enviarInforme']);
+    informeService = jasmine.createSpyObj<InformeService>('InformeService', [
+      'obtenerDetalle',
+      'enviarInforme',
+      'actualizarPeriodo'
+    ]);
     router = jasmine.createSpyObj<Router>('Router', ['navigate']);
     informeService.obtenerDetalle.and.returnValue(of(sampleInformeDetalle()));
     informeService.enviarInforme.and.returnValue(of({ ...sampleInformeDetalle(), estado: 'ENVIADO' }));
+    informeService.actualizarPeriodo.and.returnValue(of({ ...sampleInformeDetalle(), fechaInicio: '2026-06-01', fechaFin: '2026-06-30' }));
     router.navigate.and.returnValue(Promise.resolve(true));
 
     await TestBed.configureTestingModule({
@@ -79,6 +84,39 @@ describe('InformeDetalleComponent', () => {
     expect(window.confirm).toHaveBeenCalled();
     expect(informeService.enviarInforme).toHaveBeenCalledWith(501);
     expect(component.informe()?.estado).toBe('ENVIADO');
+  });
+
+  // ── T8: H3 periodo editable ───────────────────────────────────────────────
+
+  it('muestra campos editables de periodo en estado BORRADOR', () => {
+    fixture.detectChanges();
+
+    const periodoEditable = fixture.nativeElement.querySelector('[data-testid="periodo-editable"]');
+    expect(periodoEditable).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="btn-guardar-periodo"]')).not.toBeNull();
+  });
+
+  it('no muestra campos editables de periodo en estado ENVIADO', () => {
+    component.informe.set({ ...sampleInformeDetalle(), estado: 'ENVIADO' });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="periodo-editable"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="btn-guardar-periodo"]')).toBeNull();
+  });
+
+  it('guarda el periodo correctamente y actualiza la vista', () => {
+    component.periodoFechaInicio = '2026-06-01';
+    component.periodoFechaFin = '2026-06-30';
+
+    component.guardarPeriodo();
+
+    expect(informeService.actualizarPeriodo).toHaveBeenCalledWith(501, {
+      fechaInicio: '2026-06-01',
+      fechaFin: '2026-06-30'
+    });
+    expect(component.informe()?.fechaInicio).toBe('2026-06-01');
+    expect(component.informe()?.fechaFin).toBe('2026-06-30');
+    expect(component.guardandoPeriodo()).toBeFalse();
   });
 });
 

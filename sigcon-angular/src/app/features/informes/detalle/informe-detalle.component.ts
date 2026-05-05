@@ -1,4 +1,5 @@
 import { Component, OnInit, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { EstadoInforme, InformeDetalle } from '../../../core/models/informe.model';
@@ -8,7 +9,7 @@ import { StatusChipComponent } from '../../../shared/components/status-chip/stat
 @Component({
   selector: 'app-informe-detalle',
   standalone: true,
-  imports: [StatusChipComponent],
+  imports: [StatusChipComponent, FormsModule],
   template: `
     <div class="space-y-lg">
       <nav class="flex items-center gap-xs text-sm text-[var(--color-on-surface-variant)]">
@@ -29,7 +30,46 @@ import { StatusChipComponent } from '../../../shared/components/status-chip/stat
             <div>
               <p class="m-0 text-xs font-bold uppercase tracking-wider text-[var(--color-primary)]">{{ i.contratoNumero }}</p>
               <h2 class="m-0 mt-xs text-2xl font-bold text-[var(--color-on-surface)]">Informe No. {{ i.numero }}</h2>
-              <p class="m-0 mt-xs text-sm text-[var(--color-on-surface-variant)]">{{ i.fechaInicio }} a {{ i.fechaFin }}</p>
+
+              <!-- Periodo: editable en BORRADOR/DEVUELTO, solo lectura en otros estados -->
+              @if (periodoEditable(i.estado)) {
+                <div class="mt-sm flex flex-wrap items-end gap-sm" data-testid="periodo-editable">
+                  <div class="space-y-xs">
+                    <label class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Fecha inicio</label>
+                    <input
+                      class="h-9 rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface-bright)] px-sm text-sm outline-none focus:border-[var(--color-primary)]"
+                      type="date"
+                      [(ngModel)]="periodoFechaInicio"
+                      name="periodoFechaInicio"
+                      data-testid="input-fecha-inicio"
+                    />
+                  </div>
+                  <div class="space-y-xs">
+                    <label class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Fecha fin</label>
+                    <input
+                      class="h-9 rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface-bright)] px-sm text-sm outline-none focus:border-[var(--color-primary)]"
+                      type="date"
+                      [(ngModel)]="periodoFechaFin"
+                      name="periodoFechaFin"
+                      data-testid="input-fecha-fin"
+                    />
+                  </div>
+                  <button
+                    class="rounded bg-[var(--color-primary)] px-md py-xs text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+                    type="button"
+                    [disabled]="guardandoPeriodo()"
+                    (click)="guardarPeriodo()"
+                    data-testid="btn-guardar-periodo"
+                  >
+                    {{ guardandoPeriodo() ? 'Guardando...' : 'Guardar periodo' }}
+                  </button>
+                  @if (errorPeriodo()) {
+                    <p class="w-full text-xs text-[var(--color-error)]">{{ errorPeriodo() }}</p>
+                  }
+                </div>
+              } @else {
+                <p class="m-0 mt-xs text-sm text-[var(--color-on-surface-variant)]">{{ i.fechaInicio }} a {{ i.fechaFin }}</p>
+              }
             </div>
             <div class="flex flex-wrap items-center gap-sm">
               <app-status-chip [value]="i.estado" [label]="estadoLabel(i.estado)" [tone]="estadoTone(i.estado)" />
@@ -156,6 +196,11 @@ import { StatusChipComponent } from '../../../shared/components/status-chip/stat
 export class InformeDetalleComponent implements OnInit {
   readonly informe = signal<InformeDetalle | null>(null);
   readonly error = signal('');
+  readonly guardandoPeriodo = signal(false);
+  readonly errorPeriodo = signal('');
+
+  periodoFechaInicio = '';
+  periodoFechaFin = '';
 
   constructor(
     private readonly informeService: InformeService,
@@ -174,8 +219,39 @@ export class InformeDetalleComponent implements OnInit {
       return;
     }
     this.informeService.obtenerDetalle(id).subscribe({
-      next: (informe) => this.informe.set(informe),
+      next: (informe) => {
+        this.informe.set(informe);
+        this.periodoFechaInicio = informe.fechaInicio;
+        this.periodoFechaFin = informe.fechaFin;
+      },
       error: () => this.error.set('No se pudo cargar el informe.')
+    });
+  }
+
+  guardarPeriodo() {
+    const informe = this.informe();
+    if (!informe) return;
+    this.errorPeriodo.set('');
+    this.guardandoPeriodo.set(true);
+    this.informeService.actualizarPeriodo(informe.id, {
+      fechaInicio: this.periodoFechaInicio,
+      fechaFin: this.periodoFechaFin
+    }).subscribe({
+      next: (actualizado) => {
+        this.informe.set(actualizado);
+        this.periodoFechaInicio = actualizado.fechaInicio;
+        this.periodoFechaFin = actualizado.fechaFin;
+        this.guardandoPeriodo.set(false);
+      },
+      error: (err) => {
+        this.guardandoPeriodo.set(false);
+        const codigo = err?.error?.error ?? '';
+        if (codigo === 'FECHA_FIN_INVALIDA') {
+          this.errorPeriodo.set('La fecha fin no puede ser anterior a la fecha inicio.');
+        } else {
+          this.errorPeriodo.set('No se pudo guardar el periodo. Verifique las fechas e intente de nuevo.');
+        }
+      }
     });
   }
 
@@ -202,6 +278,10 @@ export class InformeDetalleComponent implements OnInit {
 
   volverAContratos() {
     void this.router.navigate(['/contratos']);
+  }
+
+  periodoEditable(estado: EstadoInforme): boolean {
+    return estado === 'BORRADOR' || estado === 'DEVUELTO';
   }
 
   puedeEnviar(estado: EstadoInforme) {
