@@ -22,14 +22,14 @@
 
 Repositorio remoto: `https://github.com/jescandonp/ProyectoContratosSED.git`
 
-| Rama | Commit validado | Estado |
+| Rama | Referencia validada | Estado |
 |---|---:|---|
 | `main` | `cc5eb25` | Sincronizada con `origin/main` |
 | `feat/sigcon-i1` | `be26bbe` | Sincronizada con `origin/feat/sigcon-i1` |
 | `feat/sigcon-i2` | `0658cef` | Sincronizada con `origin/feat/sigcon-i2` |
 | `feat/sigcon-i3` | `9be9c73` | Sincronizada con `origin/feat/sigcon-i3` |
 | `feat/sigcon-i4` | `7b61d09` | Sincronizada con `origin/feat/sigcon-i4` |
-| `feat/sigcon-i5` | `bac3e5b` | Sincronizada con `origin/feat/sigcon-i5` |
+| `feat/sigcon-i5` | cierre tecnico `bac3e5b` + catch-up documental | Sincronizada con `origin/feat/sigcon-i5` |
 
 Para retomar o validar el ultimo incremento:
 
