@@ -3,6 +3,7 @@ package co.gov.bogota.sed.sigcon.application.service;
 import co.gov.bogota.sed.sigcon.application.dto.informe.InformeDetalleDto;
 import co.gov.bogota.sed.sigcon.application.dto.informe.InformeRequest;
 import co.gov.bogota.sed.sigcon.application.dto.informe.InformeResumenDto;
+import co.gov.bogota.sed.sigcon.application.dto.informe.InformeUpdateDto;
 import co.gov.bogota.sed.sigcon.application.mapper.InformeMapper;
 import co.gov.bogota.sed.sigcon.domain.entity.ActividadInforme;
 import co.gov.bogota.sed.sigcon.domain.entity.Contrato;
@@ -154,8 +155,32 @@ public class InformeService {
         Informe informe = findActiveInforme(id);
         Usuario usuario = currentUserService.getCurrentUser();
         assertCanEditInforme(usuario, informe);
+        if (request.getFechaFin().isBefore(request.getFechaInicio())) {
+            throw new SigconBusinessException(
+                ErrorCode.FECHA_FIN_INVALIDA,
+                "La fecha fin no puede ser anterior a la fecha inicio",
+                HttpStatus.UNPROCESSABLE_ENTITY
+            );
+        }
         informe.setFechaInicio(request.getFechaInicio());
         informe.setFechaFin(request.getFechaFin());
+        informeRepository.save(informe);
+        return buildDetalle(informe);
+    }
+
+    public InformeDetalleDto actualizar(Long id, InformeUpdateDto dto) {
+        Informe informe = findActiveInforme(id);
+        Usuario usuario = currentUserService.getCurrentUser();
+        assertCanEditInforme(usuario, informe);
+        if (dto.getFechaFin().isBefore(dto.getFechaInicio())) {
+            throw new SigconBusinessException(
+                ErrorCode.FECHA_FIN_INVALIDA,
+                "La fecha fin no puede ser anterior a la fecha inicio",
+                HttpStatus.UNPROCESSABLE_ENTITY
+            );
+        }
+        informe.setFechaInicio(dto.getFechaInicio());
+        informe.setFechaFin(dto.getFechaFin());
         informeRepository.save(informe);
         return buildDetalle(informe);
     }
