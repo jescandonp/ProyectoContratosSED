@@ -21,7 +21,7 @@ El proyecto se implementa por incrementos bajo SDD Spec-Anchored. El incremento 
 docs/plans/
 ```
 
-Al 2026-05-02 el trabajo activo esta sobre I3 en `feat/sigcon-i3`; confirmar el estado exacto en `docs/plans/2026-05-02-sigcon-i3-execution-log.md` antes de continuar.
+Al 2026-05-06 el ultimo incremento cerrado es I5 en `feat/sigcon-i5`, commit `bac3e5b`. Confirmar el estado exacto en `docs/plans/2026-05-04-sigcon-i5-execution-log.md` antes de continuar.
 
 ## Estructura
 

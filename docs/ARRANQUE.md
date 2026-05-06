@@ -1,8 +1,8 @@
 # ARRANQUE SIGCON
 
-> Estado: Incremento 3 completado.
+> Estado: Incremento 5 completado.
 > Metodologia: Spec-Driven Development (SDD), nivel Spec-Anchored.
-> Ultima actualizacion: 2026-05-02 — cierre I3.
+> Ultima actualizacion: 2026-05-06 — sincronizacion GitHub y cierre I5.
 
 ## Orden De Documentos
 
@@ -13,8 +13,50 @@
 5. Spec tecnica I1: `docs/specs/2026-04-30-sigcon-i1-spec.md`
 6. Spec tecnica I2: `docs/specs/2026-05-01-sigcon-i2-spec.md`
 7. Spec tecnica I3: `docs/specs/2026-05-01-sigcon-i3-spec.md`
-8. Plan I3: `docs/plans/2026-05-02-sigcon-i3-implementation-plan.md`
-9. Log de ejecucion I3: `docs/plans/2026-05-02-sigcon-i3-execution-log.md`
+8. Spec tecnica I4: `docs/specs/2026-05-04-sigcon-i4-spec.md`
+9. Spec tecnica I5: `docs/specs/2026-05-04-sigcon-i5-spec.md`
+10. Plan I5: `docs/plans/2026-05-04-sigcon-i5-plan.md`
+11. Log de ejecucion I5: `docs/plans/2026-05-04-sigcon-i5-execution-log.md`
+
+## Estado GitHub Validado
+
+Repositorio remoto: `https://github.com/jescandonp/ProyectoContratosSED.git`
+
+| Rama | Commit validado | Estado |
+|---|---:|---|
+| `main` | `cc5eb25` | Sincronizada con `origin/main` |
+| `feat/sigcon-i1` | `be26bbe` | Sincronizada con `origin/feat/sigcon-i1` |
+| `feat/sigcon-i2` | `0658cef` | Sincronizada con `origin/feat/sigcon-i2` |
+| `feat/sigcon-i3` | `9be9c73` | Sincronizada con `origin/feat/sigcon-i3` |
+| `feat/sigcon-i4` | `7b61d09` | Sincronizada con `origin/feat/sigcon-i4` |
+| `feat/sigcon-i5` | `bac3e5b` | Sincronizada con `origin/feat/sigcon-i5` |
+
+Para retomar o validar el ultimo incremento:
+
+```powershell
+git clone https://github.com/jescandonp/ProyectoContratosSED.git
+Set-Location ProyectoContratosSED
+git checkout feat/sigcon-i5
+```
+
+El lider tecnico puede cambiar apuntamientos locales despues del clone usando los valores reales del ambiente SED para Oracle, WebLogic, Azure AD y rutas compartidas de firmas.
+
+## Alcance I5 (implementado)
+
+Incluye:
+- Edicion inline de actividades desde `InformeDetalleComponent` para informes en estado BORRADOR.
+- Edicion de descripcion, porcentaje, soportes y documentos adicionales sin salir del detalle del informe.
+- Vista de detalle en solo lectura para estados distintos de BORRADOR.
+- Uso de endpoints existentes de I2-I4; no agrega DDL ni endpoints nuevos.
+- Spec, plan y log de ejecucion I5 versionados.
+
+## Alcance I4 (implementado)
+
+Incluye:
+- Edicion administrativa de contratos.
+- Revisor opcional en contratos.
+- Flujo directo de supervisor cuando no hay revisor asignado.
+- Edicion del periodo del informe desde el detalle cuando el informe es editable.
 
 ## Alcance I3 (implementado)
 
@@ -105,7 +147,7 @@ sqlplus SED_SIGCON/<password>@localhost:1521/XEPDB1 @db/00_setup.sql
 sqlplus SED_SIGCON/<password>@localhost:1521/XEPDB1 @db/01_datos_prueba.sql
 ```
 
-`db/00_setup.sql` contiene DDL de I1, I2 e I3 bajo cabeceras `-- ===== INCREMENTO 1 =====`, `-- ===== INCREMENTO 2 =====` y `-- ===== INCREMENTO 3 =====`.
+`db/00_setup.sql` contiene DDL de I1, I2 e I3 bajo cabeceras `-- ===== INCREMENTO 1 =====`, `-- ===== INCREMENTO 2 =====` y `-- ===== INCREMENTO 3 =====`. I4 e I5 no agregan DDL.
 `db/01_datos_prueba.sql` solo debe ejecutarse en ambientes de desarrollo local.
 
 ## Configuracion I3: PDF Y Email
@@ -273,6 +315,6 @@ En `local-dev` poner `sigcon.mail.enabled: false`; el sistema registra los email
 
 Actualizar este documento cuando:
 - Cambie una version en `docs/TECNOLOGIAS.md`.
-- Se cierre I1, I2 o I3.
+- Se cierre un incremento SIGCON.
 - Cambien comandos reales de arranque local o WebLogic.
 - Se agregue configuracion validada con entorno SED.
