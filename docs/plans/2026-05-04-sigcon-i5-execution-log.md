@@ -113,6 +113,33 @@ Revisar visualmente el flujo local-dev en navegador:
 4. Entrar como Revisor desde notificacion/detalle: confirmar botones `Aprobar revision` y `Devolver`.
 5. Abrir campana de notificaciones: confirmar contraste legible en notificaciones no leidas.
 
+## 2026-05-09 — Hallazgo Post-I5: Mensaje generico al aprobar informe
+
+Caso reportado: al aprobar el informe del contrato `CO1.PCCNTR.8502220 - 2025` desde la cola de aprobacion del Supervisor, la UI mostraba solo `No se pudo aprobar el informe.` y no explicaba la causa.
+
+Diagnostico:
+
+- El backend ya expone el motivo mediante `ErrorResponse.error` y `ErrorResponse.mensaje`.
+- La cola de aprobacion descartaba el cuerpo del error en `ColaAprobacionComponent.aprobar()`.
+- Posibles causas reales, segun la maquina de aprobacion/PDF, incluyen firma requerida del contratista/supervisor o falla de generacion del PDF.
+
+Resolucion:
+
+- `ColaAprobacionComponent` ahora muestra `err.error.mensaje` cuando el backend lo entrega.
+- Se agregaron mensajes fallback por codigos conocidos: `FIRMA_REQUERIDA`, `PDF_GENERACION_FALLIDA`, `TRANSICION_INVALIDA`, `ACCESO_DENEGADO`.
+- Se agregaron pruebas unitarias para preservar el motivo especifico y para fallback sin mensaje.
+
+Validaciones 2026-05-09:
+
+- Frontend build: `node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run build` -> **exitoso**.
+- Frontend specs enfocados: `node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false --include src/app/features/aprobacion/cola-aprobacion.component.spec.ts` -> **9 specs, 0 fallos**.
+
+Proximo punto de retoma:
+
+1. Reintentar aprobacion del informe `CO1.PCCNTR.8502220 - 2025` como Supervisor.
+2. Si falla por firma requerida, la UI debe mostrar el mensaje especifico del backend indicando si falta firma del contratista o del supervisor.
+3. Cargar la firma faltante o corregir la causa reportada y reintentar aprobacion.
+
 ## Metricas de Cierre
 
 | Metrica | Meta | Resultado |

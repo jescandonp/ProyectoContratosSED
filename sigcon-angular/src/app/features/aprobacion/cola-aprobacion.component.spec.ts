@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 
 import { InformeDetalle, InformeResumen } from '../../core/models/informe.model';
 import { Page } from '../../core/models/page.model';
@@ -71,6 +71,35 @@ describe('ColaAprobacionComponent', () => {
 
     expect(observacionService.aprobarInforme).toHaveBeenCalledWith(informe.id);
     expect(informeService.listarInformes).toHaveBeenCalledTimes(2);
+  });
+
+  it('shows backend approval reason when aprobarInforme fails', () => {
+    const informe = pageConInformes.content[0];
+    observacionService.aprobarInforme.and.returnValue(throwError(() => ({
+      error: {
+        error: 'FIRMA_REQUERIDA',
+        mensaje: 'El supervisor no tiene firma registrada. Debe cargar su firma antes de aprobar el informe.'
+      }
+    })));
+
+    component.aprobar(informe);
+
+    expect(component.error()).toBe('El supervisor no tiene firma registrada. Debe cargar su firma antes de aprobar el informe.');
+    expect(component.procesando()).toBeNull();
+  });
+
+  it('shows a clear fallback when approval fails without backend message', () => {
+    const informe = pageConInformes.content[0];
+    observacionService.aprobarInforme.and.returnValue(throwError(() => ({
+      error: {
+        error: 'PDF_GENERACION_FALLIDA'
+      }
+    })));
+
+    component.aprobar(informe);
+
+    expect(component.error()).toBe('No se pudo generar el PDF del informe. Revise el detalle técnico o intente nuevamente.');
+    expect(component.procesando()).toBeNull();
   });
 
   it('blocks devolucion when observacion is empty', () => {
