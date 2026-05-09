@@ -1,36 +1,47 @@
-import { SlicePipe } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, forkJoin, of, switchMap } from 'rxjs';
 
-import { AuthService } from '../../../core/auth/auth.service';
 import { EstadoInforme, InformeDetalle } from '../../../core/models/informe.model';
+import { AporteSgssiRequest, ITEM_SGSSI_LABELS, ItemSgssi } from '../../../core/models/aporte-sgssi.model';
 import { DocumentoCatalogo } from '../../../core/models/documento-catalogo.model';
 import { ActividadInformeService } from '../../../core/services/actividad-informe.service';
+import { AporteSgssiService } from '../../../core/services/aporte-sgssi.service';
 import { DocumentoAdicionalService } from '../../../core/services/documento-adicional.service';
 import { DocumentoCatalogoService } from '../../../core/services/documento-catalogo.service';
 import { InformeService } from '../../../core/services/informe.service';
-import { ObservacionService } from '../../../core/services/observacion.service';
 import { SoporteAdjuntoService } from '../../../core/services/soporte-adjunto.service';
 import { StatusChipComponent } from '../../../shared/components/status-chip/status-chip.component';
 
 interface ActividadEditState {
   descripcion: string;
-  porcentaje: number;
   guardando: boolean;
   error: string;
   soporteNombre: string;
   soporteUrl: string;
+  soporteArchivo: File | null;
 }
+
+interface AporteSgssiEditRow {
+  item: ItemSgssi;
+  fechaPago: string;
+  valorAportado: number | null;
+  entidad: string;
+}
+
+const ITEMS_SGSSI: ItemSgssi[] = ['SALUD', 'PENSION', 'ARL'];
 
 @Component({
   selector: 'app-informe-detalle',
   standalone: true,
-  imports: [StatusChipComponent, FormsModule],
+  imports: [StatusChipComponent, FormsModule, DecimalPipe],
   templateUrl: './informe-detalle.component.html'
 })
 export class InformeDetalleComponent implements OnInit {
+  readonly itemsSgssi: ItemSgssi[] = ITEMS_SGSSI;
+
   readonly informe = signal<InformeDetalle | null>(null);
   readonly error = signal('');
   readonly guardandoPeriodo = signal(false);
@@ -43,10 +54,11 @@ export class InformeDetalleComponent implements OnInit {
   readonly nuevoDocReferencia = signal('');
   readonly guardandoDocumento = signal(false);
   readonly errorDocumento = signal('');
-  readonly procesandoRevision = signal(false);
-  readonly dialogoDevolucionRevision = signal(false);
-  readonly observacionRevision = signal('');
-  readonly errorRevision = signal('');
+
+  // I6 — aportes SGSSI editables (solo BORRADOR)
+  readonly aportesEdicion = signal<AporteSgssiEditRow[]>([]);
+  readonly guardandoAportes = signal(false);
+  readonly errorAportes = signal('');
 
   periodoFechaInicio = '';
   periodoFechaFin = '';
@@ -57,8 +69,7 @@ export class InformeDetalleComponent implements OnInit {
     private readonly soporteService: SoporteAdjuntoService,
     private readonly documentoAdicionalService: DocumentoAdicionalService,
     private readonly documentoCatalogoService: DocumentoCatalogoService,
-    private readonly observacionService: ObservacionService,
-    private readonly authService: AuthService,
+    private readonly aporteSgssiService: AporteSgssiService,
     private readonly route: ActivatedRoute,
     private readonly router: Router
   ) {}
@@ -80,6 +91,7 @@ export class InformeDetalleComponent implements OnInit {
         this.periodoFechaFin = informe.fechaFin;
         if (informe.estado === 'BORRADOR') {
           this.inicializarEstadoEdicion(informe);
+          this.inicializarAportesEdicion(informe);
           this.cargarCatalogo();
         }
       },
@@ -123,11 +135,11 @@ export class InformeDetalleComponent implements OnInit {
     informe.actividades.forEach((actividad) => {
       states.set(actividad.id, {
         descripcion: actividad.descripcion,
-        porcentaje: actividad.porcentaje,
         guardando: false,
         error: '',
         soporteNombre: '',
-        soporteUrl: ''
+        soporteUrl: '',
+        soporteArchivo: null
       });
     });
     this.actividadStates.set(states);
@@ -164,40 +176,24 @@ export class InformeDetalleComponent implements OnInit {
       this.actualizarEstadoActividad(actividadId, { error: 'La descripcion no puede estar vacia.' });
       return;
     }
-    if (state.porcentaje < 0 || state.porcentaje > 100) {
-      this.actualizarEstadoActividad(actividadId, { error: 'El porcentaje debe estar entre 0 y 100.' });
-      return;
-    }
 
     const actividad = informe.actividades.find((a) => a.id === actividadId);
     if (!actividad) return;
-    const soporteNombre = state.soporteNombre.trim();
-    const soporteUrl = state.soporteUrl.trim();
-    const tieneSoporteUrl = actividad.soportes.some((soporte) => soporte.tipo === 'URL');
-    if (!tieneSoporteUrl && (!soporteNombre || !soporteUrl)) {
-      this.actualizarEstadoActividad(actividadId, { error: 'Debe registrar nombre y URL de soporte para esta obligacion.' });
-      return;
-    }
-    if ((soporteNombre || soporteUrl) && (!soporteNombre || !soporteUrl)) {
-      this.actualizarEstadoActividad(actividadId, { error: 'Debe completar nombre y URL del soporte.' });
-      return;
-    }
-    if (soporteUrl && !this.esUrlHttp(soporteUrl)) {
-      this.actualizarEstadoActividad(actividadId, { error: 'La URL de soporte debe iniciar con http:// o https://.' });
-      return;
-    }
 
     this.actualizarEstadoActividad(actividadId, { guardando: true, error: '' });
 
     this.actividadService.actualizar(informe.id, actividadId, {
       idObligacion: actividad.idObligacion ?? 0,
       descripcion: state.descripcion.trim(),
-      porcentaje: state.porcentaje
     }).pipe(
       switchMap((actividadActualizada) => {
         const ops: Observable<unknown>[] = [];
-        if (soporteUrl) {
-          ops.push(this.soporteService.agregarUrl(actividadActualizada.id, { nombre: soporteNombre, url: soporteUrl }));
+        const nombre = state.soporteNombre.trim() || ('Soporte obligacion ' + (actividad.ordenObligacion ?? actividadId));
+        if (state.soporteUrl.trim()) {
+          ops.push(this.soporteService.agregarUrl(actividadActualizada.id, { nombre: nombre, url: state.soporteUrl.trim() }));
+        }
+        if (state.soporteArchivo) {
+          ops.push(this.soporteService.agregarArchivo(actividadActualizada.id, state.soporteArchivo));
         }
         return ops.length ? forkJoin(ops) : of([]);
       }),
@@ -228,6 +224,69 @@ export class InformeDetalleComponent implements OnInit {
       },
       error: () => this.error.set('No se pudo eliminar el soporte.')
     });
+  }
+
+  seleccionarArchivoActividad(actividadId: number, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.actualizarEstadoActividad(actividadId, { soporteArchivo: input.files?.item(0) ?? null });
+  }
+
+  // ── Aportes SGSSI editables (I6) ─────────────────────────────────────────
+
+  private inicializarAportesEdicion(informe: InformeDetalle): void {
+    const rows: AporteSgssiEditRow[] = informe.aportesSgssi.map((a) => ({
+      item: a.item,
+      fechaPago: a.fechaPago,
+      valorAportado: a.valorAportado,
+      entidad: a.entidad,
+    }));
+    this.aportesEdicion.set(rows);
+  }
+
+  agregarAporteEdicion(): void {
+    this.aportesEdicion.update((rows) => [...rows, { item: 'SALUD', fechaPago: '', valorAportado: null, entidad: '' }]);
+  }
+
+  eliminarAporteEdicion(index: number): void {
+    this.aportesEdicion.update((rows) => rows.filter((_, i) => i !== index));
+  }
+
+  actualizarAporteEdicion(index: number, patch: Partial<AporteSgssiEditRow>): void {
+    this.aportesEdicion.update((rows) => rows.map((row, i) => i === index ? { ...row, ...patch } : row));
+  }
+
+  guardarAportesSgssi(): void {
+    const informe = this.informe();
+    if (!informe) return;
+    this.guardandoAportes.set(true);
+    this.errorAportes.set('');
+
+    const validos: AporteSgssiRequest[] = this.aportesEdicion()
+      .filter((row) => row.fechaPago && row.valorAportado != null && row.entidad.trim())
+      .map((row) => ({
+        item: row.item,
+        fechaPago: row.fechaPago,
+        valorAportado: row.valorAportado!,
+        entidad: row.entidad.trim(),
+      }));
+
+    this.aporteSgssiService.guardarTodos(informe.id, validos).pipe(
+      switchMap(() => this.informeService.obtenerDetalle(informe.id))
+    ).subscribe({
+      next: (actualizado) => {
+        this.informe.set(actualizado);
+        this.inicializarAportesEdicion(actualizado);
+        this.guardandoAportes.set(false);
+      },
+      error: () => {
+        this.guardandoAportes.set(false);
+        this.errorAportes.set('No se pudieron guardar los aportes SGSSI. Intente de nuevo.');
+      }
+    });
+  }
+
+  labelSgssi(item: ItemSgssi): string {
+    return ITEM_SGSSI_LABELS[item];
   }
 
   // ── Documentos adicionales editables (I5) ────────────────────────────────
@@ -288,7 +347,6 @@ export class InformeDetalleComponent implements OnInit {
   enviar() {
     const informe = this.informe();
     if (!informe || !this.puedeEnviar(informe.estado)) return;
-    if (!this.validarEnvio(informe)) return;
     if (!window.confirm('Desea enviar este informe para revision?')) return;
 
     this.informeService.enviarInforme(informe.id).subscribe({
@@ -313,61 +371,6 @@ export class InformeDetalleComponent implements OnInit {
     return estado === 'BORRADOR' || estado === 'DEVUELTO';
   }
 
-  puedeRevisar(informe: InformeDetalle): boolean {
-    return informe.estado === 'ENVIADO' && this.authService.hasRole('REVISOR');
-  }
-
-  aprobarRevision(): void {
-    const informe = this.informe();
-    if (!informe || !this.puedeRevisar(informe)) return;
-    this.procesandoRevision.set(true);
-    this.errorRevision.set('');
-    this.observacionService.aprobarRevision(informe.id).subscribe({
-      next: (actualizado) => {
-        this.informe.set(actualizado);
-        this.procesandoRevision.set(false);
-      },
-      error: () => {
-        this.procesandoRevision.set(false);
-        this.errorRevision.set('No se pudo aprobar la revision del informe.');
-      }
-    });
-  }
-
-  abrirDevolucionRevision(): void {
-    this.dialogoDevolucionRevision.set(true);
-    this.observacionRevision.set('');
-    this.errorRevision.set('');
-  }
-
-  cerrarDevolucionRevision(): void {
-    this.dialogoDevolucionRevision.set(false);
-    this.observacionRevision.set('');
-  }
-
-  confirmarDevolucionRevision(): void {
-    const informe = this.informe();
-    if (!informe || !this.puedeRevisar(informe)) return;
-    const texto = this.observacionRevision().trim();
-    if (!texto) {
-      this.errorRevision.set('La observacion es obligatoria para devolver el informe.');
-      return;
-    }
-    this.procesandoRevision.set(true);
-    this.errorRevision.set('');
-    this.observacionService.devolverRevision(informe.id, { texto }).subscribe({
-      next: (actualizado) => {
-        this.informe.set(actualizado);
-        this.procesandoRevision.set(false);
-        this.cerrarDevolucionRevision();
-      },
-      error: () => {
-        this.procesandoRevision.set(false);
-        this.errorRevision.set('No se pudo devolver el informe.');
-      }
-    });
-  }
-
   toNumber(value: string | number): number {
     return Number(value) || 0;
   }
@@ -388,27 +391,5 @@ export class InformeDetalleComponent implements OnInit {
     if (estado === 'DEVUELTO') return 'danger';
     if (estado === 'BORRADOR') return 'neutral';
     return 'warning';
-  }
-
-  private validarEnvio(informe: InformeDetalle): boolean {
-    if (informe.actividades.some((actividad) => !actividad.soportes.some((soporte) => soporte.tipo === 'URL'))) {
-      this.error.set('Debe registrar un soporte URL para cada obligacion antes de enviar.');
-      return false;
-    }
-    const documentosRegistrados = new Set(informe.documentosAdicionales.map((doc) => doc.idCatalogo));
-    if (this.catalogoDocumentos().some((doc) => !documentosRegistrados.has(doc.id))) {
-      this.error.set('Debe registrar todos los documentos adicionales antes de enviar.');
-      return false;
-    }
-    return true;
-  }
-
-  private esUrlHttp(value: string): boolean {
-    try {
-      const url = new URL(value.trim());
-      return url.protocol === 'http:' || url.protocol === 'https:';
-    } catch {
-      return false;
-    }
   }
 }
