@@ -83,8 +83,19 @@ public class PdfInformeService {
             byte[] firmaContratista = readSignatureBytes(contratista);
             byte[] firmaSupervisor  = readSignatureBytes(supervisor);
 
+            // Firma del revisor es opcional: si no tiene revisor o no tiene firma, se omite del PDF
+            Usuario revisor = informe.getContrato().getRevisor();
+            byte[] firmaRevisor = null;
+            if (revisor != null && revisor.getFirmaImagen() != null) {
+                try {
+                    firmaRevisor = readSignatureBytes(revisor);
+                } catch (Exception e) {
+                    log.warn("No se pudo cargar la firma del revisor {}: {}", revisor.getId(), e.getMessage());
+                }
+            }
+
             // Generar PDF
-            byte[] pdfBytes = templateService.generarPdf(informe, firmaContratista, firmaSupervisor);
+            byte[] pdfBytes = templateService.generarPdf(informe, firmaContratista, firmaSupervisor, firmaRevisor);
 
             // Calcular hash SHA-256
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
