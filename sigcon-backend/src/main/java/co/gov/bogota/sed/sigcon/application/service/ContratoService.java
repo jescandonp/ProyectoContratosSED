@@ -152,6 +152,9 @@ public class ContratoService {
         contrato.setContratista(findActiveUsuario(request.getIdContratista(), RolUsuario.CONTRATISTA, "contratista"));
         contrato.setRevisor(findActiveUsuarioOpcional(request.getIdRevisor(), RolUsuario.REVISOR));
         contrato.setSupervisor(findActiveUsuario(request.getIdSupervisor(), RolUsuario.SUPERVISOR, "supervisor"));
+        contrato.setDependencia(request.getDependencia());
+        contrato.setFormaPago(request.getFormaPago());
+        contrato.setModificaciones(request.getModificaciones());
         contrato.setActivo(true);
     }
 

@@ -52,7 +52,7 @@ public class AporteSgssi {
     private String entidad;
 
     @Column(name = "ACTIVO", nullable = false)
-    private Integer activo = 1;
+    private Boolean activo = true;
 
     @CreatedDate
     @Column(name = "CREATED_AT", nullable = false, updatable = false)
@@ -114,11 +114,11 @@ public class AporteSgssi {
         this.entidad = entidad;
     }
 
-    public Integer getActivo() {
+    public Boolean getActivo() {
         return activo;
     }
 
-    public void setActivo(Integer activo) {
+    public void setActivo(Boolean activo) {
         this.activo = activo;
     }
 
