@@ -34,7 +34,7 @@ export class ContratoService {
   }
 
   actualizarContratoAdmin(id: number, request: ContratoRequest) {
-    return this.http.put<ContratoDetalle>(`/api/admin/contratos/${id}`, request);
+    return this.actualizarContrato(id, request);
   }
 
   cambiarEstado(id: number, estado: EstadoContrato) {

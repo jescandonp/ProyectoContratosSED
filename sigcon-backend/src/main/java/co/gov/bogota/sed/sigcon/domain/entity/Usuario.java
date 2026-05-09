@@ -44,6 +44,15 @@ public class Usuario {
     @Column(name = "FIRMA_IMAGEN", length = 500)
     private String firmaImagen;
 
+    @Column(name = "SGSSI_SALUD_ENTIDAD", length = 200)
+    private String sgssiSaludEntidad;
+
+    @Column(name = "SGSSI_PENSION_ENTIDAD", length = 200)
+    private String sgssiPensionEntidad;
+
+    @Column(name = "SGSSI_ARL_ENTIDAD", length = 200)
+    private String sgssiArlEntidad;
+
     @Column(name = "ACTIVO", nullable = false)
     private Boolean activo = true;
 
@@ -104,6 +113,30 @@ public class Usuario {
 
     public void setFirmaImagen(String firmaImagen) {
         this.firmaImagen = firmaImagen;
+    }
+
+    public String getSgssiSaludEntidad() {
+        return sgssiSaludEntidad;
+    }
+
+    public void setSgssiSaludEntidad(String sgssiSaludEntidad) {
+        this.sgssiSaludEntidad = sgssiSaludEntidad;
+    }
+
+    public String getSgssiPensionEntidad() {
+        return sgssiPensionEntidad;
+    }
+
+    public void setSgssiPensionEntidad(String sgssiPensionEntidad) {
+        this.sgssiPensionEntidad = sgssiPensionEntidad;
+    }
+
+    public String getSgssiArlEntidad() {
+        return sgssiArlEntidad;
+    }
+
+    public void setSgssiArlEntidad(String sgssiArlEntidad) {
+        this.sgssiArlEntidad = sgssiArlEntidad;
     }
 
     public Boolean getActivo() {

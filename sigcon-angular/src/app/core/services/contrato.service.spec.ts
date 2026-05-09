@@ -37,6 +37,10 @@ describe('ContratoService', () => {
     service.crearContrato(contratoRequest()).subscribe();
     expect(http.expectOne('/api/contratos').request.method).toBe('POST');
 
+    service.actualizarContratoAdmin(15, contratoRequest()).subscribe();
+    const updateRequest = http.expectOne('/api/contratos/15');
+    expect(updateRequest.request.method).toBe('PUT');
+
     service.cambiarEstado(15, 'CERRADO').subscribe();
     const stateRequest = http.expectOne('/api/contratos/15/estado');
     expect(stateRequest.request.method).toBe('PATCH');

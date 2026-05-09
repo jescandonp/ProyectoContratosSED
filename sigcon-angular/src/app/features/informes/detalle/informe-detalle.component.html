@@ -57,8 +57,31 @@
               Enviar
             </button>
           }
+          @if (puedeRevisar(i)) {
+            <button
+              class="rounded bg-[var(--color-primary)] px-md py-sm text-sm font-semibold text-white disabled:opacity-50"
+              type="button"
+              [disabled]="procesandoRevision()"
+              data-testid="btn-aprobar-revision-detalle"
+              (click)="aprobarRevision()"
+            >
+              Aprobar revisión
+            </button>
+            <button
+              class="rounded border border-[var(--color-error)] px-md py-sm text-sm font-semibold text-[var(--color-error)] disabled:opacity-50"
+              type="button"
+              [disabled]="procesandoRevision()"
+              data-testid="btn-devolver-revision-detalle"
+              (click)="abrirDevolucionRevision()"
+            >
+              Devolver
+            </button>
+          }
         </div>
       </div>
+      @if (errorRevision() && !dialogoDevolucionRevision()) {
+        <p class="mt-sm text-sm text-[var(--color-error)]">{{ errorRevision() }}</p>
+      }
     </section>
 
     <div class="grid grid-cols-1 gap-lg lg:grid-cols-3">
@@ -84,25 +107,14 @@
                     </div>
                   </div>
 
-                  <div class="grid grid-cols-1 gap-md lg:grid-cols-[1fr_10rem]">
-                    <label class="block">
-                      <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Actividad realizada *</span>
-                      <textarea class="min-h-24 w-full resize-y rounded border border-[var(--color-outline-variant)] bg-white px-sm py-xs text-sm outline-none focus:border-[var(--color-primary)]"
-                        [attr.data-testid]="'input-descripcion-' + actividad.id"
-                        [ngModel]="getEstadoActividad(actividad.id)?.descripcion ?? ''"
-                        (ngModelChange)="actualizarEstadoActividad(actividad.id, { descripcion: $event })"
-                      ></textarea>
-                    </label>
-                    <label class="block">
-                      <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Avance %</span>
-                      <input class="w-full rounded border border-[var(--color-outline-variant)] bg-white px-sm py-xs text-sm outline-none focus:border-[var(--color-primary)]"
-                        type="number" min="0" max="100"
-                        [attr.data-testid]="'input-porcentaje-' + actividad.id"
-                        [ngModel]="getEstadoActividad(actividad.id)?.porcentaje ?? 0"
-                        (ngModelChange)="actualizarEstadoActividad(actividad.id, { porcentaje: toNumber($event) })"
-                      />
-                    </label>
-                  </div>
+                  <label class="block">
+                    <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Actividad realizada *</span>
+                    <textarea class="min-h-24 w-full resize-y rounded border border-[var(--color-outline-variant)] bg-white px-sm py-xs text-sm outline-none focus:border-[var(--color-primary)]"
+                      [attr.data-testid]="'input-descripcion-' + actividad.id"
+                      [ngModel]="getEstadoActividad(actividad.id)?.descripcion ?? ''"
+                      (ngModelChange)="actualizarEstadoActividad(actividad.id, { descripcion: $event })"
+                    ></textarea>
+                  </label>
 
                   <!-- Soportes existentes -->
                   @if (actividad.soportes.length > 0) {
@@ -119,9 +131,9 @@
                   }
 
                   <!-- Agregar soporte -->
-                  <div class="mt-md grid grid-cols-1 gap-sm lg:grid-cols-3">
+                  <div class="mt-md grid grid-cols-1 gap-sm lg:grid-cols-2">
                     <label class="block">
-                      <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Nombre soporte</span>
+                      <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Nombre soporte *</span>
                       <input class="w-full rounded border border-[var(--color-outline-variant)] bg-white px-sm py-xs text-sm"
                         type="text"
                         [ngModel]="getEstadoActividad(actividad.id)?.soporteNombre ?? ''"
@@ -129,20 +141,12 @@
                       />
                     </label>
                     <label class="block">
-                      <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">URL soporte</span>
+                      <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">URL soporte *</span>
                       <input class="w-full rounded border border-[var(--color-outline-variant)] bg-white px-sm py-xs text-sm"
                         type="url"
                         [attr.data-testid]="'input-soporte-url-' + actividad.id"
                         [ngModel]="getEstadoActividad(actividad.id)?.soporteUrl ?? ''"
                         (ngModelChange)="actualizarEstadoActividad(actividad.id, { soporteUrl: $event })"
-                      />
-                    </label>
-                    <label class="block">
-                      <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Archivo</span>
-                      <input class="w-full rounded border border-[var(--color-outline-variant)] bg-white px-sm py-xs text-sm"
-                        type="file"
-                        [attr.data-testid]="'input-soporte-archivo-' + actividad.id"
-                        (change)="seleccionarArchivoActividad(actividad.id, $event)"
                       />
                     </label>
                   </div>
@@ -174,7 +178,6 @@
                       <p class="m-0 text-sm font-semibold text-[var(--color-on-surface)]">{{ actividad.descripcionObligacion ?? 'Obligacion contractual' }}</p>
                       <p class="m-0 mt-xs text-sm text-[var(--color-on-surface-variant)]">{{ actividad.descripcion }}</p>
                     </div>
-                    <span class="ml-auto rounded-full bg-white px-sm py-xs text-xs font-bold text-[var(--color-primary)]">{{ actividad.porcentaje }}%</span>
                   </div>
                   @if (actividad.soportes.length > 0) {
                     <div class="mt-sm flex flex-wrap gap-xs">
@@ -189,6 +192,129 @@
               }
             }
           </div>
+        </div>
+
+        <!-- Aportes SGSSI (I6) -->
+        <div class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg" data-testid="seccion-sgssi">
+          <div class="mb-md flex items-center justify-between">
+            <div class="flex items-center gap-sm">
+              <span class="h-5 w-1 rounded-full bg-[var(--color-tertiary-container,#e8d5f0)]"></span>
+              <h3 class="m-0 text-base font-semibold text-[var(--color-on-surface)]">Aportes al Sistema General de Seguridad Social</h3>
+            </div>
+            @if (esBorrador(i.estado)) {
+              <button
+                class="flex items-center gap-xs rounded border border-[var(--color-primary)] px-sm py-xs text-xs font-semibold text-[var(--color-primary)] hover:bg-[var(--color-surface-container-low)]"
+                type="button"
+                data-testid="btn-agregar-aporte"
+                (click)="agregarAporteEdicion()"
+              >
+                + Añadir
+              </button>
+            }
+          </div>
+
+          @if (esBorrador(i.estado)) {
+            <!-- Modo edicion SGSSI -->
+            @if (aportesEdicion().length === 0) {
+              <p class="m-0 text-sm text-[var(--color-on-surface-variant)]" data-testid="sgssi-vacio">Sin aportes registrados.</p>
+            } @else {
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="border-b border-[var(--color-outline-variant)] text-left text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">
+                      <th class="pb-xs pr-sm">Concepto</th>
+                      <th class="pb-xs pr-sm">Entidad</th>
+                      <th class="pb-xs pr-sm">Fecha de pago</th>
+                      <th class="pb-xs pr-sm">Valor aportado (COP)</th>
+                      <th class="pb-xs"></th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-[var(--color-outline-variant)]">
+                    @for (row of aportesEdicion(); track $index; let idx = $index) {
+                      <tr [attr.data-testid]="'fila-aporte-' + idx">
+                        <td class="py-xs pr-sm">
+                          <select
+                            class="w-full rounded border border-[var(--color-outline-variant)] px-xs py-xs text-sm"
+                            [ngModel]="row.item"
+                            (ngModelChange)="actualizarAporteEdicion(idx, { item: $event })"
+                          >
+                            @for (it of itemsSgssi; track it) {
+                              <option [value]="it">{{ labelSgssi(it) }}</option>
+                            }
+                          </select>
+                        </td>
+                        <td class="py-xs pr-sm">
+                          <input
+                            class="w-full rounded border border-[var(--color-outline-variant)] px-xs py-xs text-sm"
+                            type="text"
+                            maxlength="200"
+                            [ngModel]="row.entidad"
+                            (ngModelChange)="actualizarAporteEdicion(idx, { entidad: $event })"
+                          />
+                        </td>
+                        <td class="py-xs pr-sm">
+                          <input
+                            class="w-full rounded border border-[var(--color-outline-variant)] px-xs py-xs text-sm"
+                            type="date"
+                            [ngModel]="row.fechaPago"
+                            (ngModelChange)="actualizarAporteEdicion(idx, { fechaPago: $event })"
+                          />
+                        </td>
+                        <td class="py-xs pr-sm">
+                          <input
+                            class="w-full rounded border border-[var(--color-outline-variant)] px-xs py-xs text-sm"
+                            type="number"
+                            min="0"
+                            [ngModel]="row.valorAportado"
+                            (ngModelChange)="actualizarAporteEdicion(idx, { valorAportado: $event ? toNumber($event) : null })"
+                          />
+                        </td>
+                        <td class="py-xs">
+                          <button
+                            class="text-[var(--color-error)] hover:opacity-70"
+                            type="button"
+                            [attr.data-testid]="'btn-eliminar-aporte-' + idx"
+                            (click)="eliminarAporteEdicion(idx)"
+                            title="Eliminar"
+                          >×</button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+            @if (errorAportes()) {
+              <p class="mt-xs text-xs text-[var(--color-error)]" data-testid="error-aportes">{{ errorAportes() }}</p>
+            }
+            <div class="mt-md flex justify-end">
+              <button
+                class="rounded bg-[var(--color-primary)] px-md py-xs text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+                type="button"
+                data-testid="btn-guardar-aportes"
+                [disabled]="guardandoAportes()"
+                (click)="guardarAportesSgssi()"
+              >
+                {{ guardandoAportes() ? 'Guardando...' : 'Guardar aportes SGSSI' }}
+              </button>
+            </div>
+          } @else {
+            <!-- Modo solo lectura SGSSI -->
+            @if (i.aportesSgssi.length === 0) {
+              <p class="m-0 text-sm text-[var(--color-on-surface-variant)]">Sin aportes SGSSI registrados.</p>
+            } @else {
+              <ul class="m-0 list-none space-y-xs p-0">
+                @for (aporte of i.aportesSgssi; track aporte.id) {
+                  <li class="flex flex-wrap gap-md rounded-lg border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] px-md py-sm text-sm">
+                    <span class="font-semibold text-[var(--color-primary)]">{{ labelSgssi(aporte.item) }}</span>
+                    <span class="text-[var(--color-on-surface)]">{{ aporte.entidad }}</span>
+                    <span class="text-[var(--color-on-surface-variant)]">{{ aporte.fechaPago }}</span>
+                    <span class="ml-auto font-semibold text-[var(--color-on-surface)]">$ {{ aporte.valorAportado | number }}</span>
+                  </li>
+                }
+              </ul>
+            }
+          }
         </div>
 
         <!-- Documentos adicionales -->
@@ -306,3 +432,49 @@
     </div>
   }
 </div>
+
+@if (dialogoDevolucionRevision()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-on-surface)]/40">
+    <div class="w-full max-w-lg rounded-xl bg-white p-lg shadow-xl">
+      <h2 class="m-0 text-lg font-bold text-[var(--color-on-surface)]">Devolver informe</h2>
+      <p class="mt-xs text-sm text-[var(--color-on-surface-variant)]">
+        Registre las observaciones de revisión para que el contratista pueda corregir el informe.
+      </p>
+
+      <label class="mt-md block">
+        <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">
+          Observación <span class="text-[var(--color-error)]">*</span>
+        </span>
+        <textarea
+          class="min-h-28 w-full resize-y rounded border border-[var(--color-outline-variant)] px-sm py-xs text-sm"
+          placeholder="Indique los motivos de la devolución..."
+          data-testid="textarea-observacion-revision"
+          [ngModel]="observacionRevision()"
+          (ngModelChange)="observacionRevision.set($event)"
+        ></textarea>
+        @if (errorRevision()) {
+          <p class="mt-xs text-xs text-[var(--color-error)]">{{ errorRevision() }}</p>
+        }
+      </label>
+
+      <div class="mt-md flex justify-end gap-sm">
+        <button
+          class="rounded border border-[var(--color-outline-variant)] px-md py-sm text-sm font-semibold text-[var(--color-on-surface)]"
+          type="button"
+          (click)="cerrarDevolucionRevision()"
+        >
+          Cancelar
+        </button>
+        <button
+          class="rounded border border-[var(--color-error)] bg-[var(--color-error)] px-md py-sm text-sm font-semibold text-white disabled:opacity-50"
+          type="button"
+          [disabled]="procesandoRevision()"
+          data-testid="btn-confirmar-devolucion-revision"
+          (click)="confirmarDevolucionRevision()"
+        >
+          Confirmar devolución
+        </button>
+      </div>
+    </div>
+  </div>
+}

@@ -6,14 +6,19 @@ import co.gov.bogota.sed.sigcon.application.service.InformeEstadoService;
 import co.gov.bogota.sed.sigcon.application.service.InformeService;
 import co.gov.bogota.sed.sigcon.application.service.ObservacionService;
 import co.gov.bogota.sed.sigcon.application.service.PdfInformeService;
+import co.gov.bogota.sed.sigcon.domain.entity.ActividadInforme;
 import co.gov.bogota.sed.sigcon.domain.entity.Contrato;
 import co.gov.bogota.sed.sigcon.domain.entity.Informe;
 import co.gov.bogota.sed.sigcon.domain.entity.Usuario;
 import co.gov.bogota.sed.sigcon.domain.enums.EstadoInforme;
 import co.gov.bogota.sed.sigcon.domain.enums.RolUsuario;
+import co.gov.bogota.sed.sigcon.domain.enums.TipoSoporte;
 import co.gov.bogota.sed.sigcon.domain.enums.TipoEvento;
 import co.gov.bogota.sed.sigcon.domain.repository.ActividadInformeRepository;
+import co.gov.bogota.sed.sigcon.domain.repository.DocumentoAdicionalRepository;
+import co.gov.bogota.sed.sigcon.domain.repository.DocumentoCatalogoRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.InformeRepository;
+import co.gov.bogota.sed.sigcon.domain.repository.SoporteAdjuntoRepository;
 import co.gov.bogota.sed.sigcon.web.exception.ErrorCode;
 import co.gov.bogota.sed.sigcon.web.exception.SigconBusinessException;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +27,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+
+import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -47,6 +54,9 @@ class InformeEstadoServiceI3Test {
 
     @Mock private InformeRepository informeRepository;
     @Mock private ActividadInformeRepository actividadRepository;
+    @Mock private SoporteAdjuntoRepository soporteRepository;
+    @Mock private DocumentoCatalogoRepository documentoCatalogoRepository;
+    @Mock private DocumentoAdicionalRepository documentoAdicionalRepository;
     @Mock private InformeService informeService;
     @Mock private ObservacionService observacionService;
     @Mock private PdfInformeService pdfInformeService;
@@ -57,7 +67,8 @@ class InformeEstadoServiceI3Test {
     @BeforeEach
     void setUp() {
         service = new InformeEstadoService(
-            informeRepository, actividadRepository, informeService, observacionService,
+            informeRepository, actividadRepository, soporteRepository,
+            documentoCatalogoRepository, documentoAdicionalRepository, informeService, observacionService,
             pdfInformeService, eventoInformeService
         );
     }
@@ -149,7 +160,11 @@ class InformeEstadoServiceI3Test {
     void enviarCreaNotificacionParaRevisor() {
         Informe informe = informe(EstadoInforme.BORRADOR);
         when(informeService.findActiveInforme(50L)).thenReturn(informe);
-        when(actividadRepository.countByInformeIdAndActivoTrue(50L)).thenReturn(1);
+        ActividadInforme actividad = actividad(101L);
+        when(actividadRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.singletonList(actividad));
+        when(soporteRepository.existsByActividadIdAndTipoAndActivoTrue(101L, TipoSoporte.URL)).thenReturn(true);
+        when(documentoCatalogoRepository.findByTipoContratoAndActivoTrue(informe.getContrato().getTipo()))
+            .thenReturn(Collections.emptyList());
         when(informeRepository.save(any(Informe.class))).thenAnswer(inv -> inv.getArgument(0));
         when(informeService.buildDetalle(informe)).thenReturn(new InformeDetalleDto());
 
@@ -180,6 +195,13 @@ class InformeEstadoServiceI3Test {
         informe.setEstado(estado);
         informe.setActivo(true);
         return informe;
+    }
+
+    private static ActividadInforme actividad(Long id) {
+        ActividadInforme actividad = new ActividadInforme();
+        actividad.setId(id);
+        actividad.setActivo(true);
+        return actividad;
     }
 
     private static Usuario usuario(Long id, String email, RolUsuario rol) {

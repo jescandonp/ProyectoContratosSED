@@ -10,6 +10,9 @@ public class UsuarioDto {
     private RolUsuario rol;
     private String firmaImagen;
     private Boolean activo;
+    private String sgssiSaludEntidad;
+    private String sgssiPensionEntidad;
+    private String sgssiArlEntidad;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -25,4 +28,10 @@ public class UsuarioDto {
     public void setFirmaImagen(String firmaImagen) { this.firmaImagen = firmaImagen; }
     public Boolean getActivo() { return activo; }
     public void setActivo(Boolean activo) { this.activo = activo; }
+    public String getSgssiSaludEntidad() { return sgssiSaludEntidad; }
+    public void setSgssiSaludEntidad(String sgssiSaludEntidad) { this.sgssiSaludEntidad = sgssiSaludEntidad; }
+    public String getSgssiPensionEntidad() { return sgssiPensionEntidad; }
+    public void setSgssiPensionEntidad(String sgssiPensionEntidad) { this.sgssiPensionEntidad = sgssiPensionEntidad; }
+    public String getSgssiArlEntidad() { return sgssiArlEntidad; }
+    public void setSgssiArlEntidad(String sgssiArlEntidad) { this.sgssiArlEntidad = sgssiArlEntidad; }
 }

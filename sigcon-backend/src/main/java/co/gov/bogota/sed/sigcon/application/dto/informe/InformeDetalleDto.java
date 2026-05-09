@@ -1,7 +1,9 @@
 package co.gov.bogota.sed.sigcon.application.dto.informe;
 
+import co.gov.bogota.sed.sigcon.application.dto.sgssi.AporteSgssiDto;
 import co.gov.bogota.sed.sigcon.application.dto.usuario.UsuarioDto;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,6 +14,11 @@ public class InformeDetalleDto extends InformeResumenDto {
     private List<ActividadInformeDto> actividades = new ArrayList<>();
     private List<DocumentoAdicionalDto> documentosAdicionales = new ArrayList<>();
     private List<ObservacionDto> observaciones = new ArrayList<>();
+    private Integer numeroDesembolso;
+    private BigDecimal valorDesembolso;
+    private BigDecimal porcentajeEjecucion;
+    private Boolean correspondenciaPendiente;
+    private List<AporteSgssiDto> aportesSgssi = new ArrayList<>();
 
     public UsuarioDto getContratista() { return contratista; }
     public void setContratista(UsuarioDto contratista) { this.contratista = contratista; }
@@ -25,4 +32,14 @@ public class InformeDetalleDto extends InformeResumenDto {
     public void setDocumentosAdicionales(List<DocumentoAdicionalDto> documentosAdicionales) { this.documentosAdicionales = documentosAdicionales; }
     public List<ObservacionDto> getObservaciones() { return observaciones; }
     public void setObservaciones(List<ObservacionDto> observaciones) { this.observaciones = observaciones; }
+    public Integer getNumeroDesembolso() { return numeroDesembolso; }
+    public void setNumeroDesembolso(Integer numeroDesembolso) { this.numeroDesembolso = numeroDesembolso; }
+    public BigDecimal getValorDesembolso() { return valorDesembolso; }
+    public void setValorDesembolso(BigDecimal valorDesembolso) { this.valorDesembolso = valorDesembolso; }
+    public BigDecimal getPorcentajeEjecucion() { return porcentajeEjecucion; }
+    public void setPorcentajeEjecucion(BigDecimal porcentajeEjecucion) { this.porcentajeEjecucion = porcentajeEjecucion; }
+    public Boolean getCorrespondenciaPendiente() { return correspondenciaPendiente; }
+    public void setCorrespondenciaPendiente(Boolean correspondenciaPendiente) { this.correspondenciaPendiente = correspondenciaPendiente; }
+    public List<AporteSgssiDto> getAportesSgssi() { return aportesSgssi; }
+    public void setAportesSgssi(List<AporteSgssiDto> aportesSgssi) { this.aportesSgssi = aportesSgssi; }
 }

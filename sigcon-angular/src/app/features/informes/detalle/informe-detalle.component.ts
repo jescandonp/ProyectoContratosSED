@@ -1,12 +1,14 @@
-import { SlicePipe } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, forkJoin, of, switchMap } from 'rxjs';
 
 import { EstadoInforme, InformeDetalle } from '../../../core/models/informe.model';
+import { AporteSgssiRequest, ITEM_SGSSI_LABELS, ItemSgssi } from '../../../core/models/aporte-sgssi.model';
 import { DocumentoCatalogo } from '../../../core/models/documento-catalogo.model';
 import { ActividadInformeService } from '../../../core/services/actividad-informe.service';
+import { AporteSgssiService } from '../../../core/services/aporte-sgssi.service';
 import { DocumentoAdicionalService } from '../../../core/services/documento-adicional.service';
 import { DocumentoCatalogoService } from '../../../core/services/documento-catalogo.service';
 import { InformeService } from '../../../core/services/informe.service';
@@ -15,7 +17,6 @@ import { StatusChipComponent } from '../../../shared/components/status-chip/stat
 
 interface ActividadEditState {
   descripcion: string;
-  porcentaje: number;
   guardando: boolean;
   error: string;
   soporteNombre: string;
@@ -23,13 +24,24 @@ interface ActividadEditState {
   soporteArchivo: File | null;
 }
 
+interface AporteSgssiEditRow {
+  item: ItemSgssi;
+  fechaPago: string;
+  valorAportado: number | null;
+  entidad: string;
+}
+
+const ITEMS_SGSSI: ItemSgssi[] = ['SALUD', 'PENSION', 'ARL'];
+
 @Component({
   selector: 'app-informe-detalle',
   standalone: true,
-  imports: [StatusChipComponent, FormsModule],
+  imports: [StatusChipComponent, FormsModule, DecimalPipe],
   templateUrl: './informe-detalle.component.html'
 })
 export class InformeDetalleComponent implements OnInit {
+  readonly itemsSgssi: ItemSgssi[] = ITEMS_SGSSI;
+
   readonly informe = signal<InformeDetalle | null>(null);
   readonly error = signal('');
   readonly guardandoPeriodo = signal(false);
@@ -43,6 +55,11 @@ export class InformeDetalleComponent implements OnInit {
   readonly guardandoDocumento = signal(false);
   readonly errorDocumento = signal('');
 
+  // I6 — aportes SGSSI editables (solo BORRADOR)
+  readonly aportesEdicion = signal<AporteSgssiEditRow[]>([]);
+  readonly guardandoAportes = signal(false);
+  readonly errorAportes = signal('');
+
   periodoFechaInicio = '';
   periodoFechaFin = '';
 
@@ -52,6 +69,7 @@ export class InformeDetalleComponent implements OnInit {
     private readonly soporteService: SoporteAdjuntoService,
     private readonly documentoAdicionalService: DocumentoAdicionalService,
     private readonly documentoCatalogoService: DocumentoCatalogoService,
+    private readonly aporteSgssiService: AporteSgssiService,
     private readonly route: ActivatedRoute,
     private readonly router: Router
   ) {}
@@ -73,6 +91,7 @@ export class InformeDetalleComponent implements OnInit {
         this.periodoFechaFin = informe.fechaFin;
         if (informe.estado === 'BORRADOR') {
           this.inicializarEstadoEdicion(informe);
+          this.inicializarAportesEdicion(informe);
           this.cargarCatalogo();
         }
       },
@@ -116,7 +135,6 @@ export class InformeDetalleComponent implements OnInit {
     informe.actividades.forEach((actividad) => {
       states.set(actividad.id, {
         descripcion: actividad.descripcion,
-        porcentaje: actividad.porcentaje,
         guardando: false,
         error: '',
         soporteNombre: '',
@@ -158,10 +176,6 @@ export class InformeDetalleComponent implements OnInit {
       this.actualizarEstadoActividad(actividadId, { error: 'La descripcion no puede estar vacia.' });
       return;
     }
-    if (state.porcentaje < 0 || state.porcentaje > 100) {
-      this.actualizarEstadoActividad(actividadId, { error: 'El porcentaje debe estar entre 0 y 100.' });
-      return;
-    }
 
     const actividad = informe.actividades.find((a) => a.id === actividadId);
     if (!actividad) return;
@@ -171,7 +185,6 @@ export class InformeDetalleComponent implements OnInit {
     this.actividadService.actualizar(informe.id, actividadId, {
       idObligacion: actividad.idObligacion ?? 0,
       descripcion: state.descripcion.trim(),
-      porcentaje: state.porcentaje
     }).pipe(
       switchMap((actividadActualizada) => {
         const ops: Observable<unknown>[] = [];
@@ -216,6 +229,64 @@ export class InformeDetalleComponent implements OnInit {
   seleccionarArchivoActividad(actividadId: number, event: Event): void {
     const input = event.target as HTMLInputElement;
     this.actualizarEstadoActividad(actividadId, { soporteArchivo: input.files?.item(0) ?? null });
+  }
+
+  // ── Aportes SGSSI editables (I6) ─────────────────────────────────────────
+
+  private inicializarAportesEdicion(informe: InformeDetalle): void {
+    const rows: AporteSgssiEditRow[] = informe.aportesSgssi.map((a) => ({
+      item: a.item,
+      fechaPago: a.fechaPago,
+      valorAportado: a.valorAportado,
+      entidad: a.entidad,
+    }));
+    this.aportesEdicion.set(rows);
+  }
+
+  agregarAporteEdicion(): void {
+    this.aportesEdicion.update((rows) => [...rows, { item: 'SALUD', fechaPago: '', valorAportado: null, entidad: '' }]);
+  }
+
+  eliminarAporteEdicion(index: number): void {
+    this.aportesEdicion.update((rows) => rows.filter((_, i) => i !== index));
+  }
+
+  actualizarAporteEdicion(index: number, patch: Partial<AporteSgssiEditRow>): void {
+    this.aportesEdicion.update((rows) => rows.map((row, i) => i === index ? { ...row, ...patch } : row));
+  }
+
+  guardarAportesSgssi(): void {
+    const informe = this.informe();
+    if (!informe) return;
+    this.guardandoAportes.set(true);
+    this.errorAportes.set('');
+
+    const validos: AporteSgssiRequest[] = this.aportesEdicion()
+      .filter((row) => row.fechaPago && row.valorAportado != null && row.entidad.trim())
+      .map((row) => ({
+        item: row.item,
+        fechaPago: row.fechaPago,
+        valorAportado: row.valorAportado!,
+        entidad: row.entidad.trim(),
+      }));
+
+    this.aporteSgssiService.guardarTodos(informe.id, validos).pipe(
+      switchMap(() => this.informeService.obtenerDetalle(informe.id))
+    ).subscribe({
+      next: (actualizado) => {
+        this.informe.set(actualizado);
+        this.inicializarAportesEdicion(actualizado);
+        this.guardandoAportes.set(false);
+      },
+      error: () => {
+        this.guardandoAportes.set(false);
+        this.errorAportes.set('No se pudieron guardar los aportes SGSSI. Intente de nuevo.');
+      }
+    });
+  }
+
+  labelSgssi(item: ItemSgssi): string {
+    return ITEM_SGSSI_LABELS[item];
   }
 
   // ── Documentos adicionales editables (I5) ────────────────────────────────

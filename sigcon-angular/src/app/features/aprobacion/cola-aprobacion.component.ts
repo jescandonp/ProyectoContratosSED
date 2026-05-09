@@ -302,9 +302,9 @@ export class ColaAprobacionComponent implements OnInit {
         this.procesando.set(null);
         this.cargar();
       },
-      error: () => {
+      error: (err) => {
         this.procesando.set(null);
-        this.error.set('No se pudo aprobar el informe.');
+        this.error.set(this.mensajeErrorAprobacion(err));
       }
     });
   }
@@ -348,5 +348,31 @@ export class ColaAprobacionComponent implements OnInit {
 
   min(a: number, b: number): number {
     return Math.min(a, b);
+  }
+
+  private mensajeErrorAprobacion(err: unknown): string {
+    const respuesta = err as { error?: { error?: string; mensaje?: string } };
+    const codigo = respuesta?.error?.error ?? '';
+    const mensaje = respuesta?.error?.mensaje?.trim();
+
+    if (mensaje) return mensaje;
+
+    if (codigo === 'FIRMA_REQUERIDA') {
+      return 'No se puede aprobar porque falta una firma requerida para generar el PDF.';
+    }
+
+    if (codigo === 'PDF_GENERACION_FALLIDA') {
+      return 'No se pudo generar el PDF del informe. Revise el detalle técnico o intente nuevamente.';
+    }
+
+    if (codigo === 'TRANSICION_INVALIDA') {
+      return 'El informe ya no está en un estado válido para aprobación.';
+    }
+
+    if (codigo === 'ACCESO_DENEGADO') {
+      return 'El usuario actual no está autorizado para aprobar este informe.';
+    }
+
+    return 'No se pudo aprobar el informe.';
   }
 }

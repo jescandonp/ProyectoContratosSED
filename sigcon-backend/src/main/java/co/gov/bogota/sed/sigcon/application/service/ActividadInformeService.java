@@ -16,15 +16,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.Collections;
 
 @Service
 @Transactional
 public class ActividadInformeService {
-
-    private static final BigDecimal MIN_PORCENTAJE = BigDecimal.ZERO;
-    private static final BigDecimal MAX_PORCENTAJE = new BigDecimal("100");
 
     private final ActividadInformeRepository actividadRepository;
     private final ObligacionRepository obligacionRepository;
@@ -53,7 +49,6 @@ public class ActividadInformeService {
         Informe informe = informeService.findActiveInforme(informeId);
         Usuario usuario = currentUserService.getCurrentUser();
         informeService.assertCanEditInforme(usuario, informe);
-        validatePorcentaje(request.getPorcentaje());
 
         Obligacion obligacion = obligacionRepository.findById(request.getIdObligacion())
             .filter(o -> Boolean.TRUE.equals(o.getActivo())
@@ -69,7 +64,6 @@ public class ActividadInformeService {
         actividad.setInforme(informe);
         actividad.setObligacion(obligacion);
         actividad.setDescripcion(request.getDescripcion());
-        actividad.setPorcentaje(request.getPorcentaje());
         actividad.setActivo(true);
         ActividadInforme saved = actividadRepository.save(actividad);
         return actividadMapper.toDto(saved, Collections.emptyList());
@@ -79,11 +73,9 @@ public class ActividadInformeService {
         Informe informe = informeService.findActiveInforme(informeId);
         Usuario usuario = currentUserService.getCurrentUser();
         informeService.assertCanEditInforme(usuario, informe);
-        validatePorcentaje(request.getPorcentaje());
 
         ActividadInforme actividad = findActividadOfInforme(actividadId, informe.getId());
         actividad.setDescripcion(request.getDescripcion());
-        actividad.setPorcentaje(request.getPorcentaje());
         ActividadInforme saved = actividadRepository.save(actividad);
         return actividadMapper.toDto(saved, soporteRepository.findByActividadIdAndActivoTrue(saved.getId()));
     }
@@ -112,17 +104,5 @@ public class ActividadInformeService {
             );
         }
         return actividad;
-    }
-
-    private static void validatePorcentaje(BigDecimal porcentaje) {
-        if (porcentaje == null
-            || porcentaje.compareTo(MIN_PORCENTAJE) < 0
-            || porcentaje.compareTo(MAX_PORCENTAJE) > 0) {
-            throw new SigconBusinessException(
-                ErrorCode.PORCENTAJE_INVALIDO,
-                "El porcentaje debe estar entre 0 y 100",
-                HttpStatus.BAD_REQUEST
-            );
-        }
     }
 }

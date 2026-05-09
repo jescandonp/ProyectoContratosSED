@@ -6,12 +6,10 @@ export interface ActividadInforme {
   ordenObligacion: number | null;
   descripcionObligacion: string | null;
   descripcion: string;
-  porcentaje: number;
   soportes: SoporteAdjunto[];
 }
 
 export interface ActividadInformeRequest {
   idObligacion: number;
   descripcion: string;
-  porcentaje: number;
 }

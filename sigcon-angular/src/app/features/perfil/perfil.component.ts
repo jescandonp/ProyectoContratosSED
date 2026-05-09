@@ -58,6 +58,47 @@ import { UsuarioService } from '../../core/services/usuario.service';
               </div>
             </div>
 
+            @if (u.rol === 'CONTRATISTA') {
+              <div>
+                <p class="mb-sm text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Entidades de Seguridad Social (SGSSI)</p>
+                <div class="grid grid-cols-3 gap-md">
+                  <div class="space-y-xs">
+                    <label class="text-xs font-semibold text-[var(--color-on-surface-variant)]">EPS (Salud)</label>
+                    <input
+                      class="h-10 w-full rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface-bright)] px-sm text-sm outline-none transition-all focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]"
+                      type="text"
+                      maxlength="200"
+                      placeholder="Ej. Sanitas, Nueva EPS..."
+                      [(ngModel)]="sgssiSaludEntidad"
+                      name="sgssiSaludEntidad"
+                    />
+                  </div>
+                  <div class="space-y-xs">
+                    <label class="text-xs font-semibold text-[var(--color-on-surface-variant)]">Fondo de Pensiones</label>
+                    <input
+                      class="h-10 w-full rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface-bright)] px-sm text-sm outline-none transition-all focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]"
+                      type="text"
+                      maxlength="200"
+                      placeholder="Ej. Porvenir, Protección..."
+                      [(ngModel)]="sgssiPensionEntidad"
+                      name="sgssiPensionEntidad"
+                    />
+                  </div>
+                  <div class="space-y-xs">
+                    <label class="text-xs font-semibold text-[var(--color-on-surface-variant)]">A.R.L.</label>
+                    <input
+                      class="h-10 w-full rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface-bright)] px-sm text-sm outline-none transition-all focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]"
+                      type="text"
+                      maxlength="200"
+                      placeholder="Ej. Sura, Positiva..."
+                      [(ngModel)]="sgssiArlEntidad"
+                      name="sgssiArlEntidad"
+                    />
+                  </div>
+                </div>
+              </div>
+            }
+
             @if (mensajeExito()) {
               <div class="rounded border border-[var(--color-primary-container)] bg-[var(--color-surface-container-low)] px-sm py-xs text-sm text-[var(--color-primary)]">
                 {{ mensajeExito() }}
@@ -150,6 +191,9 @@ export class PerfilComponent implements OnInit {
 
   nombre = '';
   cargo = '';
+  sgssiSaludEntidad = '';
+  sgssiPensionEntidad = '';
+  sgssiArlEntidad = '';
 
   constructor(
     private readonly usuarioService: UsuarioService,
@@ -162,11 +206,17 @@ export class PerfilComponent implements OnInit {
       this.usuario.set(current);
       this.nombre = current.nombre;
       this.cargo = current.cargo ?? '';
+      this.sgssiSaludEntidad   = current.sgssiSaludEntidad   ?? '';
+      this.sgssiPensionEntidad = current.sgssiPensionEntidad ?? '';
+      this.sgssiArlEntidad     = current.sgssiArlEntidad     ?? '';
     }
     this.usuarioService.obtenerPerfilActual().subscribe((u) => {
       this.usuario.set(u);
       this.nombre = u.nombre;
       this.cargo = u.cargo ?? '';
+      this.sgssiSaludEntidad   = u.sgssiSaludEntidad   ?? '';
+      this.sgssiPensionEntidad = u.sgssiPensionEntidad ?? '';
+      this.sgssiArlEntidad     = u.sgssiArlEntidad     ?? '';
     });
   }
 
@@ -174,7 +224,13 @@ export class PerfilComponent implements OnInit {
     if (!this.nombre.trim()) return;
     this.guardando.set(true);
     this.mensajeExito.set('');
-    this.usuarioService.actualizarPerfilActual({ nombre: this.nombre, cargo: this.cargo || null })
+    this.usuarioService.actualizarPerfilActual({
+      nombre: this.nombre,
+      cargo: this.cargo || null,
+      sgssiSaludEntidad:   this.sgssiSaludEntidad   || null,
+      sgssiPensionEntidad: this.sgssiPensionEntidad || null,
+      sgssiArlEntidad:     this.sgssiArlEntidad     || null,
+    })
       .subscribe({
         next: (u) => {
           this.usuario.set(u);

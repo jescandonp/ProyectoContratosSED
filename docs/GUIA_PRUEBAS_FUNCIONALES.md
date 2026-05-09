@@ -444,7 +444,6 @@ Entrar como `CONTRATISTA`.
 | Acción | Resultado esperado |
 |--------|-------------------|
 | Guardar actividad con descripción vacía | Error inline: "La descripcion no puede estar vacia." |
-| Guardar actividad con porcentaje > 100 | Error inline: "El porcentaje debe estar entre 0 y 100." |
 | Agregar documento sin seleccionar tipo | Error inline: "Seleccione el tipo de documento e ingrese la referencia." |
 
 ### Diagnóstico de errores comunes I5
@@ -455,3 +454,175 @@ Entrar como `CONTRATISTA`.
 | 409 al guardar actividad | Informe no está en BORRADOR | Recargar la página |
 | Campos no editables en BORRADOR | Build desactualizado | Limpiar caché y reconstruir |
 | Soporte no aparece tras guardar | Error silencioso en la recarga | Verificar consola del navegador |
+
+---
+
+## 14. Incremento 6 — Datos Complementarios, Aportes SGSSI y PDF Institucional
+
+### Prerrequisitos
+
+- Usuario CONTRATISTA con un informe en estado BORRADOR
+- Usuario ADMIN con acceso a la administración de contratos
+- Navegador con consola abierta para verificar errores silenciosos
+
+---
+
+### 14.1 Dependencia del contrato (AdminContratoForm)
+
+**Contexto:** El campo "Dependencia SED" es un input con autocompletado nativo (`<datalist>`) que lista 44 unidades organizacionales de la SED.
+
+| Paso | Acción | Resultado esperado |
+|------|--------|--------------------|
+| 1 | Ir a Administración → Contratos → Nuevo contrato | Formulario visible con sección "Datos Complementarios" |
+| 2 | Hacer clic en el campo Dependencia | Lista desplegable con unidades SED aparece |
+| 3 | Escribir "local" | Lista filtra solo las Direcciones Locales |
+| 4 | Seleccionar "Dirección Local Usaquén" | Campo se llena con el valor seleccionado |
+| 5 | Escribir un valor libre (p. ej. "Unidad X") | Campo acepta texto libre no incluido en la lista |
+| 6 | Llenar todos los campos obligatorios y guardar | Contrato creado; al editar, dependencia aparece pre-cargada |
+| 7 | Editar el contrato y cambiar la dependencia | Nuevo valor se guarda correctamente |
+
+---
+
+### 14.2 Forma de pago y modificaciones del contrato
+
+| Paso | Acción | Resultado esperado |
+|------|--------|--------------------|
+| 1 | En el formulario de contrato, completar "Forma de Pago" | Campo de texto acepta entrada libre |
+| 2 | Completar "Modificaciones" (textarea) | Acepta texto largo (p. ej. descripción de adición) |
+| 3 | Guardar y reabrir el contrato | Ambos campos persisten con los valores ingresados |
+| 4 | Dejar ambos campos vacíos y guardar | Contrato se guarda sin error (campos opcionales) |
+
+---
+
+### 14.3 Entidades SGSSI en el perfil del contratista
+
+**Contexto:** El perfil de un CONTRATISTA expone campos para registrar las entidades de salud, pensión y ARL.
+
+| Paso | Acción | Resultado esperado |
+|------|--------|--------------------|
+| 1 | Iniciar sesión como CONTRATISTA → ir a Perfil | Sección "Aportes SGSSI — Entidades" visible (3 campos) |
+| 2 | Completar "Entidad Salud" con "Nueva EPS" | |
+| 3 | Completar "Entidad Pensión" con "Protección" | |
+| 4 | Completar "Entidad ARL" con "Sura" | |
+| 5 | Guardar perfil | Mensaje de confirmación; al recargar, los 3 valores persisten |
+| 6 | Iniciar sesión como ADMIN | Sección SGSSI NO debe aparecer en el perfil de ADMIN |
+
+---
+
+### 14.4 Datos del desembolso en nuevo informe (InformeForm)
+
+**Contexto:** Al crear un informe, el encabezado incluye Nro. Desembolso, Valor Desembolso, % Ejecución y Correspondencia Pendiente. Las actividades ya NO tienen campo "Avance %".
+
+| Paso | Acción | Resultado esperado |
+|------|--------|--------------------|
+| 1 | Crear nuevo informe para un contrato | Formulario muestra 4 campos de desembolso en el encabezado |
+| 2 | Ingresar Nro. Desembolso = 2 | Campo numérico acepta el valor |
+| 3 | Ingresar Valor Desembolso = 1500000 | |
+| 4 | Ingresar % Ejecución = 45 | |
+| 5 | Marcar "Correspondencia Pendiente" | Checkbox marcado |
+| 6 | Verificar tarjeta de actividad | NO existe campo "Avance %" en ninguna tarjeta |
+| 7 | Completar todas las actividades y enviar | Informe creado; detalles persisten al abrir el informe |
+| 8 | Dejar todos los campos de desembolso vacíos | Informe se crea sin error (campos opcionales) |
+
+---
+
+### 14.5 Aportes SGSSI en nuevo informe (InformeForm)
+
+| Paso | Acción | Resultado esperado |
+|------|--------|--------------------|
+| 1 | En el formulario de nuevo informe, localizar sección "Aportes SGSSI" | Botón "+ Agregar aporte" visible |
+| 2 | Hacer clic en "+ Agregar aporte" | Nueva fila con select (SALUD/PENSION/ARL), entidad, fecha de pago y valor |
+| 3 | Seleccionar "Pensión", ingresar entidad "Protección", fecha 2026-03-05, valor 180000 | Fila con datos válidos |
+| 4 | Agregar otra fila para ARL | Total: 2 filas de aportes |
+| 5 | Hacer clic en "×" de una fila | Fila eliminada; quedan las restantes |
+| 6 | Crear el informe | Aportes se guardan vía PUT `/api/informes/{id}/aportes-sgssi` tras crear el informe |
+| 7 | Crear informe sin agregar ningún aporte | Informe se crea sin error |
+
+---
+
+### 14.6 Aportes SGSSI en detalle del informe (InformeDetalle — BORRADOR)
+
+| Paso | Acción | Resultado esperado |
+|------|--------|--------------------|
+| 1 | Abrir un informe en BORRADOR | Sección "Aportes SGSSI" visible con botón "+ Agregar aporte" |
+| 2 | Verificar que NO existe badge "Avance %" en ninguna actividad | Ningún indicador porcentual en las tarjetas |
+| 3 | Hacer clic en "+ Agregar aporte" | Nueva fila editable aparece al final de la tabla |
+| 4 | Completar: Item=SALUD, Entidad="SaludTotal", Fecha=2026-03-31, Valor=250000 | |
+| 5 | Hacer clic en "Guardar aportes SGSSI" | PUT al backend; sección se recarga con los datos guardados |
+| 6 | Agregar una fila incompleta (sin entidad) junto a una completa | Solo la fila completa se envía al backend; la incompleta se descarta silenciosamente |
+| 7 | Eliminar una fila existente y guardar | PUT con la lista sin la fila eliminada; backend reemplaza todos los aportes |
+| 8 | Simular error del backend (desconectar red) y guardar | Mensaje de error: "No se pudieron guardar los aportes SGSSI. Intente de nuevo." |
+
+---
+
+### 14.7 Aportes SGSSI en solo lectura (InformeDetalle — ENVIADO / APROBADO)
+
+| Paso | Acción | Resultado esperado |
+|------|--------|--------------------|
+| 1 | Abrir un informe en estado ENVIADO o APROBADO | Sección SGSSI muestra lista de aportes sin campos editables |
+| 2 | Verificar formato del valor | Valor mostrado con separadores de miles (pipe `number`) |
+| 3 | Verificar etiqueta del item | "Salud", "Pensión" o "A.R.L." según el tipo |
+| 4 | Verificar que no hay botón "Guardar aportes SGSSI" | Botón ausente en estados distintos de BORRADOR |
+
+---
+
+### 14.8 PDF Institucional (8 secciones)
+
+**Contexto:** El PDF generado sigue el diseño institucional SED con colores primarios (`#002869`) y encabezado de la entidad.
+
+#### Flujo de generación
+
+| Paso | Acción | Resultado esperado |
+|------|--------|--------------------|
+| 1 | Con un informe en BORRADOR completo, hacer clic en "Preview" | Previsualización HTML del informe |
+| 2 | Hacer clic en "Ver PDF" | PDF generado y almacenado; descarga o visualización en navegador |
+| 3 | Verificar sección 1 — Encabezado | Logo SED (si aplica), nombre de la entidad, número y fecha del informe |
+| 4 | Verificar sección 2 — Datos del contrato | Número de contrato, objeto, contratista, valor, vigencia, dependencia, forma de pago |
+| 5 | Verificar sección 3 — Datos del desembolso | Nro. desembolso, valor (en letras con `NumeroPesosConverter`), % ejecución, correspondencia pendiente |
+| 6 | Verificar sección 4 — Periodo del informe | Fecha inicio y fecha fin del período reportado |
+| 7 | Verificar sección 5 — Actividades | Tabla SIN columna "% avance"; columnas: Nro., Obligación, Descripción, Soportes |
+| 8 | Verificar sección 6 — Aportes SGSSI | Tabla con período calculado (mes anterior al inicio del informe), entidades y valores |
+| 9 | Verificar sección 7 — Documentos adicionales | Lista de documentos con tipo y referencia |
+| 10 | Verificar sección 8 — Firmas | Firma contratista + firma supervisor; firma revisor solo si el revisor tiene imagen cargada |
+
+#### Casos de firma del revisor
+
+| Escenario | Resultado esperado en el PDF |
+|-----------|------------------------------|
+| Revisor con firma cargada | Celda de firma del revisor visible con imagen |
+| Revisor sin firma | Celda de firma del revisor ausente; PDF se genera sin error |
+| Sin revisor asignado | Celda de firma del revisor ausente; PDF se genera sin error |
+
+#### Verificación del valor en letras
+
+| Valor desembolso | Texto esperado |
+|-----------------|----------------|
+| 1.500.000 | "UN MILLÓN QUINIENTOS MIL PESOS M/CTE" |
+| 0 | "CERO PESOS M/CTE" |
+| null / no ingresado | Campo omitido o vacío |
+
+---
+
+### 14.9 Período SGSSI en el PDF
+
+El período de aportes SGSSI se calcula automáticamente como el mes anterior a `fechaInicio` del informe.
+
+| Fecha inicio del informe | Período SGSSI esperado en el PDF |
+|--------------------------|----------------------------------|
+| 2026-04-01 | Marzo 2026 |
+| 2026-01-15 | Diciembre 2025 |
+| 2026-07-01 | Junio 2026 |
+
+---
+
+### Diagnóstico de errores comunes I6
+
+| Síntoma | Causa probable | Solución |
+|---------|---------------|----------|
+| Sección SGSSI no aparece en BORRADOR | `aportesSgssi` ausente en `InformeDetalle` | Verificar que el backend incluye el campo en el DTO |
+| "Guardar aportes" no hace nada | `guardarTodos` retorna 404 | Verificar que el endpoint PUT `/api/informes/{id}/aportes-sgssi` está registrado |
+| Filas incompletas se envían | Filtro de validación no activo | Verificar lógica en `guardarAportesSgssi()` del componente |
+| PDF sin sección de aportes | `aporteSgssiRepository.findByInformeIdAndActivoTrue()` no retorna datos | Verificar que el campo `activo = true` se establece al guardar |
+| Firma del revisor causa NPE en PDF | Ausencia de null-check antes de `readSignatureBytes` | Verificar bloque try/catch en `PdfInformeService.generarYPersistir()` |
+| Dependencia no aparece en el PDF | Campo no incluido en `generarPdf()` template | Verificar que `informe.getContrato().getDependencia()` se referencia en `InformePdfTemplateService` |
+| Lista de dependencias vacía en el formulario | Constante `SED_DEPENDENCIAS` no importada | Verificar import desde `sed-dependencias.constants.ts` |

@@ -69,6 +69,15 @@ public class Contrato {
     @JoinColumn(name = "ID_SUPERVISOR")
     private Usuario supervisor;
 
+    @Column(name = "DEPENDENCIA", length = 500)
+    private String dependencia;
+
+    @Column(name = "FORMA_PAGO", columnDefinition = "CLOB")
+    private String formaPago;
+
+    @Column(name = "MODIFICACIONES", length = 2000)
+    private String modificaciones;
+
     @Column(name = "ACTIVO", nullable = false)
     private Boolean activo = true;
 
@@ -169,6 +178,30 @@ public class Contrato {
 
     public void setSupervisor(Usuario supervisor) {
         this.supervisor = supervisor;
+    }
+
+    public String getDependencia() {
+        return dependencia;
+    }
+
+    public void setDependencia(String dependencia) {
+        this.dependencia = dependencia;
+    }
+
+    public String getFormaPago() {
+        return formaPago;
+    }
+
+    public void setFormaPago(String formaPago) {
+        this.formaPago = formaPago;
+    }
+
+    public String getModificaciones() {
+        return modificaciones;
+    }
+
+    public void setModificaciones(String modificaciones) {
+        this.modificaciones = modificaciones;
     }
 
     public Boolean getActivo() {

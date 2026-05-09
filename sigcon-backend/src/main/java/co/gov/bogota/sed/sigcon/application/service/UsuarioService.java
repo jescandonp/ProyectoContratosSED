@@ -48,6 +48,9 @@ public class UsuarioService {
         Usuario usuario = currentUserService.getCurrentUser();
         usuario.setNombre(request.getNombre());
         usuario.setCargo(request.getCargo());
+        usuario.setSgssiSaludEntidad(request.getSgssiSaludEntidad());
+        usuario.setSgssiPensionEntidad(request.getSgssiPensionEntidad());
+        usuario.setSgssiArlEntidad(request.getSgssiArlEntidad());
         return usuarioMapper.toDto(usuarioRepository.save(usuario));
     }
 

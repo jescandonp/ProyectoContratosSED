@@ -47,6 +47,9 @@ public class ContratoMapper {
         dto.setSupervisor(usuarioMapper.toDto(contrato.getSupervisor()));
         dto.setObligaciones(obligaciones.stream().map(obligacionMapper::toDto).collect(Collectors.toList()));
         dto.setDocsAplicables(docsAplicables.stream().map(documentoCatalogoMapper::toDto).collect(Collectors.toList()));
+        dto.setDependencia(contrato.getDependencia());
+        dto.setFormaPago(contrato.getFormaPago());
+        dto.setModificaciones(contrato.getModificaciones());
         return dto;
     }
 

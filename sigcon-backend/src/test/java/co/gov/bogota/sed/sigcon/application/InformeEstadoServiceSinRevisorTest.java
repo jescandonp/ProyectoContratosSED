@@ -14,7 +14,10 @@ import co.gov.bogota.sed.sigcon.domain.enums.EstadoInforme;
 import co.gov.bogota.sed.sigcon.domain.enums.RolObservacion;
 import co.gov.bogota.sed.sigcon.domain.enums.RolUsuario;
 import co.gov.bogota.sed.sigcon.domain.repository.ActividadInformeRepository;
+import co.gov.bogota.sed.sigcon.domain.repository.DocumentoAdicionalRepository;
+import co.gov.bogota.sed.sigcon.domain.repository.DocumentoCatalogoRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.InformeRepository;
+import co.gov.bogota.sed.sigcon.domain.repository.SoporteAdjuntoRepository;
 import co.gov.bogota.sed.sigcon.web.exception.ErrorCode;
 import co.gov.bogota.sed.sigcon.web.exception.SigconBusinessException;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,6 +44,9 @@ class InformeEstadoServiceSinRevisorTest {
 
     @Mock private InformeRepository informeRepository;
     @Mock private ActividadInformeRepository actividadRepository;
+    @Mock private SoporteAdjuntoRepository soporteRepository;
+    @Mock private DocumentoCatalogoRepository documentoCatalogoRepository;
+    @Mock private DocumentoAdicionalRepository documentoAdicionalRepository;
     @Mock private InformeService informeService;
     @Mock private ObservacionService observacionService;
     @Mock private PdfInformeService pdfInformeService;
@@ -51,7 +57,8 @@ class InformeEstadoServiceSinRevisorTest {
     @BeforeEach
     void setUp() {
         service = new InformeEstadoService(
-            informeRepository, actividadRepository, informeService, observacionService,
+            informeRepository, actividadRepository, soporteRepository,
+            documentoCatalogoRepository, documentoAdicionalRepository, informeService, observacionService,
             pdfInformeService, eventoInformeService
         );
     }

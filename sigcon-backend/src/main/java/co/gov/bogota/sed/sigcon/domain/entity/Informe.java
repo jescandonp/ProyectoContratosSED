@@ -18,6 +18,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -71,6 +72,18 @@ public class Informe {
     /** I3: SHA-256 hash of the generated PDF bytes for immutability verification. */
     @Column(name = "PDF_HASH", length = 128)
     private String pdfHash;
+
+    @Column(name = "NUMERO_DESEMBOLSO")
+    private Integer numeroDesembolso;
+
+    @Column(name = "VALOR_DESEMBOLSO", precision = 14, scale = 2)
+    private BigDecimal valorDesembolso;
+
+    @Column(name = "PORCENTAJE_EJECUCION", precision = 5, scale = 2)
+    private BigDecimal porcentajeEjecucion;
+
+    @Column(name = "CORRESPONDENCIA_PENDIENTE", nullable = false)
+    private Integer correspondenciaPendiente = 0;
 
     @Column(name = "ACTIVO", nullable = false)
     private Boolean activo = true;
@@ -180,6 +193,38 @@ public class Informe {
 
     public void setPdfHash(String pdfHash) {
         this.pdfHash = pdfHash;
+    }
+
+    public Integer getNumeroDesembolso() {
+        return numeroDesembolso;
+    }
+
+    public void setNumeroDesembolso(Integer numeroDesembolso) {
+        this.numeroDesembolso = numeroDesembolso;
+    }
+
+    public BigDecimal getValorDesembolso() {
+        return valorDesembolso;
+    }
+
+    public void setValorDesembolso(BigDecimal valorDesembolso) {
+        this.valorDesembolso = valorDesembolso;
+    }
+
+    public BigDecimal getPorcentajeEjecucion() {
+        return porcentajeEjecucion;
+    }
+
+    public void setPorcentajeEjecucion(BigDecimal porcentajeEjecucion) {
+        this.porcentajeEjecucion = porcentajeEjecucion;
+    }
+
+    public Integer getCorrespondenciaPendiente() {
+        return correspondenciaPendiente;
+    }
+
+    public void setCorrespondenciaPendiente(Integer correspondenciaPendiente) {
+        this.correspondenciaPendiente = correspondenciaPendiente;
     }
 
     public Boolean getActivo() {

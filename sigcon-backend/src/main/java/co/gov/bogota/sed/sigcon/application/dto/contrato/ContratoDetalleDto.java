@@ -13,6 +13,9 @@ public class ContratoDetalleDto extends ContratoResumenDto {
     private UsuarioDto supervisor;
     private List<ObligacionDto> obligaciones = new ArrayList<>();
     private List<DocumentoCatalogoDto> docsAplicables = new ArrayList<>();
+    private String dependencia;
+    private String formaPago;
+    private String modificaciones;
 
     public UsuarioDto getContratista() { return contratista; }
     public void setContratista(UsuarioDto contratista) { this.contratista = contratista; }
@@ -24,4 +27,10 @@ public class ContratoDetalleDto extends ContratoResumenDto {
     public void setObligaciones(List<ObligacionDto> obligaciones) { this.obligaciones = obligaciones; }
     public List<DocumentoCatalogoDto> getDocsAplicables() { return docsAplicables; }
     public void setDocsAplicables(List<DocumentoCatalogoDto> docsAplicables) { this.docsAplicables = docsAplicables; }
+    public String getDependencia() { return dependencia; }
+    public void setDependencia(String dependencia) { this.dependencia = dependencia; }
+    public String getFormaPago() { return formaPago; }
+    public void setFormaPago(String formaPago) { this.formaPago = formaPago; }
+    public String getModificaciones() { return modificaciones; }
+    public void setModificaciones(String modificaciones) { this.modificaciones = modificaciones; }
 }

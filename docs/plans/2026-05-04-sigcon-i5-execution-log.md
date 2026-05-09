@@ -59,6 +59,87 @@ Gap identificado en pruebas funcionales de I4: `InformeDetalleComponent` muestra
 
 **Incremento 5 cerrado.** No hay punto de retoma pendiente.
 
+---
+
+## 2026-05-09 — Hallazgos Post-I5 Para Hardening
+
+Se reciben hallazgos funcionales posteriores al cierre de I5. Se tratan como hardening sobre la rama vigente `feat/sigcon-i5` porque corrigen comportamiento comprometido por specs ya implementadas:
+
+- I2 ya exige que el Revisor pueda aprobar la revision (`ENVIADO -> EN_REVISION`) o devolver con observacion obligatoria (`ENVIADO -> DEVUELTO`).
+- I2 ya marca los documentos adicionales como parte del informe; el hallazgo ajusta la regla operativa a que todos los documentos adicionales aplicables sean obligatorios antes de enviar.
+- I3 gobierna la barra/centro de notificaciones; el hallazgo de lectura inicial es ajuste UX sin cambio de dominio.
+- Inconsistencia detectada antes de resolver: I2/I5 permitian soporte tipo `ARCHIVO` y `URL`, pero el hallazgo redefine el flujo actual de captura para soporte por obligacion como solo `nombre + URL`, dejando la carga de archivo como capacidad futura. La resolucion debe retirar la carga de archivo de la UI actual y conservar el backend/DDL compatible para evolucion posterior.
+
+Punto de retoma operativo:
+
+1. Ajustar informe nuevo y detalle BORRADOR para exigir soporte URL por obligacion y retirar input de archivo.
+2. Exigir documentos adicionales aplicables antes de guardar/enviar y validar en backend al transicionar a `ENVIADO`.
+3. Hacer accesibles las acciones de revision desde el detalle abierto por notificacion, no solo desde la cola.
+4. Mejorar contraste del menu de notificaciones.
+5. Actualizar pruebas y registrar resultados.
+
+### Resolucion aplicada
+
+- Informe nuevo:
+  - Se retiro la carga de archivo en soportes de actividades.
+  - Cada obligacion exige `nombre soporte` y `URL soporte`.
+  - Todos los documentos adicionales del catalogo aplicable se tratan como obligatorios.
+- Detalle de informe BORRADOR:
+  - Se retiro la carga de archivo al agregar soporte.
+  - Si una actividad no tiene soporte URL registrado, no permite guardar sin `nombre + URL`.
+  - Antes de enviar valida soporte URL por actividad y documentos adicionales completos.
+- Backend:
+  - `InformeEstadoService.enviar()` valida al transicionar a `ENVIADO` que cada actividad tenga soporte tipo `URL`.
+  - `InformeEstadoService.enviar()` valida que todos los documentos de catalogo aplicables al tipo de contrato esten registrados.
+- Revision:
+  - `InformeDetalleComponent` ahora expone acciones de Revisor para informes `ENVIADO`: aprobar revision o devolver con observacion obligatoria. Esto cubre el caso de entrar al detalle desde una notificacion.
+- Notificaciones:
+  - El menu de notificaciones cambia el fondo de no leidas a superficie clara, elimina truncamiento agresivo del titulo y permite mas lineas de descripcion.
+
+### Validaciones 2026-05-09
+
+- Backend enfocado: `mvn test "-Dtest=InformeEstadoServiceTest,InformeEstadoServiceI3Test,InformeEstadoServiceSinRevisorTest"` -> **25 tests, 0 fallos**.
+- Backend completo: `mvn test` -> **125 tests, 0 fallos**.
+- Frontend build: `node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run build` -> **exitoso**.
+- Frontend specs enfocados: `node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false --include ...` -> no concluye en 6 minutos fuera del sandbox. Se mantiene como limitacion de runner/browser del entorno; la compilacion Angular si quedo validada.
+
+### Proximo Punto de Retoma
+
+Revisar visualmente el flujo local-dev en navegador:
+
+1. Crear informe: confirmar que cada obligacion exige nombre/URL de soporte y que no aparece input de archivo.
+2. Crear informe: confirmar que todos los documentos adicionales exigen referencia.
+3. Enviar informe: confirmar bloqueo si falta soporte URL o documento adicional.
+4. Entrar como Revisor desde notificacion/detalle: confirmar botones `Aprobar revision` y `Devolver`.
+5. Abrir campana de notificaciones: confirmar contraste legible en notificaciones no leidas.
+
+## 2026-05-09 — Hallazgo Post-I5: Mensaje generico al aprobar informe
+
+Caso reportado: al aprobar el informe del contrato `CO1.PCCNTR.8502220 - 2025` desde la cola de aprobacion del Supervisor, la UI mostraba solo `No se pudo aprobar el informe.` y no explicaba la causa.
+
+Diagnostico:
+
+- El backend ya expone el motivo mediante `ErrorResponse.error` y `ErrorResponse.mensaje`.
+- La cola de aprobacion descartaba el cuerpo del error en `ColaAprobacionComponent.aprobar()`.
+- Posibles causas reales, segun la maquina de aprobacion/PDF, incluyen firma requerida del contratista/supervisor o falla de generacion del PDF.
+
+Resolucion:
+
+- `ColaAprobacionComponent` ahora muestra `err.error.mensaje` cuando el backend lo entrega.
+- Se agregaron mensajes fallback por codigos conocidos: `FIRMA_REQUERIDA`, `PDF_GENERACION_FALLIDA`, `TRANSICION_INVALIDA`, `ACCESO_DENEGADO`.
+- Se agregaron pruebas unitarias para preservar el motivo especifico y para fallback sin mensaje.
+
+Validaciones 2026-05-09:
+
+- Frontend build: `node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run build` -> **exitoso**.
+- Frontend specs enfocados: `node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false --include src/app/features/aprobacion/cola-aprobacion.component.spec.ts` -> **9 specs, 0 fallos**.
+
+Proximo punto de retoma:
+
+1. Reintentar aprobacion del informe `CO1.PCCNTR.8502220 - 2025` como Supervisor.
+2. Si falla por firma requerida, la UI debe mostrar el mensaje especifico del backend indicando si falta firma del contratista o del supervisor.
+3. Cargar la firma faltante o corregir la causa reportada y reintentar aprobacion.
+
 ## Metricas de Cierre
 
 | Metrica | Meta | Resultado |

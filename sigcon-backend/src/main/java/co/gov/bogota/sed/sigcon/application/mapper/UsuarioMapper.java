@@ -19,6 +19,9 @@ public class UsuarioMapper {
         dto.setRol(usuario.getRol());
         dto.setFirmaImagen(usuario.getFirmaImagen());
         dto.setActivo(usuario.getActivo());
+        dto.setSgssiSaludEntidad(usuario.getSgssiSaludEntidad());
+        dto.setSgssiPensionEntidad(usuario.getSgssiPensionEntidad());
+        dto.setSgssiArlEntidad(usuario.getSgssiArlEntidad());
         return dto;
     }
 }

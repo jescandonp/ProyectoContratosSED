@@ -8,6 +8,9 @@ export interface Usuario {
   rol: RolUsuario;
   firmaImagen: string | null;
   activo: boolean;
+  sgssiSaludEntidad: string | null;
+  sgssiPensionEntidad: string | null;
+  sgssiArlEntidad: string | null;
 }
 
 export interface UsuarioRequest {
@@ -20,6 +23,9 @@ export interface UsuarioRequest {
 export interface PerfilUpdateRequest {
   nombre: string;
   cargo: string | null;
+  sgssiSaludEntidad?: string | null;
+  sgssiPensionEntidad?: string | null;
+  sgssiArlEntidad?: string | null;
 }
 
 export interface EstadoUsuarioRequest {

@@ -6,6 +6,7 @@ import co.gov.bogota.sed.sigcon.application.dto.informe.InformeResumenDto;
 import co.gov.bogota.sed.sigcon.application.dto.informe.InformeUpdateDto;
 import co.gov.bogota.sed.sigcon.application.mapper.InformeMapper;
 import co.gov.bogota.sed.sigcon.domain.entity.ActividadInforme;
+import co.gov.bogota.sed.sigcon.domain.entity.AporteSgssi;
 import co.gov.bogota.sed.sigcon.domain.entity.Contrato;
 import co.gov.bogota.sed.sigcon.domain.entity.DocumentoAdicional;
 import co.gov.bogota.sed.sigcon.domain.entity.Informe;
@@ -16,6 +17,7 @@ import co.gov.bogota.sed.sigcon.domain.enums.EstadoContrato;
 import co.gov.bogota.sed.sigcon.domain.enums.EstadoInforme;
 import co.gov.bogota.sed.sigcon.domain.enums.RolUsuario;
 import co.gov.bogota.sed.sigcon.domain.repository.ActividadInformeRepository;
+import co.gov.bogota.sed.sigcon.domain.repository.AporteSgssiRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.ContratoRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.DocumentoAdicionalRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.InformeRepository;
@@ -29,6 +31,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +46,7 @@ public class InformeService {
     private final SoporteAdjuntoRepository soporteRepository;
     private final DocumentoAdicionalRepository documentoAdicionalRepository;
     private final ObservacionRepository observacionRepository;
+    private final AporteSgssiRepository aporteSgssiRepository;
     private final CurrentUserService currentUserService;
     private final InformeMapper informeMapper;
 
@@ -53,6 +57,7 @@ public class InformeService {
         SoporteAdjuntoRepository soporteRepository,
         DocumentoAdicionalRepository documentoAdicionalRepository,
         ObservacionRepository observacionRepository,
+        AporteSgssiRepository aporteSgssiRepository,
         CurrentUserService currentUserService,
         InformeMapper informeMapper
     ) {
@@ -62,6 +67,7 @@ public class InformeService {
         this.soporteRepository = soporteRepository;
         this.documentoAdicionalRepository = documentoAdicionalRepository;
         this.observacionRepository = observacionRepository;
+        this.aporteSgssiRepository = aporteSgssiRepository;
         this.currentUserService = currentUserService;
         this.informeMapper = informeMapper;
     }
@@ -146,6 +152,11 @@ public class InformeService {
         informe.setFechaInicio(request.getFechaInicio());
         informe.setFechaFin(request.getFechaFin());
         informe.setEstado(EstadoInforme.BORRADOR);
+        informe.setNumeroDesembolso(request.getNumeroDesembolso());
+        informe.setValorDesembolso(request.getValorDesembolso());
+        informe.setPorcentajeEjecucion(request.getPorcentajeEjecucion());
+        informe.setCorrespondenciaPendiente(
+            Boolean.TRUE.equals(request.getCorrespondenciaPendiente()) ? 1 : 0);
         informe.setActivo(true);
         Informe saved = informeRepository.save(informe);
         return buildDetalle(saved);
@@ -164,6 +175,8 @@ public class InformeService {
         }
         informe.setFechaInicio(request.getFechaInicio());
         informe.setFechaFin(request.getFechaFin());
+        applyScalarFields(informe, request.getNumeroDesembolso(), request.getValorDesembolso(),
+            request.getPorcentajeEjecucion(), request.getCorrespondenciaPendiente());
         informeRepository.save(informe);
         return buildDetalle(informe);
     }
@@ -181,6 +194,8 @@ public class InformeService {
         }
         informe.setFechaInicio(dto.getFechaInicio());
         informe.setFechaFin(dto.getFechaFin());
+        applyScalarFields(informe, dto.getNumeroDesembolso(), dto.getValorDesembolso(),
+            dto.getPorcentajeEjecucion(), dto.getCorrespondenciaPendiente());
         informeRepository.save(informe);
         return buildDetalle(informe);
     }
@@ -193,7 +208,7 @@ public class InformeService {
         informeRepository.save(informe);
     }
 
-    // ------- Helpers usados por servicios I2 hermanos y por InformeEstadoService (Task 5) -------
+    // ------- Helpers usados por servicios hermanos -------
 
     public Informe findActiveInforme(Long id) {
         return informeRepository.findByIdAndActivoTrue(id)
@@ -215,7 +230,10 @@ public class InformeService {
         }
         List<DocumentoAdicional> documentos = documentoAdicionalRepository.findByInformeIdAndActivoTrue(informe.getId());
         List<Observacion> observaciones = observacionRepository.findByInformeIdAndActivoTrueOrderByFechaAsc(informe.getId());
-        return informeMapper.toDetalleDto(informe, actividades, soportesPorActividad, documentos, observaciones);
+        List<AporteSgssi> aportes = informe.getId() != null
+            ? aporteSgssiRepository.findByInformeIdAndActivoTrue(informe.getId())
+            : Collections.emptyList();
+        return informeMapper.toDetalleDto(informe, actividades, soportesPorActividad, documentos, observaciones, aportes);
     }
 
     public void assertCanEditInforme(Usuario usuario, Informe informe) {
@@ -262,6 +280,27 @@ public class InformeService {
                 "Contrato no encontrado",
                 HttpStatus.NOT_FOUND
             ));
+    }
+
+    private static void applyScalarFields(
+        Informe informe,
+        Integer numeroDesembolso,
+        java.math.BigDecimal valorDesembolso,
+        java.math.BigDecimal porcentajeEjecucion,
+        Boolean correspondenciaPendiente
+    ) {
+        if (numeroDesembolso != null) {
+            informe.setNumeroDesembolso(numeroDesembolso);
+        }
+        if (valorDesembolso != null) {
+            informe.setValorDesembolso(valorDesembolso);
+        }
+        if (porcentajeEjecucion != null) {
+            informe.setPorcentajeEjecucion(porcentajeEjecucion);
+        }
+        if (correspondenciaPendiente != null) {
+            informe.setCorrespondenciaPendiente(Boolean.TRUE.equals(correspondenciaPendiente) ? 1 : 0);
+        }
     }
 
     private static boolean isAssigned(Usuario usuario, Long id) {

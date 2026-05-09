@@ -1,8 +1,8 @@
 # ARRANQUE SIGCON
 
-> Estado: Incremento 5 completado.
+> Estado: Incremento 6 completado.
 > Metodologia: Spec-Driven Development (SDD), nivel Spec-Anchored.
-> Ultima actualizacion: 2026-05-06 — sincronizacion GitHub y cierre I5.
+> Ultima actualizacion: 2026-05-09 — cierre I6 (PDF institucional + aportes SGSSI + datos complementarios).
 
 ## Orden De Documentos
 
@@ -15,37 +15,51 @@
 7. Spec tecnica I3: `docs/specs/2026-05-01-sigcon-i3-spec.md`
 8. Spec tecnica I4: `docs/specs/2026-05-04-sigcon-i4-spec.md`
 9. Spec tecnica I5: `docs/specs/2026-05-04-sigcon-i5-spec.md`
-10. Plan I5: `docs/plans/2026-05-04-sigcon-i5-plan.md`
-11. Log de ejecucion I5: `docs/plans/2026-05-04-sigcon-i5-execution-log.md`
+10. Spec tecnica I6: `docs/specs/2026-05-09-sigcon-i6-spec.md`
+11. Plan I6: `docs/plans/2026-05-09-sigcon-i6-plan.md`
+12. Log de ejecucion I6: `docs/plans/2026-05-09-sigcon-i6-execution-log.md`
 
-## Estado GitHub Validado
+## Estado GitHub
 
 Repositorio remoto: `https://github.com/jescandonp/ProyectoContratosSED.git`
 
-| Rama | Referencia validada | Estado |
+| Rama | SHA HEAD local | Estado |
 |---|---:|---|
-| `main` | `cc5eb25` | Sincronizada con `origin/main` |
-| `feat/sigcon-i1` | `be26bbe` | Sincronizada con `origin/feat/sigcon-i1` |
-| `feat/sigcon-i2` | `0658cef` | Sincronizada con `origin/feat/sigcon-i2` |
-| `feat/sigcon-i3` | `9be9c73` | Sincronizada con `origin/feat/sigcon-i3` |
-| `feat/sigcon-i4` | `7b61d09` | Sincronizada con `origin/feat/sigcon-i4` |
-| `feat/sigcon-i5` | cierre tecnico `bac3e5b` + catch-up documental | Sincronizada con `origin/feat/sigcon-i5` |
+| `main` | `3768101` | Pendiente push post-I6 |
+| `feat/sigcon-i1` | `be26bbe` | Sincronizada |
+| `feat/sigcon-i2` | `0658cef` | Sincronizada |
+| `feat/sigcon-i3` | `9be9c73` | Sincronizada |
+| `feat/sigcon-i4` | `7b61d09` | Sincronizada |
+| `feat/sigcon-i5` | `0cc76a9` | Sincronizada |
+| `feat/sigcon-i6` | `df9762c` | Local — pendiente push + PR a main |
 
-Para retomar o validar el ultimo incremento:
+Para retomar o continuar desde I6:
 
 ```powershell
 git clone https://github.com/jescandonp/ProyectoContratosSED.git
 Set-Location ProyectoContratosSED
-git checkout feat/sigcon-i5
+git checkout feat/sigcon-i6
 ```
 
 El lider tecnico puede cambiar apuntamientos locales despues del clone usando los valores reales del ambiente SED para Oracle, WebLogic, Azure AD y rutas compartidas de firmas.
+
+## Alcance I6 (implementado)
+
+Incluye:
+- **PDF institucional SED** — rediseno completo `InformePdfTemplateService`: 8 secciones, encabezado `#002869`, valor del desembolso en letras (`NumeroPesosConverter`), firma del revisor opcional.
+- **Aportes SGSSI por informe** — nueva tabla `SGCN_APORTES_SGSSI` con borrado logico; endpoints GET + PUT `/api/informes/{id}/aportes-sgssi`; seccion editable en `InformeFormComponent` e `InformeDetalleComponent`.
+- **Datos complementarios del contrato** — campos `dependencia` (catalogo 44 unidades SED via `<datalist>`), `formaPago`, `modificaciones` en el formulario admin.
+- **Perfil contratista SGSSI** — campos `sgssiSaludEntidad`, `sgssiPensionEntidad`, `sgssiArlEntidad` en perfil.
+- **Campos nuevos del informe** — `numeroDesembolso`, `valorDesembolso`, `porcentajeEjecucion`, `correspondenciaPendiente` en encabezado del informe.
+- **Eliminacion de `porcentaje` por actividad** (Enmienda E2) — campo eliminado de DTOs y templates; permanece mapeado en entidad Hibernate.
+- 135 tests backend, 106 specs frontend, 0 fallos.
+- Spec, plan y log de ejecucion I6 versionados.
 
 ## Alcance I5 (implementado)
 
 Incluye:
 - Edicion inline de actividades desde `InformeDetalleComponent` para informes en estado BORRADOR.
-- Edicion de descripcion, porcentaje, soportes y documentos adicionales sin salir del detalle del informe.
+- Edicion de descripcion, soportes y documentos adicionales sin salir del detalle del informe.
 - Vista de detalle en solo lectura para estados distintos de BORRADOR.
 - Uso de endpoints existentes de I2-I4; no agrega DDL ni endpoints nuevos.
 - Spec, plan y log de ejecucion I5 versionados.
@@ -147,7 +161,7 @@ sqlplus SED_SIGCON/<password>@localhost:1521/XEPDB1 @db/00_setup.sql
 sqlplus SED_SIGCON/<password>@localhost:1521/XEPDB1 @db/01_datos_prueba.sql
 ```
 
-`db/00_setup.sql` contiene DDL de I1, I2 e I3 bajo cabeceras `-- ===== INCREMENTO 1 =====`, `-- ===== INCREMENTO 2 =====` y `-- ===== INCREMENTO 3 =====`. I4 e I5 no agregan DDL.
+`db/00_setup.sql` contiene DDL de I1–I6. I4 e I5 no agregaron DDL. I6 agrega bloque al final con cabecera `-- ============================================================ SIGCON I6`.
 `db/01_datos_prueba.sql` solo debe ejecutarse en ambientes de desarrollo local.
 
 ## Configuracion I3: PDF Y Email

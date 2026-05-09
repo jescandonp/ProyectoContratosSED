@@ -4,10 +4,12 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, map, of, switchMap } from 'rxjs';
 
 import { ActividadInforme } from '../../../core/models/actividad-informe.model';
+import { AporteSgssiRequest, ITEM_SGSSI_LABELS, ItemSgssi } from '../../../core/models/aporte-sgssi.model';
 import { ContratoDetalle } from '../../../core/models/contrato.model';
 import { DocumentoCatalogo } from '../../../core/models/documento-catalogo.model';
 import { InformeDetalle } from '../../../core/models/informe.model';
 import { ActividadInformeService } from '../../../core/services/actividad-informe.service';
+import { AporteSgssiService } from '../../../core/services/aporte-sgssi.service';
 import { ContratoService } from '../../../core/services/contrato.service';
 import { DocumentoAdicionalService } from '../../../core/services/documento-adicional.service';
 import { DocumentoCatalogoService } from '../../../core/services/documento-catalogo.service';
@@ -19,10 +21,8 @@ interface ActividadFormRow {
   orden: number;
   descripcionObligacion: string;
   descripcion: string;
-  porcentaje: number;
   soporteNombre: string;
   soporteUrl: string;
-  soporteArchivo: File | null;
 }
 
 interface DocumentoFormRow {
@@ -31,6 +31,15 @@ interface DocumentoFormRow {
   obligatorio: boolean;
   referencia: string;
 }
+
+interface AporteSgssiRow {
+  item: ItemSgssi;
+  fechaPago: string;
+  valorAportado: number | null;
+  entidad: string;
+}
+
+const ITEMS_SGSSI: ItemSgssi[] = ['SALUD', 'PENSION', 'ARL'];
 
 @Component({
   selector: 'app-informe-form',
@@ -51,6 +60,7 @@ interface DocumentoFormRow {
       }
 
       @if (contrato(); as c) {
+        <!-- Encabezado del contrato + periodo -->
         <section class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg">
           <div class="flex flex-col gap-md lg:flex-row lg:items-start lg:justify-between">
             <div>
@@ -80,14 +90,64 @@ interface DocumentoFormRow {
             </div>
           </div>
 
+          <div class="mt-lg grid grid-cols-1 gap-md md:grid-cols-2 lg:grid-cols-4">
+            <div class="space-y-xs">
+              <label class="block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">N.° Desembolso</label>
+              <input
+                class="w-full rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface-bright)] px-sm py-xs text-sm"
+                type="number"
+                min="1"
+                placeholder="Ej. 3"
+                [ngModel]="numeroDesembolso()"
+                (ngModelChange)="numeroDesembolso.set($event ? Number($event) : null)"
+              />
+            </div>
+            <div class="space-y-xs">
+              <label class="block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Valor Desembolso (COP)</label>
+              <input
+                class="w-full rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface-bright)] px-sm py-xs text-sm"
+                type="number"
+                min="0"
+                placeholder="Ej. 6000000"
+                [ngModel]="valorDesembolso()"
+                (ngModelChange)="valorDesembolso.set($event ? Number($event) : null)"
+              />
+            </div>
+            <div class="space-y-xs">
+              <label class="block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">% Ejecución acumulada</label>
+              <input
+                class="w-full rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface-bright)] px-sm py-xs text-sm"
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                placeholder="Ej. 45.5"
+                [ngModel]="porcentajeEjecucion()"
+                (ngModelChange)="porcentajeEjecucion.set($event ? Number($event) : null)"
+              />
+            </div>
+            <div class="flex flex-col justify-end space-y-xs">
+              <label class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Correspondencia pendiente</label>
+              <label class="flex cursor-pointer items-center gap-sm">
+                <input
+                  class="h-4 w-4 accent-[var(--color-primary)]"
+                  type="checkbox"
+                  [ngModel]="correspondenciaPendiente()"
+                  (ngModelChange)="correspondenciaPendiente.set($event)"
+                />
+                <span class="text-sm text-[var(--color-on-surface)]">Sí, hay correspondencia pendiente</span>
+              </label>
+            </div>
+          </div>
+
           <div class="mt-lg grid grid-cols-1 gap-md md:grid-cols-3">
             <div class="rounded-lg bg-[var(--color-surface-container-low)] p-md">
               <p class="m-0 text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Obligaciones</p>
               <p class="m-0 mt-xs text-xl font-bold text-[var(--color-on-surface)]">{{ actividadesForm().length }}</p>
             </div>
             <div class="rounded-lg bg-[var(--color-surface-container-low)] p-md">
-              <p class="m-0 text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Avance declarado</p>
-              <p class="m-0 mt-xs text-xl font-bold text-[var(--color-on-surface)]">{{ avancePromedio() }}%</p>
+              <p class="m-0 text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Aportes SGSSI</p>
+              <p class="m-0 mt-xs text-xl font-bold text-[var(--color-on-surface)]">{{ aportesForm().length }}</p>
             </div>
             <div class="rounded-lg bg-[var(--color-surface-container-low)] p-md">
               <p class="m-0 text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Documentos</p>
@@ -96,6 +156,100 @@ interface DocumentoFormRow {
           </div>
         </section>
 
+        <!-- Aportes SGSSI -->
+        <section class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg">
+          <div class="mb-md flex items-center justify-between">
+            <div class="flex items-center gap-sm">
+              <span class="h-5 w-1 rounded-full bg-[var(--color-tertiary-container,#e8d5f0)]"></span>
+              <h3 class="m-0 text-base font-semibold text-[var(--color-on-surface)]">Aportes al Sistema General de Seguridad Social</h3>
+            </div>
+            <button
+              class="flex items-center gap-xs rounded border border-[var(--color-primary)] px-sm py-xs text-xs font-semibold text-[var(--color-primary)] hover:bg-[var(--color-surface-container-low)]"
+              type="button"
+              (click)="agregarAporte()"
+            >
+              + Añadir
+            </button>
+          </div>
+          <p class="mb-md text-xs text-[var(--color-on-surface-variant)]">
+            Período de aportes: mes inmediatamente anterior al inicio del período del informe.
+          </p>
+          @if (aportesForm().length === 0) {
+            <p class="m-0 text-sm text-[var(--color-on-surface-variant)]">Sin aportes registrados. Agregue los conceptos SALUD, PENSIÓN y A.R.L.</p>
+          } @else {
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="border-b border-[var(--color-outline-variant)] text-left text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">
+                    <th class="pb-xs pr-sm">Concepto</th>
+                    <th class="pb-xs pr-sm">Entidad</th>
+                    <th class="pb-xs pr-sm">Fecha de pago</th>
+                    <th class="pb-xs pr-sm">Valor aportado (COP)</th>
+                    <th class="pb-xs"></th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-[var(--color-outline-variant)]">
+                  @for (row of aportesForm(); track $index; let i = $index) {
+                    <tr>
+                      <td class="py-xs pr-sm">
+                        <select
+                          class="w-full rounded border border-[var(--color-outline-variant)] px-xs py-xs text-sm"
+                          [ngModel]="row.item"
+                          (ngModelChange)="actualizarAporte(i, { item: $event })"
+                        >
+                          @for (it of itemsSgssi; track it) {
+                            <option [value]="it">{{ labelSgssi(it) }}</option>
+                          }
+                        </select>
+                      </td>
+                      <td class="py-xs pr-sm">
+                        <input
+                          class="w-full rounded border border-[var(--color-outline-variant)] px-xs py-xs text-sm"
+                          type="text"
+                          maxlength="200"
+                          placeholder="Nombre entidad"
+                          [ngModel]="row.entidad"
+                          (ngModelChange)="actualizarAporte(i, { entidad: $event })"
+                        />
+                      </td>
+                      <td class="py-xs pr-sm">
+                        <input
+                          class="w-full rounded border border-[var(--color-outline-variant)] px-xs py-xs text-sm"
+                          type="date"
+                          [ngModel]="row.fechaPago"
+                          (ngModelChange)="actualizarAporte(i, { fechaPago: $event })"
+                        />
+                      </td>
+                      <td class="py-xs pr-sm">
+                        <input
+                          class="w-full rounded border border-[var(--color-outline-variant)] px-xs py-xs text-sm"
+                          type="number"
+                          min="0"
+                          [ngModel]="row.valorAportado"
+                          (ngModelChange)="actualizarAporte(i, { valorAportado: $event ? Number($event) : null })"
+                        />
+                      </td>
+                      <td class="py-xs">
+                        <button
+                          class="text-[var(--color-error)] hover:opacity-70"
+                          type="button"
+                          (click)="eliminarAporte(i)"
+                          title="Eliminar"
+                        >
+                          <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M18 6L6 18M6 6l12 12"/>
+                          </svg>
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </section>
+
+        <!-- Actividades por obligación -->
         <section class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg">
           <div class="mb-md flex items-center gap-sm">
             <span class="h-5 w-1 rounded-full bg-[var(--color-primary)]"></span>
@@ -115,31 +269,18 @@ interface DocumentoFormRow {
                   </div>
                 </div>
 
-                <div class="grid grid-cols-1 gap-md lg:grid-cols-[1fr_10rem]">
-                  <label class="block">
-                    <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Actividad realizada</span>
-                    <textarea
-                      class="min-h-28 w-full resize-y rounded border border-[var(--color-outline-variant)] px-sm py-xs text-sm"
-                      [ngModel]="row.descripcion"
-                      (ngModelChange)="actualizarActividad(i, { descripcion: $event })"
-                    ></textarea>
-                  </label>
-                  <label class="block">
-                    <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Avance %</span>
-                    <input
-                      class="w-full rounded border border-[var(--color-outline-variant)] px-sm py-xs text-sm"
-                      type="number"
-                      min="0"
-                      max="100"
-                      [ngModel]="row.porcentaje"
-                      (ngModelChange)="actualizarActividad(i, { porcentaje: toNumber($event) })"
-                    />
-                  </label>
-                </div>
+                <label class="block">
+                  <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Actividad realizada</span>
+                  <textarea
+                    class="min-h-28 w-full resize-y rounded border border-[var(--color-outline-variant)] px-sm py-xs text-sm"
+                    [ngModel]="row.descripcion"
+                    (ngModelChange)="actualizarActividad(i, { descripcion: $event })"
+                  ></textarea>
+                </label>
 
-                <div class="mt-md grid grid-cols-1 gap-md lg:grid-cols-3">
+                <div class="mt-md grid grid-cols-1 gap-md lg:grid-cols-2">
                   <label class="block">
-                    <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Nombre soporte</span>
+                    <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Nombre soporte *</span>
                     <input
                       class="w-full rounded border border-[var(--color-outline-variant)] px-sm py-xs text-sm"
                       type="text"
@@ -148,20 +289,12 @@ interface DocumentoFormRow {
                     />
                   </label>
                   <label class="block">
-                    <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">URL soporte</span>
+                    <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">URL soporte *</span>
                     <input
                       class="w-full rounded border border-[var(--color-outline-variant)] px-sm py-xs text-sm"
                       type="url"
                       [ngModel]="row.soporteUrl"
                       (ngModelChange)="actualizarActividad(i, { soporteUrl: $event })"
-                    />
-                  </label>
-                  <label class="block">
-                    <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Archivo</span>
-                    <input
-                      class="w-full rounded border border-[var(--color-outline-variant)] bg-white px-sm py-xs text-sm"
-                      type="file"
-                      (change)="seleccionarArchivo(i, $event)"
                     />
                   </label>
                 </div>
@@ -170,6 +303,7 @@ interface DocumentoFormRow {
           </div>
         </section>
 
+        <!-- Documentos adicionales -->
         <section class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg">
           <div class="mb-md flex items-center gap-sm">
             <span class="h-5 w-1 rounded-full bg-[var(--color-secondary-container)]"></span>
@@ -182,12 +316,10 @@ interface DocumentoFormRow {
             <div class="space-y-sm">
               @for (doc of documentosForm(); track doc.idCatalogo; let i = $index) {
                 <label class="grid grid-cols-1 gap-sm rounded-lg border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] p-md md:grid-cols-[1fr_18rem] md:items-center">
-                  <span>
-                    <span class="block text-sm font-semibold text-[var(--color-on-surface)]">{{ doc.nombreCatalogo }}</span>
-                    @if (doc.obligatorio) {
+                    <span>
+                      <span class="block text-sm font-semibold text-[var(--color-on-surface)]">{{ doc.nombreCatalogo }}</span>
                       <span class="text-xs font-bold uppercase tracking-wider text-[var(--color-error)]">Obligatorio</span>
-                    }
-                  </span>
+                    </span>
                   <input
                     class="w-full rounded border border-[var(--color-outline-variant)] bg-white px-sm py-xs text-sm"
                     type="text"
@@ -201,10 +333,11 @@ interface DocumentoFormRow {
           }
         </section>
 
+        <!-- Barra fija de acciones -->
         <div class="fixed inset-x-0 bottom-0 z-10 border-t border-[var(--color-outline-variant)] bg-white/95 px-lg py-md backdrop-blur">
           <div class="mx-auto flex max-w-6xl items-center justify-between gap-md">
             <p class="m-0 text-sm text-[var(--color-on-surface-variant)]">
-              {{ guardando() ? 'Guardando informe...' : 'Revise actividades, soportes y documentos antes de enviar.' }}
+              {{ guardando() ? 'Guardando informe...' : 'Revise actividades, aportes SGSSI y documentos antes de enviar.' }}
             </p>
             <div class="flex gap-sm">
               <button class="rounded border border-[var(--color-outline-variant)] px-md py-sm text-sm font-semibold text-[var(--color-on-surface)]" type="button" (click)="volverAContrato()">
@@ -228,20 +361,22 @@ interface DocumentoFormRow {
   `
 })
 export class InformeFormComponent implements OnInit {
+  readonly itemsSgssi: ItemSgssi[] = ITEMS_SGSSI;
+
   readonly contrato = signal<ContratoDetalle | null>(null);
   readonly fechaInicio = signal('');
   readonly fechaFin = signal('');
   readonly actividadesForm = signal<ActividadFormRow[]>([]);
   readonly documentosForm = signal<DocumentoFormRow[]>([]);
+  readonly aportesForm = signal<AporteSgssiRow[]>([]);
   readonly error = signal('');
   readonly guardando = signal(false);
 
-  readonly avancePromedio = computed(() => {
-    const rows = this.actividadesForm();
-    if (rows.length === 0) return 0;
-    const total = rows.reduce((sum, row) => sum + Number(row.porcentaje || 0), 0);
-    return Math.round(total / rows.length);
-  });
+  // I6 header fields
+  readonly numeroDesembolso   = signal<number | null>(null);
+  readonly valorDesembolso    = signal<number | null>(null);
+  readonly porcentajeEjecucion = signal<number | null>(null);
+  readonly correspondenciaPendiente = signal<boolean>(false);
 
   readonly documentosCompletos = computed(() => this.documentosForm().filter((doc) => doc.referencia.trim()).length);
 
@@ -252,6 +387,7 @@ export class InformeFormComponent implements OnInit {
     private readonly actividadService: ActividadInformeService,
     private readonly soporteService: SoporteAdjuntoService,
     private readonly documentoAdicionalService: DocumentoAdicionalService,
+    private readonly aporteSgssiService: AporteSgssiService,
     private readonly route: ActivatedRoute,
     private readonly router: Router
   ) {}
@@ -276,10 +412,8 @@ export class InformeFormComponent implements OnInit {
               orden: obligacion.orden,
               descripcionObligacion: obligacion.descripcion,
               descripcion: '',
-              porcentaje: 0,
               soporteNombre: '',
-              soporteUrl: '',
-              soporteArchivo: null
+              soporteUrl: ''
             }))
         );
       },
@@ -302,7 +436,11 @@ export class InformeFormComponent implements OnInit {
     this.informeService.crearInforme({
       idContrato: contrato.id,
       fechaInicio: this.fechaInicio(),
-      fechaFin: this.fechaFin()
+      fechaFin: this.fechaFin(),
+      numeroDesembolso: this.numeroDesembolso(),
+      valorDesembolso: this.valorDesembolso(),
+      porcentajeEjecucion: this.porcentajeEjecucion(),
+      correspondenciaPendiente: this.correspondenciaPendiente(),
     }).pipe(
       switchMap((informe) => this.guardarDetalle(informe)),
       switchMap((informe) => enviarDespues ? this.informeService.enviarInforme(informe.id) : of(informe))
@@ -337,44 +475,68 @@ export class InformeFormComponent implements OnInit {
     this.actualizarActividad(index, { soporteArchivo: input.files?.item(0) ?? null });
   }
 
+  agregarAporte() {
+    this.aportesForm.update((rows) => [...rows, { item: 'SALUD', fechaPago: '', valorAportado: null, entidad: '' }]);
+  }
+
+  eliminarAporte(index: number) {
+    this.aportesForm.update((rows) => rows.filter((_, i) => i !== index));
+  }
+
+  actualizarAporte(index: number, patch: Partial<AporteSgssiRow>) {
+    this.aportesForm.update((rows) => rows.map((row, i) => i === index ? { ...row, ...patch } : row));
+  }
+
+  labelSgssi(item: ItemSgssi): string {
+    return ITEM_SGSSI_LABELS[item];
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Number(value: any): number { return Number(value) || 0; }
+
+
   volverAContrato() {
     const contrato = this.contrato();
     void this.router.navigate(contrato ? ['/contratos', contrato.id] : ['/contratos']);
   }
 
-  toNumber(value: string | number): number {
-    return Number(value) || 0;
-  }
-
   private guardarDetalle(informe: InformeDetalle) {
-    const operaciones = [
-      ...this.actividadesForm().map((row) =>
-        this.actividadService.crear(informe.id, {
-          idObligacion: row.idObligacion,
-          descripcion: row.descripcion.trim(),
-          porcentaje: Number(row.porcentaje)
-        }).pipe(switchMap((actividad) => this.guardarSoportes(row, actividad)))
-      ),
-      ...this.documentosForm()
-        .filter((doc) => doc.referencia.trim())
-        .map((doc) => this.documentoAdicionalService.agregar(informe.id, {
-          idCatalogo: doc.idCatalogo,
-          referencia: doc.referencia.trim()
-        }))
-    ];
+    const actividadOps = this.actividadesForm().map((row) =>
+      this.actividadService.crear(informe.id, {
+        idObligacion: row.idObligacion,
+        descripcion: row.descripcion.trim(),
+      }).pipe(switchMap((actividad) => this.guardarSoportes(row, actividad)))
+    );
 
-    return (operaciones.length ? forkJoin(operaciones) : of([])).pipe(map(() => informe));
+    const documentoOps = this.documentosForm()
+      .filter((doc) => doc.referencia.trim())
+      .map((doc) => this.documentoAdicionalService.agregar(informe.id, {
+        idCatalogo: doc.idCatalogo,
+        referencia: doc.referencia.trim()
+      }));
+
+    const aportesValidos: AporteSgssiRequest[] = this.aportesForm()
+      .filter((row) => row.fechaPago && row.valorAportado != null && row.entidad.trim())
+      .map((row) => ({
+        item: row.item,
+        fechaPago: row.fechaPago,
+        valorAportado: row.valorAportado!,
+        entidad: row.entidad.trim(),
+      }));
+    const aportesOp = aportesValidos.length > 0
+      ? [this.aporteSgssiService.guardarTodos(informe.id, aportesValidos)]
+      : [];
+
+    const todas = [...actividadOps, ...documentoOps, ...aportesOp];
+    return (todas.length ? forkJoin(todas) : of([])).pipe(map(() => informe));
   }
 
   private guardarSoportes(row: ActividadFormRow, actividad: ActividadInforme) {
     const operaciones = [];
-    const soporteNombre = row.soporteNombre.trim() || `Soporte obligación ${row.orden}`;
-    if (row.soporteUrl.trim()) {
-      operaciones.push(this.soporteService.agregarUrl(actividad.id, { nombre: soporteNombre, url: row.soporteUrl.trim() }));
-    }
-    if (row.soporteArchivo) {
-      operaciones.push(this.soporteService.agregarArchivo(actividad.id, row.soporteArchivo));
-    }
+    operaciones.push(this.soporteService.agregarUrl(actividad.id, {
+      nombre: row.soporteNombre.trim(),
+      url: row.soporteUrl.trim()
+    }));
 
     return (operaciones.length ? forkJoin(operaciones) : of([])).pipe(map(() => actividad));
   }
@@ -388,15 +550,20 @@ export class InformeFormComponent implements OnInit {
       this.error.set('Debe registrar la actividad realizada para cada obligación.');
       return false;
     }
-    if (this.actividadesForm().some((row) => row.porcentaje < 0 || row.porcentaje > 100)) {
-      this.error.set('El porcentaje de avance debe estar entre 0 y 100.');
-      return false;
-    }
     if (this.documentosForm().some((doc) => doc.obligatorio && !doc.referencia.trim())) {
       this.error.set('Debe registrar la referencia de los documentos obligatorios.');
       return false;
     }
     return true;
+  }
+
+  private esUrlHttp(value: string): boolean {
+    try {
+      const url = new URL(value.trim());
+      return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch {
+      return false;
+    }
   }
 
   private toDocumentoForm(doc: DocumentoCatalogo): DocumentoFormRow {
