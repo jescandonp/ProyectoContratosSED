@@ -25,7 +25,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.math.BigDecimal;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -73,7 +72,7 @@ class ActividadInformeServiceTest {
             return actividad;
         });
 
-        ActividadInformeRequest request = request(4L, "avance", new BigDecimal("35.5"));
+        ActividadInformeRequest request = request(4L, "avance");
 
         assertThat(service.crear(50L, request).getId()).isEqualTo(9L);
     }
@@ -90,16 +89,15 @@ class ActividadInformeServiceTest {
         when(currentUserService.getCurrentUser()).thenReturn(usuario(2L));
         when(actividadRepository.findByIdAndActivoTrue(9L)).thenReturn(Optional.of(actividad));
 
-        assertThatThrownBy(() -> service.actualizar(50L, 9L, request(4L, "avance", BigDecimal.TEN)))
+        assertThatThrownBy(() -> service.actualizar(50L, 9L, request(4L, "avance")))
             .isInstanceOfSatisfying(SigconBusinessException.class, ex ->
                 assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.ACCESO_DENEGADO));
     }
 
-    private static ActividadInformeRequest request(Long obligacionId, String descripcion, BigDecimal porcentaje) {
+    private static ActividadInformeRequest request(Long obligacionId, String descripcion) {
         ActividadInformeRequest request = new ActividadInformeRequest();
         request.setIdObligacion(obligacionId);
         request.setDescripcion(descripcion);
-        request.setPorcentaje(porcentaje);
         return request;
     }
 

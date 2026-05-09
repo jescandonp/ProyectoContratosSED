@@ -6,7 +6,9 @@ import co.gov.bogota.sed.sigcon.application.dto.informe.InformeResumenDto;
 import co.gov.bogota.sed.sigcon.application.dto.informe.ActividadInformeRequest;
 import co.gov.bogota.sed.sigcon.application.dto.informe.InformeUpdateDto;
 import co.gov.bogota.sed.sigcon.application.dto.informe.SoporteAdjuntoDto;
-import co.gov.bogota.sed.sigcon.application.dto.informe.SoporteUrlRequest;import co.gov.bogota.sed.sigcon.application.mapper.ActividadInformeMapper;
+import co.gov.bogota.sed.sigcon.application.dto.informe.SoporteUrlRequest;
+import co.gov.bogota.sed.sigcon.application.mapper.ActividadInformeMapper;
+import co.gov.bogota.sed.sigcon.application.mapper.AporteSgssiMapper;
 import co.gov.bogota.sed.sigcon.application.mapper.DocumentoAdicionalMapper;
 import co.gov.bogota.sed.sigcon.application.mapper.InformeMapper;
 import co.gov.bogota.sed.sigcon.application.mapper.ObservacionMapper;
@@ -27,6 +29,7 @@ import co.gov.bogota.sed.sigcon.domain.enums.EstadoInforme;
 import co.gov.bogota.sed.sigcon.domain.enums.RolUsuario;
 import co.gov.bogota.sed.sigcon.domain.enums.TipoContrato;
 import co.gov.bogota.sed.sigcon.domain.repository.ActividadInformeRepository;
+import co.gov.bogota.sed.sigcon.domain.repository.AporteSgssiRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.ContratoRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.DocumentoAdicionalRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.InformeRepository;
@@ -67,6 +70,7 @@ class InformeServiceTest {
     @Mock private SoporteAdjuntoRepository soporteRepository;
     @Mock private DocumentoAdicionalRepository documentoAdicionalRepository;
     @Mock private ObservacionRepository observacionRepository;
+    @Mock private AporteSgssiRepository aporteSgssiRepository;
     @Mock private ObligacionRepository obligacionRepository;
     @Mock private CurrentUserService currentUserService;
     @Mock private DocumentStorageService documentStorageService;
@@ -81,10 +85,12 @@ class InformeServiceTest {
         ActividadInformeMapper actividadMapper = new ActividadInformeMapper(soporteMapper);
         DocumentoAdicionalMapper docMapper = new DocumentoAdicionalMapper();
         ObservacionMapper obsMapper = new ObservacionMapper();
-        InformeMapper informeMapper = new InformeMapper(new UsuarioMapper(), actividadMapper, docMapper, obsMapper);
+        InformeMapper informeMapper = new InformeMapper(
+            new UsuarioMapper(), actividadMapper, docMapper, obsMapper, new AporteSgssiMapper());
         informeService = new InformeService(
             informeRepository, contratoRepository, actividadRepository, soporteRepository,
-            documentoAdicionalRepository, observacionRepository, currentUserService, informeMapper
+            documentoAdicionalRepository, observacionRepository, aporteSgssiRepository,
+            currentUserService, informeMapper
         );
         actividadService = new ActividadInformeService(
             actividadRepository, obligacionRepository, soporteRepository,
@@ -111,6 +117,7 @@ class InformeServiceTest {
         when(actividadRepository.findByInformeIdAndActivoTrue(99L)).thenReturn(Collections.emptyList());
         when(documentoAdicionalRepository.findByInformeIdAndActivoTrue(99L)).thenReturn(Collections.emptyList());
         when(observacionRepository.findByInformeIdAndActivoTrueOrderByFechaAsc(99L)).thenReturn(Collections.emptyList());
+        when(aporteSgssiRepository.findByInformeIdAndActivoTrue(99L)).thenReturn(Collections.emptyList());
 
         InformeRequest request = informeRequest(10L);
         InformeDetalleDto detalle = informeService.crearInforme(request);
@@ -200,29 +207,13 @@ class InformeServiceTest {
         when(actividadRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.emptyList());
         when(documentoAdicionalRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.emptyList());
         when(observacionRepository.findByInformeIdAndActivoTrueOrderByFechaAsc(50L)).thenReturn(Collections.emptyList());
+        when(aporteSgssiRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.emptyList());
 
         InformeDetalleDto detalle = informeService.obtenerDetalle(50L);
 
         assertThat(detalle.getPdfRuta()).isEqualTo("pdfs/10/50/informe-1.pdf");
         assertThat(detalle.getPdfGeneradoAt()).isEqualTo(pdfGeneradoAt);
         assertThat(detalle.getPdfHash()).isEqualTo("abc123");
-    }
-
-    @Test
-    void invalidPorcentajeIsRejected() {
-        Usuario contratista = usuario(2L, RolUsuario.CONTRATISTA);
-        Informe informe = informe(50L, contrato(10L, contratista, EstadoContrato.EN_EJECUCION), EstadoInforme.BORRADOR);
-        when(informeRepository.findByIdAndActivoTrue(50L)).thenReturn(Optional.of(informe));
-        when(currentUserService.getCurrentUser()).thenReturn(contratista);
-
-        ActividadInformeRequest request = new ActividadInformeRequest();
-        request.setIdObligacion(1L);
-        request.setDescripcion("avance");
-        request.setPorcentaje(new BigDecimal("150"));
-
-        assertThatThrownBy(() -> actividadService.crear(50L, request))
-            .isInstanceOfSatisfying(SigconBusinessException.class, ex ->
-                assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.PORCENTAJE_INVALIDO));
     }
 
     @Test
@@ -282,6 +273,7 @@ class InformeServiceTest {
         when(actividadRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.emptyList());
         when(documentoAdicionalRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.emptyList());
         when(observacionRepository.findByInformeIdAndActivoTrueOrderByFechaAsc(50L)).thenReturn(Collections.emptyList());
+        when(aporteSgssiRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.emptyList());
 
         InformeUpdateDto dto = informeUpdateDto(LocalDate.of(2026, 2, 1), LocalDate.of(2026, 2, 28));
         InformeDetalleDto result = informeService.actualizar(50L, dto);
@@ -300,6 +292,7 @@ class InformeServiceTest {
         when(actividadRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.emptyList());
         when(documentoAdicionalRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.emptyList());
         when(observacionRepository.findByInformeIdAndActivoTrueOrderByFechaAsc(50L)).thenReturn(Collections.emptyList());
+        when(aporteSgssiRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.emptyList());
 
         InformeUpdateDto dto = informeUpdateDto(LocalDate.of(2026, 3, 1), LocalDate.of(2026, 3, 31));
         InformeDetalleDto result = informeService.actualizar(50L, dto);
@@ -367,7 +360,8 @@ class InformeServiceTest {
             });
     }
 
-    private static Usuario usuario(Long id, RolUsuario rol) {        Usuario u = new Usuario();
+    private static Usuario usuario(Long id, RolUsuario rol) {
+        Usuario u = new Usuario();
         u.setId(id);
         u.setEmail("u" + id + "@educacionbogota.edu.co");
         u.setNombre("Usuario " + id);
