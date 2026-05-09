@@ -26,7 +26,6 @@ public class ActividadInformeMapper {
             dto.setDescripcionObligacion(entity.getObligacion().getDescripcion());
         }
         dto.setDescripcion(entity.getDescripcion());
-        dto.setPorcentaje(entity.getPorcentaje());
         dto.setSoportes(soportes == null
             ? java.util.Collections.emptyList()
             : soportes.stream().map(soporteAdjuntoMapper::toDto).collect(Collectors.toList()));

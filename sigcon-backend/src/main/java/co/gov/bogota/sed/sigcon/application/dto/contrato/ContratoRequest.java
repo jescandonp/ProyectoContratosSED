@@ -29,6 +29,14 @@ public class ContratoRequest {
     @NotNull
     private Long idSupervisor;
 
+    @Size(max = 500)
+    private String dependencia;
+
+    private String formaPago;
+
+    @Size(max = 2000)
+    private String modificaciones;
+
     public String getNumero() { return numero; }
     public void setNumero(String numero) { this.numero = numero; }
     public String getObjeto() { return objeto; }
@@ -47,4 +55,10 @@ public class ContratoRequest {
     public void setIdRevisor(Long idRevisor) { this.idRevisor = idRevisor; }
     public Long getIdSupervisor() { return idSupervisor; }
     public void setIdSupervisor(Long idSupervisor) { this.idSupervisor = idSupervisor; }
+    public String getDependencia() { return dependencia; }
+    public void setDependencia(String dependencia) { this.dependencia = dependencia; }
+    public String getFormaPago() { return formaPago; }
+    public void setFormaPago(String formaPago) { this.formaPago = formaPago; }
+    public String getModificaciones() { return modificaciones; }
+    public void setModificaciones(String modificaciones) { this.modificaciones = modificaciones; }
 }
