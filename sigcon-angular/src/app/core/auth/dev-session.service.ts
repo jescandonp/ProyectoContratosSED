@@ -79,7 +79,10 @@ export class DevSessionService {
       cargo: session.cargo,
       rol: session.rol,
       firmaImagen: null,
-      activo: true
+      activo: true,
+      sgssiSaludEntidad: null,
+      sgssiPensionEntidad: null,
+      sgssiArlEntidad: null
     };
   }
 
