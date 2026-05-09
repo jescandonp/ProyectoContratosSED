@@ -12,6 +12,7 @@ import { AporteSgssiService } from '../../../core/services/aporte-sgssi.service'
 import { DocumentoAdicionalService } from '../../../core/services/documento-adicional.service';
 import { DocumentoCatalogoService } from '../../../core/services/documento-catalogo.service';
 import { InformeService } from '../../../core/services/informe.service';
+import { ObservacionService } from '../../../core/services/observacion.service';
 import { SoporteAdjuntoService } from '../../../core/services/soporte-adjunto.service';
 import { StatusChipComponent } from '../../../shared/components/status-chip/status-chip.component';
 
@@ -60,6 +61,12 @@ export class InformeDetalleComponent implements OnInit {
   readonly guardandoAportes = signal(false);
   readonly errorAportes = signal('');
 
+  // Flujo REVISOR — diálogo de devolución con observación
+  readonly dialogoDevolucionRevision = signal(false);
+  readonly observacionRevision = signal('');
+  readonly procesandoRevision = signal(false);
+  readonly errorRevision = signal('');
+
   periodoFechaInicio = '';
   periodoFechaFin = '';
 
@@ -70,6 +77,7 @@ export class InformeDetalleComponent implements OnInit {
     private readonly documentoAdicionalService: DocumentoAdicionalService,
     private readonly documentoCatalogoService: DocumentoCatalogoService,
     private readonly aporteSgssiService: AporteSgssiService,
+    private readonly observacionService: ObservacionService,
     private readonly route: ActivatedRoute,
     private readonly router: Router
   ) {}
@@ -329,6 +337,63 @@ export class InformeDetalleComponent implements OnInit {
         this.inicializarEstadoEdicion(actualizado);
       },
       error: () => this.error.set('No se pudo eliminar el documento.')
+    });
+  }
+
+  // ── Flujo REVISOR ────────────────────────────────────────────────────────
+
+  puedeRevisar(informe: InformeDetalle): boolean {
+    return informe.estado === 'ENVIADO';
+  }
+
+  aprobarRevision(): void {
+    const informe = this.informe();
+    if (!informe) return;
+    this.procesandoRevision.set(true);
+    this.errorRevision.set('');
+    this.observacionService.aprobarRevision(informe.id).subscribe({
+      next: (actualizado) => {
+        this.informe.set(actualizado);
+        this.procesandoRevision.set(false);
+      },
+      error: () => {
+        this.procesandoRevision.set(false);
+        this.errorRevision.set('No se pudo aprobar la revisión. Intente de nuevo.');
+      }
+    });
+  }
+
+  abrirDevolucionRevision(): void {
+    this.observacionRevision.set('');
+    this.errorRevision.set('');
+    this.dialogoDevolucionRevision.set(true);
+  }
+
+  cerrarDevolucionRevision(): void {
+    this.dialogoDevolucionRevision.set(false);
+    this.errorRevision.set('');
+  }
+
+  confirmarDevolucionRevision(): void {
+    const informe = this.informe();
+    const texto = this.observacionRevision().trim();
+    if (!informe) return;
+    if (!texto) {
+      this.errorRevision.set('La observación es obligatoria para devolver el informe.');
+      return;
+    }
+    this.procesandoRevision.set(true);
+    this.errorRevision.set('');
+    this.observacionService.devolverRevision(informe.id, { texto }).subscribe({
+      next: (actualizado) => {
+        this.informe.set(actualizado);
+        this.procesandoRevision.set(false);
+        this.dialogoDevolucionRevision.set(false);
+      },
+      error: () => {
+        this.procesandoRevision.set(false);
+        this.errorRevision.set('No se pudo devolver el informe. Intente de nuevo.');
+      }
     });
   }
 
