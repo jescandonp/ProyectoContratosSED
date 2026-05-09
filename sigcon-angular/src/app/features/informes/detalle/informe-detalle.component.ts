@@ -4,12 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, forkJoin, of, switchMap } from 'rxjs';
 
+import { AuthService } from '../../../core/auth/auth.service';
 import { EstadoInforme, InformeDetalle } from '../../../core/models/informe.model';
 import { DocumentoCatalogo } from '../../../core/models/documento-catalogo.model';
 import { ActividadInformeService } from '../../../core/services/actividad-informe.service';
 import { DocumentoAdicionalService } from '../../../core/services/documento-adicional.service';
 import { DocumentoCatalogoService } from '../../../core/services/documento-catalogo.service';
 import { InformeService } from '../../../core/services/informe.service';
+import { ObservacionService } from '../../../core/services/observacion.service';
 import { SoporteAdjuntoService } from '../../../core/services/soporte-adjunto.service';
 import { StatusChipComponent } from '../../../shared/components/status-chip/status-chip.component';
 
@@ -20,7 +22,6 @@ interface ActividadEditState {
   error: string;
   soporteNombre: string;
   soporteUrl: string;
-  soporteArchivo: File | null;
 }
 
 @Component({
@@ -42,6 +43,10 @@ export class InformeDetalleComponent implements OnInit {
   readonly nuevoDocReferencia = signal('');
   readonly guardandoDocumento = signal(false);
   readonly errorDocumento = signal('');
+  readonly procesandoRevision = signal(false);
+  readonly dialogoDevolucionRevision = signal(false);
+  readonly observacionRevision = signal('');
+  readonly errorRevision = signal('');
 
   periodoFechaInicio = '';
   periodoFechaFin = '';
@@ -52,6 +57,8 @@ export class InformeDetalleComponent implements OnInit {
     private readonly soporteService: SoporteAdjuntoService,
     private readonly documentoAdicionalService: DocumentoAdicionalService,
     private readonly documentoCatalogoService: DocumentoCatalogoService,
+    private readonly observacionService: ObservacionService,
+    private readonly authService: AuthService,
     private readonly route: ActivatedRoute,
     private readonly router: Router
   ) {}
@@ -120,8 +127,7 @@ export class InformeDetalleComponent implements OnInit {
         guardando: false,
         error: '',
         soporteNombre: '',
-        soporteUrl: '',
-        soporteArchivo: null
+        soporteUrl: ''
       });
     });
     this.actividadStates.set(states);
@@ -165,6 +171,21 @@ export class InformeDetalleComponent implements OnInit {
 
     const actividad = informe.actividades.find((a) => a.id === actividadId);
     if (!actividad) return;
+    const soporteNombre = state.soporteNombre.trim();
+    const soporteUrl = state.soporteUrl.trim();
+    const tieneSoporteUrl = actividad.soportes.some((soporte) => soporte.tipo === 'URL');
+    if (!tieneSoporteUrl && (!soporteNombre || !soporteUrl)) {
+      this.actualizarEstadoActividad(actividadId, { error: 'Debe registrar nombre y URL de soporte para esta obligacion.' });
+      return;
+    }
+    if ((soporteNombre || soporteUrl) && (!soporteNombre || !soporteUrl)) {
+      this.actualizarEstadoActividad(actividadId, { error: 'Debe completar nombre y URL del soporte.' });
+      return;
+    }
+    if (soporteUrl && !this.esUrlHttp(soporteUrl)) {
+      this.actualizarEstadoActividad(actividadId, { error: 'La URL de soporte debe iniciar con http:// o https://.' });
+      return;
+    }
 
     this.actualizarEstadoActividad(actividadId, { guardando: true, error: '' });
 
@@ -175,12 +196,8 @@ export class InformeDetalleComponent implements OnInit {
     }).pipe(
       switchMap((actividadActualizada) => {
         const ops: Observable<unknown>[] = [];
-        const nombre = state.soporteNombre.trim() || ('Soporte obligacion ' + (actividad.ordenObligacion ?? actividadId));
-        if (state.soporteUrl.trim()) {
-          ops.push(this.soporteService.agregarUrl(actividadActualizada.id, { nombre: nombre, url: state.soporteUrl.trim() }));
-        }
-        if (state.soporteArchivo) {
-          ops.push(this.soporteService.agregarArchivo(actividadActualizada.id, state.soporteArchivo));
+        if (soporteUrl) {
+          ops.push(this.soporteService.agregarUrl(actividadActualizada.id, { nombre: soporteNombre, url: soporteUrl }));
         }
         return ops.length ? forkJoin(ops) : of([]);
       }),
@@ -211,11 +228,6 @@ export class InformeDetalleComponent implements OnInit {
       },
       error: () => this.error.set('No se pudo eliminar el soporte.')
     });
-  }
-
-  seleccionarArchivoActividad(actividadId: number, event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.actualizarEstadoActividad(actividadId, { soporteArchivo: input.files?.item(0) ?? null });
   }
 
   // ── Documentos adicionales editables (I5) ────────────────────────────────
@@ -276,6 +288,7 @@ export class InformeDetalleComponent implements OnInit {
   enviar() {
     const informe = this.informe();
     if (!informe || !this.puedeEnviar(informe.estado)) return;
+    if (!this.validarEnvio(informe)) return;
     if (!window.confirm('Desea enviar este informe para revision?')) return;
 
     this.informeService.enviarInforme(informe.id).subscribe({
@@ -300,6 +313,61 @@ export class InformeDetalleComponent implements OnInit {
     return estado === 'BORRADOR' || estado === 'DEVUELTO';
   }
 
+  puedeRevisar(informe: InformeDetalle): boolean {
+    return informe.estado === 'ENVIADO' && this.authService.hasRole('REVISOR');
+  }
+
+  aprobarRevision(): void {
+    const informe = this.informe();
+    if (!informe || !this.puedeRevisar(informe)) return;
+    this.procesandoRevision.set(true);
+    this.errorRevision.set('');
+    this.observacionService.aprobarRevision(informe.id).subscribe({
+      next: (actualizado) => {
+        this.informe.set(actualizado);
+        this.procesandoRevision.set(false);
+      },
+      error: () => {
+        this.procesandoRevision.set(false);
+        this.errorRevision.set('No se pudo aprobar la revision del informe.');
+      }
+    });
+  }
+
+  abrirDevolucionRevision(): void {
+    this.dialogoDevolucionRevision.set(true);
+    this.observacionRevision.set('');
+    this.errorRevision.set('');
+  }
+
+  cerrarDevolucionRevision(): void {
+    this.dialogoDevolucionRevision.set(false);
+    this.observacionRevision.set('');
+  }
+
+  confirmarDevolucionRevision(): void {
+    const informe = this.informe();
+    if (!informe || !this.puedeRevisar(informe)) return;
+    const texto = this.observacionRevision().trim();
+    if (!texto) {
+      this.errorRevision.set('La observacion es obligatoria para devolver el informe.');
+      return;
+    }
+    this.procesandoRevision.set(true);
+    this.errorRevision.set('');
+    this.observacionService.devolverRevision(informe.id, { texto }).subscribe({
+      next: (actualizado) => {
+        this.informe.set(actualizado);
+        this.procesandoRevision.set(false);
+        this.cerrarDevolucionRevision();
+      },
+      error: () => {
+        this.procesandoRevision.set(false);
+        this.errorRevision.set('No se pudo devolver el informe.');
+      }
+    });
+  }
+
   toNumber(value: string | number): number {
     return Number(value) || 0;
   }
@@ -320,5 +388,27 @@ export class InformeDetalleComponent implements OnInit {
     if (estado === 'DEVUELTO') return 'danger';
     if (estado === 'BORRADOR') return 'neutral';
     return 'warning';
+  }
+
+  private validarEnvio(informe: InformeDetalle): boolean {
+    if (informe.actividades.some((actividad) => !actividad.soportes.some((soporte) => soporte.tipo === 'URL'))) {
+      this.error.set('Debe registrar un soporte URL para cada obligacion antes de enviar.');
+      return false;
+    }
+    const documentosRegistrados = new Set(informe.documentosAdicionales.map((doc) => doc.idCatalogo));
+    if (this.catalogoDocumentos().some((doc) => !documentosRegistrados.has(doc.id))) {
+      this.error.set('Debe registrar todos los documentos adicionales antes de enviar.');
+      return false;
+    }
+    return true;
+  }
+
+  private esUrlHttp(value: string): boolean {
+    try {
+      const url = new URL(value.trim());
+      return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch {
+      return false;
+    }
   }
 }

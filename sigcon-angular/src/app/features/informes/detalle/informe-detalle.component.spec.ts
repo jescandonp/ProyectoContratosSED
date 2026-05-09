@@ -2,11 +2,13 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
 
+import { AuthService } from '../../../core/auth/auth.service';
 import { InformeDetalle } from '../../../core/models/informe.model';
 import { ActividadInformeService } from '../../../core/services/actividad-informe.service';
 import { DocumentoAdicionalService } from '../../../core/services/documento-adicional.service';
 import { DocumentoCatalogoService } from '../../../core/services/documento-catalogo.service';
 import { InformeService } from '../../../core/services/informe.service';
+import { ObservacionService } from '../../../core/services/observacion.service';
 import { SoporteAdjuntoService } from '../../../core/services/soporte-adjunto.service';
 import { InformeDetalleComponent } from './informe-detalle.component';
 
@@ -18,6 +20,8 @@ describe('InformeDetalleComponent', () => {
   let soporteService: jasmine.SpyObj<SoporteAdjuntoService>;
   let documentoAdicionalService: jasmine.SpyObj<DocumentoAdicionalService>;
   let documentoCatalogoService: jasmine.SpyObj<DocumentoCatalogoService>;
+  let observacionService: jasmine.SpyObj<ObservacionService>;
+  let authService: jasmine.SpyObj<AuthService>;
   let router: jasmine.SpyObj<Router>;
 
   beforeEach(async () => {
@@ -27,9 +31,11 @@ describe('InformeDetalleComponent', () => {
       'actualizarPeriodo'
     ]);
     actividadService = jasmine.createSpyObj<ActividadInformeService>('ActividadInformeService', ['actualizar']);
-    soporteService = jasmine.createSpyObj<SoporteAdjuntoService>('SoporteAdjuntoService', ['agregarUrl', 'agregarArchivo', 'eliminar']);
+    soporteService = jasmine.createSpyObj<SoporteAdjuntoService>('SoporteAdjuntoService', ['agregarUrl', 'eliminar']);
     documentoAdicionalService = jasmine.createSpyObj<DocumentoAdicionalService>('DocumentoAdicionalService', ['agregar', 'eliminar']);
     documentoCatalogoService = jasmine.createSpyObj<DocumentoCatalogoService>('DocumentoCatalogoService', ['listar']);
+    observacionService = jasmine.createSpyObj<ObservacionService>('ObservacionService', ['aprobarRevision', 'devolverRevision']);
+    authService = jasmine.createSpyObj<AuthService>('AuthService', ['hasRole']);
     router = jasmine.createSpyObj<Router>('Router', ['navigate']);
 
     informeService.obtenerDetalle.and.returnValue(of(sampleInformeDetalle()));
@@ -41,6 +47,9 @@ describe('InformeDetalleComponent', () => {
     documentoAdicionalService.agregar.and.returnValue(of({ id: 99, idCatalogo: 301, nombreCatalogo: 'Planilla', obligatorio: true, referencia: 'REF-NEW' }));
     documentoAdicionalService.eliminar.and.returnValue(of(void 0));
     documentoCatalogoService.listar.and.returnValue(of({ content: [], totalElements: 0, totalPages: 0, size: 100, number: 0, first: true, last: true }));
+    observacionService.aprobarRevision.and.returnValue(of({ ...sampleInformeDetalle(), estado: 'EN_REVISION' }));
+    observacionService.devolverRevision.and.returnValue(of({ ...sampleInformeDetalle(), estado: 'DEVUELTO' }));
+    authService.hasRole.and.returnValue(false);
     router.navigate.and.returnValue(Promise.resolve(true));
 
     await TestBed.configureTestingModule({
@@ -52,6 +61,8 @@ describe('InformeDetalleComponent', () => {
         { provide: SoporteAdjuntoService, useValue: soporteService },
         { provide: DocumentoAdicionalService, useValue: documentoAdicionalService },
         { provide: DocumentoCatalogoService, useValue: documentoCatalogoService },
+        { provide: ObservacionService, useValue: observacionService },
+        { provide: AuthService, useValue: authService },
         { provide: Router, useValue: router }
       ]
     }).compileComponents();
@@ -226,6 +237,7 @@ describe('InformeDetalleComponent', () => {
 
   it('agrega soporte URL y recarga el informe', () => {
     informeService.obtenerDetalle.and.returnValue(of(sampleInformeDetalle()));
+    component.actualizarEstadoActividad(1001, { soporteNombre: 'Nuevo soporte' });
     component.actualizarEstadoActividad(1001, { soporteUrl: 'https://example.com/soporte' });
 
     component.guardarActividad(1001);
@@ -234,6 +246,50 @@ describe('InformeDetalleComponent', () => {
       1001,
       jasmine.objectContaining({ url: 'https://example.com/soporte' })
     );
+  });
+
+  it('rechaza guardar actividad sin soporte URL cuando la obligacion no tiene soporte', () => {
+    component.informe.set({
+      ...sampleInformeDetalle(),
+      actividades: [{ ...sampleInformeDetalle().actividades[0], soportes: [] }]
+    });
+    component.actualizarEstadoActividad(1001, { soporteNombre: '', soporteUrl: '' });
+
+    component.guardarActividad(1001);
+
+    expect(actividadService.actualizar).not.toHaveBeenCalled();
+    expect(component.getEstadoActividad(1001)?.error).toContain('soporte');
+  });
+
+  it('muestra acciones de revision en detalle para revisor con informe ENVIADO', () => {
+    authService.hasRole.and.returnValue(true);
+    component.informe.set({ ...sampleInformeDetalle(), estado: 'ENVIADO' });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="btn-aprobar-revision-detalle"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="btn-devolver-revision-detalle"]')).not.toBeNull();
+  });
+
+  it('aprueba revision desde el detalle y actualiza el informe', () => {
+    authService.hasRole.and.returnValue(true);
+    component.informe.set({ ...sampleInformeDetalle(), estado: 'ENVIADO' });
+
+    component.aprobarRevision();
+
+    expect(observacionService.aprobarRevision).toHaveBeenCalledWith(501);
+    expect(component.informe()?.estado).toBe('EN_REVISION');
+  });
+
+  it('bloquea devolucion de revision sin observacion desde el detalle', () => {
+    authService.hasRole.and.returnValue(true);
+    component.informe.set({ ...sampleInformeDetalle(), estado: 'ENVIADO' });
+    component.abrirDevolucionRevision();
+    component.observacionRevision.set('');
+
+    component.confirmarDevolucionRevision();
+
+    expect(component.errorRevision()).toContain('obligatoria');
+    expect(observacionService.devolverRevision).not.toHaveBeenCalled();
   });
 
   it('agrega documento adicional y recarga el informe', () => {

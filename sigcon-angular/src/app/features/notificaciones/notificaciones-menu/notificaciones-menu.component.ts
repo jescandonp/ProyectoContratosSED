@@ -54,18 +54,18 @@ import { NotificacionService } from '../../../core/services/notificacion.service
               @for (notificacion of recientes(); track notificacion.id) {
                 <button
                   class="block w-full border-b border-[var(--color-outline-variant)] px-md py-sm text-left hover:bg-[var(--color-surface-container-low)]"
-                  [class.bg-[var(--color-primary-container)]]="!notificacion.leida"
+                  [class.bg-[var(--color-surface-container-low)]]="!notificacion.leida"
                   type="button"
                   data-testid="notificacion-menu-item"
                   (click)="abrirNotificacion(notificacion)"
                 >
                   <div class="flex items-start gap-sm">
-                    <span class="mt-0.5 text-[var(--color-primary)]">
+                    <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded bg-white text-[var(--color-primary)]">
                       <i [class]="icono(notificacion.tipoEvento)" aria-hidden="true"></i>
                     </span>
                     <span class="min-w-0 flex-1">
-                      <span class="block truncate text-sm font-semibold text-[var(--color-on-surface)]">{{ notificacion.titulo }}</span>
-                      <span class="mt-0.5 line-clamp-2 block text-xs text-[var(--color-on-surface-variant)]">{{ notificacion.descripcion }}</span>
+                      <span class="block text-sm font-semibold leading-snug text-[var(--color-on-surface)]">{{ notificacion.titulo }}</span>
+                      <span class="mt-xs line-clamp-3 block text-xs leading-relaxed text-[var(--color-on-surface-variant)]">{{ notificacion.descripcion }}</span>
                     </span>
                   </div>
                 </button>

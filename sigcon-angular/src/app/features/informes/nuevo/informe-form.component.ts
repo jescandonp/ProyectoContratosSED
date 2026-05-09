@@ -22,7 +22,6 @@ interface ActividadFormRow {
   porcentaje: number;
   soporteNombre: string;
   soporteUrl: string;
-  soporteArchivo: File | null;
 }
 
 interface DocumentoFormRow {
@@ -137,9 +136,9 @@ interface DocumentoFormRow {
                   </label>
                 </div>
 
-                <div class="mt-md grid grid-cols-1 gap-md lg:grid-cols-3">
+                <div class="mt-md grid grid-cols-1 gap-md lg:grid-cols-2">
                   <label class="block">
-                    <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Nombre soporte</span>
+                    <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Nombre soporte *</span>
                     <input
                       class="w-full rounded border border-[var(--color-outline-variant)] px-sm py-xs text-sm"
                       type="text"
@@ -148,20 +147,12 @@ interface DocumentoFormRow {
                     />
                   </label>
                   <label class="block">
-                    <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">URL soporte</span>
+                    <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">URL soporte *</span>
                     <input
                       class="w-full rounded border border-[var(--color-outline-variant)] px-sm py-xs text-sm"
                       type="url"
                       [ngModel]="row.soporteUrl"
                       (ngModelChange)="actualizarActividad(i, { soporteUrl: $event })"
-                    />
-                  </label>
-                  <label class="block">
-                    <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Archivo</span>
-                    <input
-                      class="w-full rounded border border-[var(--color-outline-variant)] bg-white px-sm py-xs text-sm"
-                      type="file"
-                      (change)="seleccionarArchivo(i, $event)"
                     />
                   </label>
                 </div>
@@ -182,12 +173,10 @@ interface DocumentoFormRow {
             <div class="space-y-sm">
               @for (doc of documentosForm(); track doc.idCatalogo; let i = $index) {
                 <label class="grid grid-cols-1 gap-sm rounded-lg border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] p-md md:grid-cols-[1fr_18rem] md:items-center">
-                  <span>
-                    <span class="block text-sm font-semibold text-[var(--color-on-surface)]">{{ doc.nombreCatalogo }}</span>
-                    @if (doc.obligatorio) {
+                    <span>
+                      <span class="block text-sm font-semibold text-[var(--color-on-surface)]">{{ doc.nombreCatalogo }}</span>
                       <span class="text-xs font-bold uppercase tracking-wider text-[var(--color-error)]">Obligatorio</span>
-                    }
-                  </span>
+                    </span>
                   <input
                     class="w-full rounded border border-[var(--color-outline-variant)] bg-white px-sm py-xs text-sm"
                     type="text"
@@ -278,8 +267,7 @@ export class InformeFormComponent implements OnInit {
               descripcion: '',
               porcentaje: 0,
               soporteNombre: '',
-              soporteUrl: '',
-              soporteArchivo: null
+              soporteUrl: ''
             }))
         );
       },
@@ -332,11 +320,6 @@ export class InformeFormComponent implements OnInit {
     this.documentosForm.update((docs) => docs.map((doc, i) => i === index ? { ...doc, referencia } : doc));
   }
 
-  seleccionarArchivo(index: number, event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.actualizarActividad(index, { soporteArchivo: input.files?.item(0) ?? null });
-  }
-
   volverAContrato() {
     const contrato = this.contrato();
     void this.router.navigate(contrato ? ['/contratos', contrato.id] : ['/contratos']);
@@ -368,13 +351,10 @@ export class InformeFormComponent implements OnInit {
 
   private guardarSoportes(row: ActividadFormRow, actividad: ActividadInforme) {
     const operaciones = [];
-    const soporteNombre = row.soporteNombre.trim() || `Soporte obligación ${row.orden}`;
-    if (row.soporteUrl.trim()) {
-      operaciones.push(this.soporteService.agregarUrl(actividad.id, { nombre: soporteNombre, url: row.soporteUrl.trim() }));
-    }
-    if (row.soporteArchivo) {
-      operaciones.push(this.soporteService.agregarArchivo(actividad.id, row.soporteArchivo));
-    }
+    operaciones.push(this.soporteService.agregarUrl(actividad.id, {
+      nombre: row.soporteNombre.trim(),
+      url: row.soporteUrl.trim()
+    }));
 
     return (operaciones.length ? forkJoin(operaciones) : of([])).pipe(map(() => actividad));
   }
@@ -392,11 +372,28 @@ export class InformeFormComponent implements OnInit {
       this.error.set('El porcentaje de avance debe estar entre 0 y 100.');
       return false;
     }
-    if (this.documentosForm().some((doc) => doc.obligatorio && !doc.referencia.trim())) {
-      this.error.set('Debe registrar la referencia de los documentos obligatorios.');
+    if (this.actividadesForm().some((row) => !row.soporteNombre.trim() || !row.soporteUrl.trim())) {
+      this.error.set('Debe registrar nombre y URL de soporte para cada obligación.');
+      return false;
+    }
+    if (this.actividadesForm().some((row) => !this.esUrlHttp(row.soporteUrl))) {
+      this.error.set('La URL de soporte debe iniciar con http:// o https://.');
+      return false;
+    }
+    if (this.documentosForm().some((doc) => !doc.referencia.trim())) {
+      this.error.set('Debe registrar la referencia de todos los documentos adicionales.');
       return false;
     }
     return true;
+  }
+
+  private esUrlHttp(value: string): boolean {
+    try {
+      const url = new URL(value.trim());
+      return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch {
+      return false;
+    }
   }
 
   private toDocumentoForm(doc: DocumentoCatalogo): DocumentoFormRow {

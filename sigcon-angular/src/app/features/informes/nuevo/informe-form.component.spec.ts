@@ -31,7 +31,7 @@ describe('InformeFormComponent', () => {
     const catalogoService = jasmine.createSpyObj<DocumentoCatalogoService>('DocumentoCatalogoService', ['listar']);
     informeService = jasmine.createSpyObj<InformeService>('InformeService', ['crearInforme', 'enviarInforme']);
     actividadService = jasmine.createSpyObj<ActividadInformeService>('ActividadInformeService', ['crear']);
-    soporteService = jasmine.createSpyObj<SoporteAdjuntoService>('SoporteAdjuntoService', ['agregarUrl', 'agregarArchivo']);
+    soporteService = jasmine.createSpyObj<SoporteAdjuntoService>('SoporteAdjuntoService', ['agregarUrl']);
     documentoAdicionalService = jasmine.createSpyObj<DocumentoAdicionalService>('DocumentoAdicionalService', ['agregar']);
     router = jasmine.createSpyObj<Router>('Router', ['navigate']);
 
@@ -60,7 +60,6 @@ describe('InformeFormComponent', () => {
         { provide: DocumentoCatalogoService, useValue: catalogoService },
         { provide: InformeService, useValue: informeService },
         { provide: ActividadInformeService, useValue: actividadService },
-        { provide: SoporteAdjuntoService, useValue: soporteService },
         { provide: DocumentoAdicionalService, useValue: documentoAdicionalService },
         { provide: SoporteAdjuntoService, useValue: soporteService },
         { provide: Router, useValue: router }
@@ -85,8 +84,8 @@ describe('InformeFormComponent', () => {
       ...row,
       descripcion: `Actividad ${index + 1}`,
       porcentaje: index === 0 ? 60 : 40,
-      soporteNombre: index === 0 ? 'Evidencia' : '',
-      soporteUrl: index === 0 ? 'https://sed.example/soporte' : ''
+      soporteNombre: `Evidencia ${index + 1}`,
+      soporteUrl: `https://sed.example/soporte-${index + 1}`
     })));
     component.documentosForm.update((docs) => docs.map((doc) => ({ ...doc, referencia: `DOC-${doc.idCatalogo}` })));
 
@@ -103,7 +102,8 @@ describe('InformeFormComponent', () => {
       descripcion: 'Actividad 1',
       porcentaje: 60
     });
-    expect(soporteService.agregarUrl).toHaveBeenCalledWith(901, { nombre: 'Evidencia', url: 'https://sed.example/soporte' });
+    expect(soporteService.agregarUrl).toHaveBeenCalledTimes(2);
+    expect(soporteService.agregarUrl).toHaveBeenCalledWith(901, { nombre: 'Evidencia 1', url: 'https://sed.example/soporte-1' });
     expect(documentoAdicionalService.agregar).toHaveBeenCalledTimes(2);
     expect(router.navigate).toHaveBeenCalledWith(['/informes', 501]);
   });
@@ -112,7 +112,13 @@ describe('InformeFormComponent', () => {
     spyOn(window, 'confirm').and.returnValue(true);
     component.fechaInicio.set('2026-05-01');
     component.fechaFin.set('2026-05-31');
-    component.actividadesForm.update((rows) => rows.map((row) => ({ ...row, descripcion: 'Actividad realizada', porcentaje: 100 })));
+    component.actividadesForm.update((rows) => rows.map((row, index) => ({
+      ...row,
+      descripcion: 'Actividad realizada',
+      porcentaje: 100,
+      soporteNombre: `Evidencia ${index + 1}`,
+      soporteUrl: `https://sed.example/soporte-${index + 1}`
+    })));
     component.documentosForm.update((docs) => docs.map((doc) => ({ ...doc, referencia: `DOC-${doc.idCatalogo}` })));
 
     component.confirmarEnvio();
@@ -120,6 +126,45 @@ describe('InformeFormComponent', () => {
     expect(window.confirm).toHaveBeenCalled();
     expect(informeService.enviarInforme).toHaveBeenCalledWith(501);
     expect(router.navigate).toHaveBeenCalledWith(['/informes', 501]);
+  });
+
+  it('requires support name and URL for every obligation', () => {
+    component.fechaInicio.set('2026-05-01');
+    component.fechaFin.set('2026-05-31');
+    component.actividadesForm.update((rows) => rows.map((row) => ({
+      ...row,
+      descripcion: 'Actividad realizada',
+      porcentaje: 100,
+      soporteNombre: '',
+      soporteUrl: ''
+    })));
+    component.documentosForm.update((docs) => docs.map((doc) => ({ ...doc, referencia: `DOC-${doc.idCatalogo}` })));
+
+    component.guardarBorrador();
+
+    expect(component.error()).toContain('soporte');
+    expect(informeService.crearInforme).not.toHaveBeenCalled();
+  });
+
+  it('requires every additional document reference', () => {
+    component.fechaInicio.set('2026-05-01');
+    component.fechaFin.set('2026-05-31');
+    component.actividadesForm.update((rows) => rows.map((row, index) => ({
+      ...row,
+      descripcion: 'Actividad realizada',
+      porcentaje: 100,
+      soporteNombre: `Evidencia ${index + 1}`,
+      soporteUrl: `https://sed.example/soporte-${index + 1}`
+    })));
+    component.documentosForm.update((docs) => docs.map((doc, index) => ({
+      ...doc,
+      referencia: index === 0 ? `DOC-${doc.idCatalogo}` : ''
+    })));
+
+    component.guardarBorrador();
+
+    expect(component.error()).toContain('documentos adicionales');
+    expect(informeService.crearInforme).not.toHaveBeenCalled();
   });
 });
 

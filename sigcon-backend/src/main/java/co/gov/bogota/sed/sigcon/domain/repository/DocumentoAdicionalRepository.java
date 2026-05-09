@@ -10,5 +10,7 @@ public interface DocumentoAdicionalRepository extends JpaRepository<DocumentoAdi
 
     List<DocumentoAdicional> findByInformeIdAndActivoTrue(Long informeId);
 
+    boolean existsByInformeIdAndCatalogoIdAndActivoTrue(Long informeId, Long catalogoId);
+
     Optional<DocumentoAdicional> findByIdAndActivoTrue(Long id);
 }

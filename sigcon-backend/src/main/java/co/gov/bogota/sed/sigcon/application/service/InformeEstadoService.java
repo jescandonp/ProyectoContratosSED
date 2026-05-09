@@ -1,13 +1,19 @@
 package co.gov.bogota.sed.sigcon.application.service;
 
 import co.gov.bogota.sed.sigcon.application.dto.informe.InformeDetalleDto;
+import co.gov.bogota.sed.sigcon.domain.entity.ActividadInforme;
+import co.gov.bogota.sed.sigcon.domain.entity.DocumentoCatalogo;
 import co.gov.bogota.sed.sigcon.domain.entity.Informe;
 import co.gov.bogota.sed.sigcon.domain.entity.Usuario;
 import co.gov.bogota.sed.sigcon.domain.enums.EstadoInforme;
 import co.gov.bogota.sed.sigcon.domain.enums.RolObservacion;
+import co.gov.bogota.sed.sigcon.domain.enums.TipoSoporte;
 import co.gov.bogota.sed.sigcon.domain.enums.TipoEvento;
 import co.gov.bogota.sed.sigcon.domain.repository.ActividadInformeRepository;
+import co.gov.bogota.sed.sigcon.domain.repository.DocumentoAdicionalRepository;
+import co.gov.bogota.sed.sigcon.domain.repository.DocumentoCatalogoRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.InformeRepository;
+import co.gov.bogota.sed.sigcon.domain.repository.SoporteAdjuntoRepository;
 import co.gov.bogota.sed.sigcon.web.exception.ErrorCode;
 import co.gov.bogota.sed.sigcon.web.exception.SigconBusinessException;
 import org.springframework.http.HttpStatus;
@@ -15,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Maquina de estados del informe.
@@ -26,6 +33,9 @@ public class InformeEstadoService {
 
     private final InformeRepository informeRepository;
     private final ActividadInformeRepository actividadRepository;
+    private final SoporteAdjuntoRepository soporteRepository;
+    private final DocumentoCatalogoRepository documentoCatalogoRepository;
+    private final DocumentoAdicionalRepository documentoAdicionalRepository;
     private final InformeService informeService;
     private final ObservacionService observacionService;
     private final PdfInformeService pdfInformeService;
@@ -34,6 +44,9 @@ public class InformeEstadoService {
     public InformeEstadoService(
         InformeRepository informeRepository,
         ActividadInformeRepository actividadRepository,
+        SoporteAdjuntoRepository soporteRepository,
+        DocumentoCatalogoRepository documentoCatalogoRepository,
+        DocumentoAdicionalRepository documentoAdicionalRepository,
         InformeService informeService,
         ObservacionService observacionService,
         PdfInformeService pdfInformeService,
@@ -41,6 +54,9 @@ public class InformeEstadoService {
     ) {
         this.informeRepository = informeRepository;
         this.actividadRepository = actividadRepository;
+        this.soporteRepository = soporteRepository;
+        this.documentoCatalogoRepository = documentoCatalogoRepository;
+        this.documentoAdicionalRepository = documentoAdicionalRepository;
         this.informeService = informeService;
         this.observacionService = observacionService;
         this.pdfInformeService = pdfInformeService;
@@ -56,14 +72,16 @@ public class InformeEstadoService {
         Informe informe = informeService.findActiveInforme(informeId);
         assertState(informe, EstadoInforme.BORRADOR, EstadoInforme.DEVUELTO);
         assertAssignedEmail(informe.getContrato().getContratista(), contratistaEmail);
-        Integer actividades = actividadRepository.countByInformeIdAndActivoTrue(informe.getId());
-        if (actividades == null || actividades.intValue() == 0) {
+        List<ActividadInforme> actividades = actividadRepository.findByInformeIdAndActivoTrue(informe.getId());
+        if (actividades.isEmpty()) {
             throw new SigconBusinessException(
                 ErrorCode.ACTIVIDAD_REQUERIDA,
                 "El informe debe tener al menos una actividad para ser enviado",
                 HttpStatus.BAD_REQUEST
             );
         }
+        assertSoporteUrlPorActividad(actividades);
+        assertDocumentosAdicionalesCompletos(informe);
         informe.setEstado(EstadoInforme.ENVIADO);
         informe.setFechaUltimoEnvio(LocalDateTime.now());
         InformeDetalleDto detalle = saveAndBuildDetalle(informe);
@@ -179,6 +197,40 @@ public class InformeEstadoService {
     private InformeDetalleDto saveAndBuildDetalle(Informe informe) {
         Informe saved = informeRepository.save(informe);
         return informeService.buildDetalle(saved);
+    }
+
+    private void assertSoporteUrlPorActividad(List<ActividadInforme> actividades) {
+        for (ActividadInforme actividad : actividades) {
+            boolean tieneSoporteUrl = soporteRepository.existsByActividadIdAndTipoAndActivoTrue(
+                actividad.getId(),
+                TipoSoporte.URL
+            );
+            if (!tieneSoporteUrl) {
+                throw new SigconBusinessException(
+                    ErrorCode.SOPORTE_INVALIDO,
+                    "Cada actividad reportada debe tener un soporte URL",
+                    HttpStatus.BAD_REQUEST
+                );
+            }
+        }
+    }
+
+    private void assertDocumentosAdicionalesCompletos(Informe informe) {
+        List<DocumentoCatalogo> documentosAplicables = documentoCatalogoRepository
+            .findByTipoContratoAndActivoTrue(informe.getContrato().getTipo());
+        for (DocumentoCatalogo catalogo : documentosAplicables) {
+            boolean registrado = documentoAdicionalRepository.existsByInformeIdAndCatalogoIdAndActivoTrue(
+                informe.getId(),
+                catalogo.getId()
+            );
+            if (!registrado) {
+                throw new SigconBusinessException(
+                    ErrorCode.DOCUMENTO_ADICIONAL_REQUERIDO,
+                    "Debe registrar todos los documentos adicionales aplicables",
+                    HttpStatus.BAD_REQUEST
+                );
+            }
+        }
     }
 
     private static void assertState(Informe informe, EstadoInforme... allowed) {
