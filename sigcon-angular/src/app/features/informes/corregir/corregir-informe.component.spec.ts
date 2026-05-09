@@ -77,7 +77,6 @@ describe('CorregirInformeComponent', () => {
     expect(component.informe()?.id).toBe(501);
     expect(component.actividadesForm().length).toBe(1);
     expect(component.actividadesForm()[0].descripcion).toBe('Actividad previa');
-    expect(component.actividadesForm()[0].porcentaje).toBe(50);
   });
 
   it('shows historical observations in the side panel', () => {
@@ -102,7 +101,7 @@ describe('CorregirInformeComponent', () => {
 
   it('saves corrections by updating existing activities', () => {
     component.actividadesForm.update((rows) =>
-      rows.map((row) => ({ ...row, descripcion: 'Actividad corregida', porcentaje: 80 }))
+      rows.map((row) => ({ ...row, descripcion: 'Actividad corregida' }))
     );
     component.documentosForm.update((docs) =>
       docs.map((doc) => ({ ...doc, referencia: doc.referencia || `REF-${doc.idCatalogo}` }))
@@ -118,7 +117,6 @@ describe('CorregirInformeComponent', () => {
     expect(actividadService.actualizar).toHaveBeenCalledWith(501, 901, {
       idObligacion: 11,
       descripcion: 'Actividad corregida',
-      porcentaje: 80
     });
     expect(router.navigate).toHaveBeenCalledWith(['/informes', 501]);
   });
@@ -126,7 +124,7 @@ describe('CorregirInformeComponent', () => {
   it('confirms before resending the corrected report', () => {
     spyOn(window, 'confirm').and.returnValue(true);
     component.actividadesForm.update((rows) =>
-      rows.map((row) => ({ ...row, descripcion: 'Actividad corregida', porcentaje: 80 }))
+      rows.map((row) => ({ ...row, descripcion: 'Actividad corregida' }))
     );
     component.documentosForm.update((docs) =>
       docs.map((doc) => ({ ...doc, referencia: doc.referencia || `REF-${doc.idCatalogo}` }))
@@ -153,7 +151,6 @@ function sampleActividad(): ActividadInforme {
     ordenObligacion: 1,
     descripcionObligacion: 'Ejecutar actividades del contrato',
     descripcion: 'Actividad corregida',
-    porcentaje: 80,
     soportes: []
   };
 }
@@ -179,7 +176,6 @@ function sampleInformeDevuelto(): InformeDetalle {
         ordenObligacion: 1,
         descripcionObligacion: 'Ejecutar actividades del contrato',
         descripcion: 'Actividad previa',
-        porcentaje: 50,
         soportes: []
       }
     ],

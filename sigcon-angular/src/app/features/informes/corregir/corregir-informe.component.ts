@@ -21,7 +21,6 @@ interface ActividadFormRow {
   orden: number;
   descripcionObligacion: string;
   descripcion: string;
-  porcentaje: number;
   soporteNombre: string;
   soporteUrl: string;
   soporteArchivo: File | null;
@@ -77,14 +76,10 @@ interface DocumentoFormRow {
               </div>
             </div>
 
-            <div class="mt-lg grid grid-cols-1 gap-md md:grid-cols-3">
+            <div class="mt-lg grid grid-cols-1 gap-md md:grid-cols-2">
               <div class="rounded-lg bg-[var(--color-surface-container-low)] p-md">
                 <p class="m-0 text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Obligaciones</p>
                 <p class="m-0 mt-xs text-xl font-bold text-[var(--color-on-surface)]">{{ actividadesForm().length }}</p>
-              </div>
-              <div class="rounded-lg bg-[var(--color-surface-container-low)] p-md">
-                <p class="m-0 text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Avance declarado</p>
-                <p class="m-0 mt-xs text-xl font-bold text-[var(--color-on-surface)]">{{ avancePromedio() }}%</p>
               </div>
               <div class="rounded-lg bg-[var(--color-surface-container-low)] p-md">
                 <p class="m-0 text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Documentos</p>
@@ -116,7 +111,7 @@ interface DocumentoFormRow {
                         </div>
                       </div>
 
-                      <div class="grid grid-cols-1 gap-md lg:grid-cols-[1fr_10rem]">
+                      <div class="grid grid-cols-1 gap-md">
                         <label class="block">
                           <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Actividad realizada</span>
                           <textarea
@@ -124,17 +119,6 @@ interface DocumentoFormRow {
                             [ngModel]="row.descripcion"
                             (ngModelChange)="actualizarActividad(i, { descripcion: $event })"
                           ></textarea>
-                        </label>
-                        <label class="block">
-                          <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Avance %</span>
-                          <input
-                            class="w-full rounded border border-[var(--color-outline-variant)] px-sm py-xs text-sm"
-                            type="number"
-                            min="0"
-                            max="100"
-                            [ngModel]="row.porcentaje"
-                            (ngModelChange)="actualizarActividad(i, { porcentaje: toNumber($event) })"
-                          />
                         </label>
                       </div>
 
@@ -301,13 +285,6 @@ export class CorregirInformeComponent implements OnInit {
 
   readonly observaciones = computed(() => this.informe()?.observaciones ?? []);
 
-  readonly avancePromedio = computed(() => {
-    const rows = this.actividadesForm();
-    if (rows.length === 0) return 0;
-    const total = rows.reduce((sum, row) => sum + Number(row.porcentaje || 0), 0);
-    return Math.round(total / rows.length);
-  });
-
   readonly documentosCompletos = computed(() => this.documentosForm().filter((doc) => doc.referencia.trim()).length);
 
   constructor(
@@ -436,7 +413,6 @@ export class CorregirInformeComponent implements OnInit {
         orden: actividad.ordenObligacion ?? 0,
         descripcionObligacion: actividad.descripcionObligacion ?? '',
         descripcion: actividad.descripcion,
-        porcentaje: actividad.porcentaje,
         soporteNombre: '',
         soporteUrl: '',
         soporteArchivo: null
@@ -471,13 +447,11 @@ export class CorregirInformeComponent implements OnInit {
           return this.actividadService.actualizar(informe.id, row.idActividad, {
             idObligacion: row.idObligacion,
             descripcion: row.descripcion.trim(),
-            porcentaje: Number(row.porcentaje)
           }).pipe(switchMap((actividad) => this.guardarSoportesNuevos(row, actividad)));
         }
         return this.actividadService.crear(informe.id, {
           idObligacion: row.idObligacion,
           descripcion: row.descripcion.trim(),
-          porcentaje: Number(row.porcentaje)
         }).pipe(switchMap((actividad) => this.guardarSoportesNuevos(row, actividad)));
       }),
       ...this.documentosForm()
@@ -508,10 +482,6 @@ export class CorregirInformeComponent implements OnInit {
   private validarFormulario() {
     if (this.actividadesForm().some((row) => !row.descripcion.trim())) {
       this.error.set('Debe registrar la actividad realizada para cada obligación.');
-      return false;
-    }
-    if (this.actividadesForm().some((row) => row.porcentaje < 0 || row.porcentaje > 100)) {
-      this.error.set('El porcentaje de avance debe estar entre 0 y 100.');
       return false;
     }
     if (this.documentosForm().some((doc) => doc.obligatorio && !doc.referencia.trim())) {

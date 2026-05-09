@@ -72,7 +72,7 @@ class PdfInformeServiceTest {
 
         pdfService.generarYPersistir(informe);
 
-        verify(templateService, never()).generarPdf(any(), any(), any());
+        verify(templateService, never()).generarPdf(any(), any(), any(), any());
     }
 
     @Test
@@ -88,7 +88,7 @@ class PdfInformeServiceTest {
             .thenReturn(new ByteArrayInputStream(fakeFirmaBytes));
         when(storageService.loadFile(supervisor.getFirmaImagen()))
             .thenReturn(new ByteArrayInputStream(fakeFirmaBytes));
-        when(templateService.generarPdf(any(), any(), any())).thenReturn(fakePdf);
+        when(templateService.generarPdf(any(), any(), any(), any())).thenReturn(fakePdf);
         when(storageService.storeBytes(anyString(), anyString(), eq(fakePdf)))
             .thenReturn("pdfs/1/1/informe-1.pdf");
         when(informeRepository.save(any(Informe.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -112,7 +112,7 @@ class PdfInformeServiceTest {
             .thenReturn(new ByteArrayInputStream(fakeFirmaBytes));
         when(storageService.loadFile(supervisor.getFirmaImagen()))
             .thenReturn(new ByteArrayInputStream(fakeFirmaBytes));
-        when(templateService.generarPdf(any(), any(), any())).thenReturn(new byte[]{1});
+        when(templateService.generarPdf(any(), any(), any(), any())).thenReturn(new byte[]{1});
         when(storageService.storeBytes(any(), any(), any()))
             .thenThrow(new java.io.IOException("disco lleno"));
 
