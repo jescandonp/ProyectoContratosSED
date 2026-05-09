@@ -5,6 +5,7 @@ import { forkJoin, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 
 import { ContratoDetalle, ContratoRequest, TipoContrato } from '../../../core/models/contrato.model';
+import { SED_DEPENDENCIAS } from '../../../core/constants/sed-dependencias.constants';
 import { Obligacion } from '../../../core/models/obligacion.model';
 import { Usuario } from '../../../core/models/usuario.model';
 import { ContratoService } from '../../../core/services/contrato.service';
@@ -123,6 +124,55 @@ interface ObligacionForm { id?: number; descripcion: string; orden: number; }
           </div>
         </div>
 
+        <!-- Datos complementarios (I6) -->
+        <div class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg">
+          <div class="mb-md flex items-center gap-sm">
+            <span class="h-5 w-1 rounded-full bg-[var(--color-tertiary-container,#e8d5f0)]"></span>
+            <h3 class="m-0 text-base font-semibold text-[var(--color-on-surface)]">Datos Complementarios</h3>
+          </div>
+          <div class="space-y-md">
+            <div class="space-y-xs">
+              <label class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Dependencia</label>
+              <input
+                class="input-field"
+                type="text"
+                list="sed-dependencias-list"
+                placeholder="Escriba para filtrar dependencias SED..."
+                [(ngModel)]="form.dependencia"
+                name="dependencia"
+                autocomplete="off"
+              />
+              <datalist id="sed-dependencias-list">
+                @for (dep of sedDependencias; track dep) {
+                  <option [value]="dep"></option>
+                }
+              </datalist>
+            </div>
+            <div class="space-y-xs">
+              <label class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Forma de Pago</label>
+              <input
+                class="input-field"
+                type="text"
+                maxlength="500"
+                placeholder="Ej. Mensual vencido, Pago único..."
+                [(ngModel)]="form.formaPago"
+                name="formaPago"
+              />
+            </div>
+            <div class="space-y-xs">
+              <label class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Modificaciones / Adiciones</label>
+              <textarea
+                class="w-full rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface-bright)] px-sm py-xs text-sm outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]"
+                rows="3"
+                maxlength="2000"
+                placeholder="Describa las modificaciones o adiciones al contrato (opcional)..."
+                [(ngModel)]="form.modificaciones"
+                name="modificaciones"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
         <!-- Obligaciones -->
         <div class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg">
           <div class="mb-md flex items-center justify-between">
@@ -214,6 +264,7 @@ interface ObligacionForm { id?: number; descripcion: string; orden: number; }
   `
 })
 export class AdminContratoFormComponent implements OnInit {
+  readonly sedDependencias = SED_DEPENDENCIAS;
   readonly esEdicion = signal(false);
   readonly guardando = signal(false);
   readonly error = signal('');
@@ -232,7 +283,10 @@ export class AdminContratoFormComponent implements OnInit {
     fechaFin: '',
     idContratista: null as unknown as number,
     idRevisor: null,
-    idSupervisor: null as unknown as number
+    idSupervisor: null as unknown as number,
+    dependencia: null,
+    formaPago: null,
+    modificaciones: null,
   };
 
   private contratoId: number | null = null;
@@ -261,7 +315,10 @@ export class AdminContratoFormComponent implements OnInit {
           fechaFin: c.fechaFin,
           idContratista: c.contratista.id,
           idRevisor: c.revisor?.id ?? null,
-          idSupervisor: c.supervisor?.id ?? null as unknown as number
+          idSupervisor: c.supervisor?.id ?? null as unknown as number,
+          dependencia: c.dependencia ?? null,
+          formaPago: c.formaPago ?? null,
+          modificaciones: c.modificaciones ?? null,
         };
         this.obligaciones.set(c.obligaciones.map((o: Obligacion) => ({ id: o.id, descripcion: o.descripcion, orden: o.orden })));
         this.originalObligacionIds = new Set(c.obligaciones.map((o: Obligacion) => o.id));
