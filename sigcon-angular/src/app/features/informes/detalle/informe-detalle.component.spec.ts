@@ -9,6 +9,7 @@ import { AporteSgssiService } from '../../../core/services/aporte-sgssi.service'
 import { DocumentoAdicionalService } from '../../../core/services/documento-adicional.service';
 import { DocumentoCatalogoService } from '../../../core/services/documento-catalogo.service';
 import { InformeService } from '../../../core/services/informe.service';
+import { ObservacionService } from '../../../core/services/observacion.service';
 import { SoporteAdjuntoService } from '../../../core/services/soporte-adjunto.service';
 import { InformeDetalleComponent } from './informe-detalle.component';
 
@@ -21,6 +22,7 @@ describe('InformeDetalleComponent', () => {
   let documentoAdicionalService: jasmine.SpyObj<DocumentoAdicionalService>;
   let documentoCatalogoService: jasmine.SpyObj<DocumentoCatalogoService>;
   let aporteSgssiService: jasmine.SpyObj<AporteSgssiService>;
+  let observacionService: jasmine.SpyObj<ObservacionService>;
   let router: jasmine.SpyObj<Router>;
 
   beforeEach(async () => {
@@ -34,6 +36,7 @@ describe('InformeDetalleComponent', () => {
     documentoAdicionalService = jasmine.createSpyObj<DocumentoAdicionalService>('DocumentoAdicionalService', ['agregar', 'eliminar']);
     documentoCatalogoService = jasmine.createSpyObj<DocumentoCatalogoService>('DocumentoCatalogoService', ['listar']);
     aporteSgssiService = jasmine.createSpyObj<AporteSgssiService>('AporteSgssiService', ['guardarTodos']);
+    observacionService = jasmine.createSpyObj<ObservacionService>('ObservacionService', ['aprobarRevision', 'devolverRevision']);
     router = jasmine.createSpyObj<Router>('Router', ['navigate']);
 
     informeService.obtenerDetalle.and.returnValue(of(sampleInformeDetalle()));
@@ -46,6 +49,8 @@ describe('InformeDetalleComponent', () => {
     documentoAdicionalService.eliminar.and.returnValue(of(void 0));
     documentoCatalogoService.listar.and.returnValue(of({ content: [], totalElements: 0, totalPages: 0, size: 100, number: 0, first: true, last: true }));
     aporteSgssiService.guardarTodos.and.returnValue(of([]));
+    observacionService.aprobarRevision.and.returnValue(of({ ...sampleInformeDetalle(), estado: 'EN_REVISION' as const }));
+    observacionService.devolverRevision.and.returnValue(of({ ...sampleInformeDetalle(), estado: 'DEVUELTO' as const }));
     router.navigate.and.returnValue(Promise.resolve(true));
 
     await TestBed.configureTestingModule({
@@ -58,6 +63,7 @@ describe('InformeDetalleComponent', () => {
         { provide: DocumentoAdicionalService, useValue: documentoAdicionalService },
         { provide: DocumentoCatalogoService, useValue: documentoCatalogoService },
         { provide: AporteSgssiService, useValue: aporteSgssiService },
+        { provide: ObservacionService, useValue: observacionService },
         { provide: Router, useValue: router }
       ]
     }).compileComponents();

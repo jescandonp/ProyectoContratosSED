@@ -74,7 +74,6 @@ import { StatusChipComponent } from '../../../shared/components/status-chip/stat
                       <p class="m-0 text-sm font-semibold text-[var(--color-on-surface)]">{{ actividad.descripcionObligacion ?? 'Obligación contractual' }}</p>
                       <p class="m-0 mt-xs text-sm leading-6 text-[var(--color-on-surface-variant)]">{{ actividad.descripcion }}</p>
                     </div>
-                    <span class="rounded-full bg-[var(--color-surface-container-low)] px-sm py-xs text-xs font-bold text-[var(--color-primary)]">{{ actividad.porcentaje }}%</span>
                   </div>
                   @if (actividad.soportes.length > 0) {
                     <div class="mt-sm flex flex-wrap gap-xs pl-10">

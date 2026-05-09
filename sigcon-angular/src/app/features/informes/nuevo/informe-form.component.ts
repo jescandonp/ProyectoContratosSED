@@ -23,6 +23,7 @@ interface ActividadFormRow {
   descripcion: string;
   soporteNombre: string;
   soporteUrl: string;
+  soporteArchivo: File | null;
 }
 
 interface DocumentoFormRow {
@@ -413,7 +414,8 @@ export class InformeFormComponent implements OnInit {
               descripcionObligacion: obligacion.descripcion,
               descripcion: '',
               soporteNombre: '',
-              soporteUrl: ''
+              soporteUrl: '',
+              soporteArchivo: null
             }))
         );
       },
@@ -533,10 +535,15 @@ export class InformeFormComponent implements OnInit {
 
   private guardarSoportes(row: ActividadFormRow, actividad: ActividadInforme) {
     const operaciones = [];
-    operaciones.push(this.soporteService.agregarUrl(actividad.id, {
-      nombre: row.soporteNombre.trim(),
-      url: row.soporteUrl.trim()
-    }));
+    if (row.soporteUrl.trim()) {
+      operaciones.push(this.soporteService.agregarUrl(actividad.id, {
+        nombre: row.soporteNombre.trim() || 'Soporte',
+        url: row.soporteUrl.trim()
+      }));
+    }
+    if (row.soporteArchivo) {
+      operaciones.push(this.soporteService.agregarArchivo(actividad.id, row.soporteArchivo));
+    }
 
     return (operaciones.length ? forkJoin(operaciones) : of([])).pipe(map(() => actividad));
   }
