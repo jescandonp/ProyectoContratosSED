@@ -1,4 +1,5 @@
 import type { ActividadInforme } from './actividad-informe.model';
+import type { AporteSgssiDto } from './aporte-sgssi.model';
 import type { DocumentoAdicional } from './documento-adicional.model';
 import type { Observacion } from './observacion.model';
 import type { Usuario } from './usuario.model';
@@ -27,15 +28,28 @@ export interface InformeDetalle extends InformeResumen {
   actividades: ActividadInforme[];
   documentosAdicionales: DocumentoAdicional[];
   observaciones: Observacion[];
+  aportesSgssi: AporteSgssiDto[];
+  numeroDesembolso: number | null;
+  valorDesembolso: number | null;
+  porcentajeEjecucion: number | null;
+  correspondenciaPendiente: boolean | null;
 }
 
 export interface InformeRequest {
   idContrato: number;
   fechaInicio: string;
   fechaFin: string;
+  numeroDesembolso?: number | null;
+  valorDesembolso?: number | null;
+  porcentajeEjecucion?: number | null;
+  correspondenciaPendiente?: boolean | null;
 }
 
 export interface InformeUpdateDto {
   fechaInicio: string;
   fechaFin: string;
+  numeroDesembolso?: number | null;
+  valorDesembolso?: number | null;
+  porcentajeEjecucion?: number | null;
+  correspondenciaPendiente?: boolean | null;
 }
