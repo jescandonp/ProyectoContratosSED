@@ -1,6 +1,7 @@
 package co.gov.bogota.sed.sigcon.application;
 
 import co.gov.bogota.sed.sigcon.application.dto.informe.InformeDetalleDto;
+import co.gov.bogota.sed.sigcon.application.service.DocumentoRequeridoInformeService;
 import co.gov.bogota.sed.sigcon.application.service.EventoInformeService;
 import co.gov.bogota.sed.sigcon.application.service.InformeEstadoService;
 import co.gov.bogota.sed.sigcon.application.service.InformeService;
@@ -51,6 +52,7 @@ class InformeEstadoServiceSinRevisorTest {
     @Mock private ObservacionService observacionService;
     @Mock private PdfInformeService pdfInformeService;
     @Mock private EventoInformeService eventoInformeService;
+    @Mock private DocumentoRequeridoInformeService documentoRequeridoInformeService;
 
     private InformeEstadoService service;
 
@@ -59,7 +61,7 @@ class InformeEstadoServiceSinRevisorTest {
         service = new InformeEstadoService(
             informeRepository, actividadRepository, soporteRepository,
             documentoCatalogoRepository, documentoAdicionalRepository, informeService, observacionService,
-            pdfInformeService, eventoInformeService
+            pdfInformeService, eventoInformeService, documentoRequeridoInformeService
         );
     }
 

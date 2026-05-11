@@ -1,6 +1,7 @@
 package co.gov.bogota.sed.sigcon.application;
 
 import co.gov.bogota.sed.sigcon.application.dto.informe.InformeDetalleDto;
+import co.gov.bogota.sed.sigcon.application.service.DocumentoRequeridoInformeService;
 import co.gov.bogota.sed.sigcon.application.service.EventoInformeService;
 import co.gov.bogota.sed.sigcon.application.service.InformeEstadoService;
 import co.gov.bogota.sed.sigcon.application.service.InformeService;
@@ -55,6 +56,7 @@ class InformeEstadoServiceTest {
     @Mock private ObservacionService observacionService;
     @Mock private PdfInformeService pdfInformeService;
     @Mock private EventoInformeService eventoInformeService;
+    @Mock private DocumentoRequeridoInformeService documentoRequeridoInformeService;
 
     private InformeEstadoService service;
 
@@ -63,7 +65,7 @@ class InformeEstadoServiceTest {
         service = new InformeEstadoService(
             informeRepository, actividadRepository, soporteRepository,
             documentoCatalogoRepository, documentoAdicionalRepository, informeService, observacionService,
-            pdfInformeService, eventoInformeService
+            pdfInformeService, eventoInformeService, documentoRequeridoInformeService
         );
     }
 
@@ -250,8 +252,95 @@ class InformeEstadoServiceTest {
                 assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.INFORME_NO_EDITABLE));
     }
 
+    // -----------------------------------------------------------------------
+    // T5 — Validacion de documentos requeridos al enviar (FACTURA por IVA)
+    // -----------------------------------------------------------------------
+
+    @Test
+    void enviarConResponsableIvaYFacturaCargadaPermiteEnvio() {
+        Informe informe = informeConIva(EstadoInforme.BORRADOR, true);
+        when(informeService.findActiveInforme(50L)).thenReturn(informe);
+        ActividadInforme actividad = actividad(101L);
+        when(actividadRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.singletonList(actividad));
+        when(soporteRepository.existsByActividadIdAndTipoAndActivoTrue(101L, TipoSoporte.URL)).thenReturn(true);
+        when(documentoCatalogoRepository.findByTipoContratoAndActivoTrue(informe.getContrato().getTipo()))
+            .thenReturn(Collections.emptyList());
+        // assertDocumentosRequeridosCompletos no lanza (FACTURA cargada — mock no-op por defecto)
+        when(informeRepository.save(any(Informe.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(informeService.buildDetalle(informe)).thenReturn(new InformeDetalleDto());
+
+        service.enviar(50L, CONTRATISTA_EMAIL);
+
+        assertThat(informe.getEstado()).isEqualTo(EstadoInforme.ENVIADO);
+        verify(documentoRequeridoInformeService).assertDocumentosRequeridosCompletos(informe);
+    }
+
+    @Test
+    void enviarConResponsableIvaYFacturaFaltanteBloquea() {
+        Informe informe = informeConIva(EstadoInforme.BORRADOR, true);
+        when(informeService.findActiveInforme(50L)).thenReturn(informe);
+        ActividadInforme actividad = actividad(101L);
+        when(actividadRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.singletonList(actividad));
+        when(soporteRepository.existsByActividadIdAndTipoAndActivoTrue(101L, TipoSoporte.URL)).thenReturn(true);
+        when(documentoCatalogoRepository.findByTipoContratoAndActivoTrue(informe.getContrato().getTipo()))
+            .thenReturn(Collections.emptyList());
+        // Simular que la FACTURA falta
+        org.mockito.Mockito.doThrow(new SigconBusinessException(
+            ErrorCode.DOCUMENTO_REQUERIDO_FALTANTE,
+            "Debe cargar la FACTURA antes de enviar el informe",
+            org.springframework.http.HttpStatus.BAD_REQUEST
+        )).when(documentoRequeridoInformeService).assertDocumentosRequeridosCompletos(informe);
+
+        assertThatThrownBy(() -> service.enviar(50L, CONTRATISTA_EMAIL))
+            .isInstanceOfSatisfying(SigconBusinessException.class, ex ->
+                assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.DOCUMENTO_REQUERIDO_FALTANTE));
+        assertThat(informe.getEstado()).isEqualTo(EstadoInforme.BORRADOR);
+        verify(informeRepository, never()).save(any(Informe.class));
+    }
+
+    @Test
+    void enviarSinResponsableIvaNoExigeFactura() {
+        Informe informe = informeConIva(EstadoInforme.BORRADOR, false);
+        when(informeService.findActiveInforme(50L)).thenReturn(informe);
+        ActividadInforme actividad = actividad(101L);
+        when(actividadRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.singletonList(actividad));
+        when(soporteRepository.existsByActividadIdAndTipoAndActivoTrue(101L, TipoSoporte.URL)).thenReturn(true);
+        when(documentoCatalogoRepository.findByTipoContratoAndActivoTrue(informe.getContrato().getTipo()))
+            .thenReturn(Collections.emptyList());
+        // assertDocumentosRequeridosCompletos no lanza (no responsable IVA — mock no-op por defecto)
+        when(informeRepository.save(any(Informe.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(informeService.buildDetalle(informe)).thenReturn(new InformeDetalleDto());
+
+        service.enviar(50L, CONTRATISTA_EMAIL);
+
+        assertThat(informe.getEstado()).isEqualTo(EstadoInforme.ENVIADO);
+        verify(documentoRequeridoInformeService).assertDocumentosRequeridosCompletos(informe);
+    }
+
     private static Informe informe(EstadoInforme estado) {
         Usuario contratista = usuario(1L, CONTRATISTA_EMAIL, RolUsuario.CONTRATISTA);
+        Usuario revisor = usuario(2L, REVISOR_EMAIL, RolUsuario.REVISOR);
+        Usuario supervisor = usuario(3L, SUPERVISOR_EMAIL, RolUsuario.SUPERVISOR);
+
+        Contrato contrato = new Contrato();
+        contrato.setId(10L);
+        contrato.setContratista(contratista);
+        contrato.setRevisor(revisor);
+        contrato.setSupervisor(supervisor);
+        contrato.setActivo(true);
+
+        Informe informe = new Informe();
+        informe.setId(50L);
+        informe.setContrato(contrato);
+        informe.setEstado(estado);
+        informe.setActivo(true);
+        return informe;
+    }
+
+    /** Helper T5: informe con contratista que puede o no ser responsable de IVA. */
+    private static Informe informeConIva(EstadoInforme estado, boolean responsableIva) {
+        Usuario contratista = usuario(1L, CONTRATISTA_EMAIL, RolUsuario.CONTRATISTA);
+        contratista.setResponsableIva(responsableIva);
         Usuario revisor = usuario(2L, REVISOR_EMAIL, RolUsuario.REVISOR);
         Usuario supervisor = usuario(3L, SUPERVISOR_EMAIL, RolUsuario.SUPERVISOR);
 

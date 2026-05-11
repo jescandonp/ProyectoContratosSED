@@ -26,6 +26,7 @@ import java.util.List;
 /**
  * Maquina de estados del informe.
  * I3: genera PDF y publica eventos de notificacion en cada transicion.
+ * I7: valida documentos requeridos (incluida FACTURA por IVA) antes de enviar.
  */
 @Service
 @Transactional
@@ -40,6 +41,7 @@ public class InformeEstadoService {
     private final ObservacionService observacionService;
     private final PdfInformeService pdfInformeService;
     private final EventoInformeService eventoInformeService;
+    private final DocumentoRequeridoInformeService documentoRequeridoInformeService;
 
     public InformeEstadoService(
         InformeRepository informeRepository,
@@ -50,7 +52,8 @@ public class InformeEstadoService {
         InformeService informeService,
         ObservacionService observacionService,
         PdfInformeService pdfInformeService,
-        EventoInformeService eventoInformeService
+        EventoInformeService eventoInformeService,
+        DocumentoRequeridoInformeService documentoRequeridoInformeService
     ) {
         this.informeRepository = informeRepository;
         this.actividadRepository = actividadRepository;
@@ -61,6 +64,7 @@ public class InformeEstadoService {
         this.observacionService = observacionService;
         this.pdfInformeService = pdfInformeService;
         this.eventoInformeService = eventoInformeService;
+        this.documentoRequeridoInformeService = documentoRequeridoInformeService;
     }
 
     /**
@@ -82,6 +86,7 @@ public class InformeEstadoService {
         }
         assertSoporteUrlPorActividad(actividades);
         assertDocumentosAdicionalesCompletos(informe);
+        documentoRequeridoInformeService.assertDocumentosRequeridosCompletos(informe);
         informe.setEstado(EstadoInforme.ENVIADO);
         informe.setFechaUltimoEnvio(LocalDateTime.now());
         InformeDetalleDto detalle = saveAndBuildDetalle(informe);
