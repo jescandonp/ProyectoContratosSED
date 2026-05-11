@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 
 @Service
@@ -64,6 +65,7 @@ public class ActividadInformeService {
         actividad.setInforme(informe);
         actividad.setObligacion(obligacion);
         actividad.setDescripcion(request.getDescripcion());
+        actividad.setPorcentaje(BigDecimal.ZERO);
         actividad.setActivo(true);
         ActividadInforme saved = actividadRepository.save(actividad);
         return actividadMapper.toDto(saved, Collections.emptyList());

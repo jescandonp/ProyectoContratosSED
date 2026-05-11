@@ -160,6 +160,41 @@ Tres líneas de trabajo simultáneas:
 
 ---
 
+## Correcciones Post-Cierre — 2026-05-11
+
+### ORA-01400 en creación de actividades
+
+- **Síntoma:** al guardar un informe con actividades nuevas, Oracle rechazaba el insert con `ORA-01400: no se puede realizar una inserción NULL en ("SED_SIGCON"."SGCN_ACTIVIDADES"."PORCENTAJE")`.
+- **Causa raíz:** I6 eliminó `porcentaje` del request/API y de la interfaz por actividad, pero la columna heredada `SGCN_ACTIVIDADES.PORCENTAJE` permanece `NOT NULL` en el modelo físico.
+- **Corrección backend:** `ActividadInformeService.crear()` asigna `BigDecimal.ZERO` como valor técnico de compatibilidad antes de persistir la actividad. El valor no se expone ni se usa funcionalmente en I6.
+- **Corrección DDL:** `db/00_setup.sql` deja `PORCENTAJE NUMBER(5,2) DEFAULT 0 NOT NULL` para instalaciones limpias.
+- **Regresión:** `ActividadInformeServiceTest.createsActividadForObligacionOfSameContract()` valida que la actividad se guarde con `porcentaje = 0`.
+
+### Reset controlado de informes locales
+
+- Se agrega `db/03_reset_informes_local_dev.sql` para limpiar informes de pruebas sin tocar usuarios, contratos, obligaciones ni catálogos.
+- Orden de borrado validado contra FKs actuales:
+  1. `SGCN_SOPORTES` vía `SGCN_ACTIVIDADES`
+  2. `SGCN_APORTES_SGSSI`
+  3. `SGCN_DOCS_ADICIONALES`
+  4. `SGCN_OBSERVACIONES`
+  5. `SGCN_NOTIFICACIONES` asociadas a informe
+  6. `SGCN_ACTIVIDADES`
+  7. `SGCN_INFORMES`
+- El script exige confirmación explícita (`SIGCON_RESET_INFORMES_CONFIRM = 'RESET_INFORMES'`), muestra conteos antes/después y falla con rollback ante error.
+- No reinicia secuencias. Es intencional: el número funcional del informe se calcula por contrato con `countByContratoId + 1`, por lo que después del reset el siguiente informe vuelve a `No. 1` sin manipular secuencias Oracle.
+
+### Validación ejecutada
+
+```powershell
+mvn test -Dtest=ActividadInformeServiceTest
+mvn test "-Dtest=ActividadInformeServiceTest,InformeServiceTest,InformeSecurityTest"
+```
+
+Resultado: **31 tests, 0 fallos** en la corrida enfocada extendida.
+
+---
+
 ## Próximo Punto de Retoma
 
 **Incremento 6 cerrado.** No hay punto de retoma pendiente.

@@ -25,6 +25,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -68,6 +69,7 @@ class ActividadInformeServiceTest {
         when(obligacionRepository.findById(4L)).thenReturn(Optional.of(obligacion));
         when(actividadRepository.save(any(ActividadInforme.class))).thenAnswer(inv -> {
             ActividadInforme actividad = inv.getArgument(0);
+            assertThat(actividad.getPorcentaje()).isEqualByComparingTo(BigDecimal.ZERO);
             actividad.setId(9L);
             return actividad;
         });
