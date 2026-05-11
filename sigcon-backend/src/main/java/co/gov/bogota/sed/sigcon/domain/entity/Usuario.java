@@ -53,6 +53,9 @@ public class Usuario {
     @Column(name = "SGSSI_ARL_ENTIDAD", length = 200)
     private String sgssiArlEntidad;
 
+    @Column(name = "RESPONSABLE_IVA", nullable = false)
+    private Boolean responsableIva = false;
+
     @Column(name = "ACTIVO", nullable = false)
     private Boolean activo = true;
 
@@ -137,6 +140,14 @@ public class Usuario {
 
     public void setSgssiArlEntidad(String sgssiArlEntidad) {
         this.sgssiArlEntidad = sgssiArlEntidad;
+    }
+
+    public Boolean getResponsableIva() {
+        return responsableIva;
+    }
+
+    public void setResponsableIva(Boolean responsableIva) {
+        this.responsableIva = responsableIva;
     }
 
     public Boolean getActivo() {

@@ -108,6 +108,7 @@ public class UsuarioService {
         usuario.setNombre(request.getNombre());
         usuario.setCargo(request.getCargo());
         usuario.setRol(request.getRol());
+        usuario.setResponsableIva(Boolean.TRUE.equals(request.getResponsableIva()));
     }
 
     private void ensureUniqueEmail(String email, Long currentUserId) {

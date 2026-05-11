@@ -23,6 +23,8 @@ public class UsuarioRequest {
     @NotNull
     private RolUsuario rol;
 
+    private Boolean responsableIva;
+
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
     public String getNombre() { return nombre; }
@@ -31,4 +33,6 @@ public class UsuarioRequest {
     public void setCargo(String cargo) { this.cargo = cargo; }
     public RolUsuario getRol() { return rol; }
     public void setRol(RolUsuario rol) { this.rol = rol; }
+    public Boolean getResponsableIva() { return responsableIva; }
+    public void setResponsableIva(Boolean responsableIva) { this.responsableIva = responsableIva; }
 }

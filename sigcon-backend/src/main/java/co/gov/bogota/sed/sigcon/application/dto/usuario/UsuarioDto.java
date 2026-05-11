@@ -13,6 +13,7 @@ public class UsuarioDto {
     private String sgssiSaludEntidad;
     private String sgssiPensionEntidad;
     private String sgssiArlEntidad;
+    private Boolean responsableIva;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -34,4 +35,6 @@ public class UsuarioDto {
     public void setSgssiPensionEntidad(String sgssiPensionEntidad) { this.sgssiPensionEntidad = sgssiPensionEntidad; }
     public String getSgssiArlEntidad() { return sgssiArlEntidad; }
     public void setSgssiArlEntidad(String sgssiArlEntidad) { this.sgssiArlEntidad = sgssiArlEntidad; }
+    public Boolean getResponsableIva() { return responsableIva; }
+    public void setResponsableIva(Boolean responsableIva) { this.responsableIva = responsableIva; }
 }

@@ -22,6 +22,7 @@ public class UsuarioMapper {
         dto.setSgssiSaludEntidad(usuario.getSgssiSaludEntidad());
         dto.setSgssiPensionEntidad(usuario.getSgssiPensionEntidad());
         dto.setSgssiArlEntidad(usuario.getSgssiArlEntidad());
+        dto.setResponsableIva(usuario.getResponsableIva());
         return dto;
     }
 }

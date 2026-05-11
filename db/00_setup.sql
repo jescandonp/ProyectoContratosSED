@@ -373,3 +373,11 @@ BEGIN
     :NEW.UPDATED_AT := SYSTIMESTAMP;
 END;
 /
+
+-- ============================================================
+-- ===== INCREMENTO 7 — Usuario IVA + Documentos + Busqueda
+-- ============================================================
+
+ALTER TABLE SGCN_USUARIOS ADD (
+    RESPONSABLE_IVA NUMBER(1) DEFAULT 0 NOT NULL
+);

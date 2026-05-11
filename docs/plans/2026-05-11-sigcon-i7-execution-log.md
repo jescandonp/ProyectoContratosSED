@@ -48,8 +48,8 @@ I7 se abre como incremento formal posterior a I6 a partir de hallazgos de prueba
 | Tarea | Descripcion | Estado | Commit |
 |-------|-------------|--------|--------|
 | T0 | Estabilizacion heredada I6/I7 | COMPLETO EN BASE | `3c8accf` |
-| T1 | Spec, plan y execution log I7 | EN PROGRESO | pendiente |
-| T2 | Backend usuario responsable IVA | PENDIENTE | pendiente |
+| T1 | Spec, plan y execution log I7 | COMPLETO | `31a5381` |
+| T2 | Backend usuario responsable IVA | COMPLETO | pendiente |
 | T3 | Frontend usuario IVA + confirmaciones | PENDIENTE | pendiente |
 | T4 | Backend documentos requeridos PDF/EML + FACTURA dinamica | PENDIENTE | pendiente |
 | T5 | Validacion envio por documentos requeridos | PENDIENTE | pendiente |
@@ -74,19 +74,32 @@ I7 se abre como incremento formal posterior a I6 a partir de hallazgos de prueba
   - email de aprobacion a contratista y admin configurable
   - busqueda administrativa global con rango por periodo de informe
 
+### 2026-05-11 — T2 Backend usuario responsable IVA
+
+- Se aplico TDD para `UsuarioService`.
+- RED: `mvn test -Dtest=UsuarioServiceTest` fallo por ausencia de `responsableIva` en `Usuario`, `UsuarioRequest` y `UsuarioDto`.
+- GREEN:
+  - `db/00_setup.sql`: bloque I7 con `SGCN_USUARIOS.RESPONSABLE_IVA NUMBER(1) DEFAULT 0 NOT NULL`.
+  - `Usuario`: nuevo campo `responsableIva` con default `false`.
+  - `UsuarioRequest`: nuevo campo opcional `responsableIva`.
+  - `UsuarioDto`: expone `responsableIva`.
+  - `UsuarioMapper`: mapea `responsableIva`.
+  - `UsuarioService.applyRequest()`: persiste `Boolean.TRUE.equals(request.getResponsableIva())`, conservando default `false` si el request omite el valor.
+  - `UsuarioServiceTest`: valida default `false` y persistencia `true`.
+
 ---
 
 ## Validaciones Ejecutadas
 
-Pendiente.
+- `mvn test -Dtest=UsuarioServiceTest` — 2 tests, 0 fallos.
 
 ---
 
 ## Proximo Punto de Retoma
 
-Continuar con **T1**:
+Continuar con **T3 Frontend usuario IVA + confirmaciones**:
 
-1. Revisar spec y plan I7.
-2. Commit documental inicial.
-3. Iniciar T2 backend usuario responsable IVA.
-
+1. Extender modelo Angular de usuario con `responsableIva`.
+2. Agregar campo "Responsable de IVA" en administracion de usuarios con default `No`.
+3. Corregir confirmaciones visuales al crear/editar usuario.
+4. Agregar specs focalizados.
