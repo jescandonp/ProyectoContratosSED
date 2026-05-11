@@ -122,3 +122,36 @@ Continuar con **T4 Backend documentos requeridos PDF/EML + FACTURA dinamica**:
 2. Definir entidad/servicio minimo para archivo requerido por informe si no existe.
 3. Implementar lista de documentos requeridos por informe con `FACTURA` dinamica para responsables IVA.
 4. Implementar upload/download/preview PDF/EML con pruebas backend.
+
+---
+
+## Handoff Para Siguiente Herramienta
+
+Estado listo para retomar:
+
+- Rama activa esperada: `feat/sigcon-i7`.
+- HEAD documentado antes del handoff: `3be818d`.
+- Tareas cerradas: T0, T1, T2, T3.
+- Siguiente tarea: T4.
+- No iniciar T5/T6 hasta que T4 deje estable el contrato backend de documentos requeridos.
+
+Contexto tecnico util para T4:
+
+- Ya existen `DocumentoCatalogo`, `DocumentoAdicional`, `DocumentoAdicionalInformeService`, `DocumentoAdicionalInformeController`.
+- Los documentos adicionales actuales solo guardan `referencia` textual; no cubren archivo requerido por informe ni preview PDF/EML.
+- Ya existe `DocumentStorageService` con `storeFile(...)` y `loadFile(...)`.
+- El nuevo modelo debe mantener separada la seccion **Documentos Requeridos** de soportes de actividad y documentos adicionales libres.
+- `FACTURA` debe resolverse como requerido dinamico si `informe.contrato.contratista.responsableIva == true`.
+- Estados editables para carga/eliminacion: `BORRADOR` y `DEVUELTO`.
+- Estados solo lectura: `ENVIADO`, `EN_REVISION`, `APROBADO`.
+- Formatos permitidos: PDF y `.eml`.
+
+Archivos no versionados presentes y no relacionados con T2/T3:
+
+- `.agents/`
+- `.claude/`
+- `.kiro/`
+- `Notas_ProyectoContratos/`
+- `skills-lock.json`
+
+No limpiar ni revertir esos archivos salvo instruccion explicita.
