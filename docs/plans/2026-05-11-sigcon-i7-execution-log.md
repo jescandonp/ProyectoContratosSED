@@ -52,7 +52,7 @@ I7 se abre como incremento formal posterior a I6 a partir de hallazgos de prueba
 | T2 | Backend usuario responsable IVA | COMPLETO | `b4f717f` |
 | T3 | Frontend usuario IVA + confirmaciones | COMPLETO | `2f2cb82` |
 | T4 | Backend documentos requeridos PDF/EML + FACTURA dinamica | COMPLETO | `c97c0de` |
-| T5 | Validacion envio por documentos requeridos | PENDIENTE | pendiente |
+| T5 | Validacion envio por documentos requeridos | COMPLETO | `613bb6e` |
 | T6 | Frontend Documentos Requeridos | PENDIENTE | pendiente |
 | T7 | Email aprobacion contratista + admin configurable | PENDIENTE | pendiente |
 | T8 | Busqueda administrativa global | PENDIENTE | pendiente |
@@ -141,7 +141,24 @@ I7 se abre como incremento formal posterior a I6 a partir de hallazgos de prueba
 - `mvn test -Dtest=DocumentoRequeridoInformeServiceTest` — 15 tests, 0 fallos.
 - `mvn test` (suite completa) — 152 tests, 0 fallos, 0 errores, BUILD SUCCESS.
 
-**Commit:** `c97c0de feat(i7): add required document upload and preview (T4)`
+### 2026-05-11 — T5 Backend validacion de envio por documentos requeridos
+
+**Cambios:**
+- `InformeEstadoService`: inyectado `DocumentoRequeridoInformeService` via constructor (10° parametro).
+- `InformeEstadoService.enviar()`: llamada a `documentoRequeridoInformeService.assertDocumentosRequeridosCompletos(informe)` despues de `assertDocumentosAdicionalesCompletos(informe)`.
+- `InformeEstadoServiceTest`: mock de `DocumentoRequeridoInformeService` agregado; constructor actualizado; 3 tests nuevos:
+  - `enviarConResponsableIvaYFacturaCargadaPermiteEnvio` — verifica que el hook se invoca y el envio procede.
+  - `enviarConResponsableIvaYFacturaFaltanteBloquea` — verifica `DOCUMENTO_REQUERIDO_FALTANTE` y que el estado no cambia.
+  - `enviarSinResponsableIvaNoExigeFactura` — verifica que el hook se invoca pero no lanza excepcion.
+- `InformeEstadoServiceI3Test` y `InformeEstadoServiceSinRevisorTest`: constructores actualizados con el nuevo parametro.
+
+**Validaciones ejecutadas:**
+- `mvn test -Dtest=InformeEstadoServiceTest,InformeEstadoServiceI3Test,InformeEstadoServiceSinRevisorTest` — 28 tests, 0 fallos.
+- `mvn test` (suite completa) — 155 tests, 0 fallos, 0 errores, BUILD SUCCESS.
+
+**Commit:** `613bb6e feat(i7): require invoice document for IVA contractors (T5)`
+
+---
 
 ---
 
@@ -155,12 +172,17 @@ I7 se abre como incremento formal posterior a I6 a partir de hallazgos de prueba
 
 ## Proximo Punto de Retoma
 
-Continuar con **T5 Backend validacion de envio por documentos requeridos**:
+Continuar con **T6 Frontend Documentos Requeridos**:
 
-1. En `InformeEstadoService.enviar()`, invocar `documentoRequeridoInformeService.assertDocumentosRequeridosCompletos(informe)` antes de cambiar estado.
-2. El hook ya esta implementado en `DocumentoRequeridoInformeService.assertDocumentosRequeridosCompletos()`.
-3. Agregar tests de envio con `responsableIva=true` (falta FACTURA → error) y `responsableIva=false` (no exige FACTURA).
-4. No iniciar T6 hasta que T5 deje estable el contrato de validacion de envio.
+1. Crear modelo Angular `DocumentoRequerido` y `EmlPreview` en `core/models/`.
+2. Crear servicio `DocumentoRequeridoService` con los 5 endpoints.
+3. Agregar seccion "Documentos Requeridos" en `InformeDetalleComponent` / `InformeFormComponent`.
+4. En `BORRADOR`/`DEVUELTO`: cargar/reemplazar/eliminar + visualizar/descargar.
+5. En otros estados: solo visualizar/descargar.
+6. Mostrar `FACTURA` como requerida por IVA con indicador visual.
+7. Validar extension PDF/EML antes de enviar al backend.
+8. Preview PDF (visor embebido o nueva pestaña) y EML (mostrar metadatos + cuerpo texto).
+9. Tests Angular focalizados.
 
 ---
 
@@ -169,24 +191,22 @@ Continuar con **T5 Backend validacion de envio por documentos requeridos**:
 Estado listo para retomar:
 
 - Rama activa esperada: `feat/sigcon-i7`.
-- HEAD documentado antes del handoff: `c97c0de`.
-- Tareas cerradas: T0, T1, T2, T3, T4.
-- Siguiente tarea: T5.
-- No iniciar T6 hasta que T5 deje estable el contrato de validacion de envio.
+- HEAD documentado antes del handoff: `613bb6e`.
+- Tareas cerradas: T0, T1, T2, T3, T4, T5.
+- Siguiente tarea: T6.
 
-Contexto tecnico util para T5:
+Contexto tecnico util para T6:
 
-- `DocumentoRequeridoInformeService.assertDocumentosRequeridosCompletos(Informe)` ya implementado.
-- Lanza `DOCUMENTO_REQUERIDO_FALTANTE` si `responsableIva=true` y FACTURA no cargada.
-- No lanza excepcion si `responsableIva=false`.
-- En `InformeEstadoService.enviar()`, agregar llamada a este metodo despues de `assertDocumentosAdicionalesCompletos(informe)`.
-- Inyectar `DocumentoRequeridoInformeService` en `InformeEstadoService` via constructor.
-- Tests a agregar en `InformeEstadoServiceTest` o clase nueva `InformeEstadoServiceI7Test`:
-  - enviar con `responsableIva=true` y FACTURA cargada → OK.
-  - enviar con `responsableIva=true` y FACTURA faltante → `DOCUMENTO_REQUERIDO_FALTANTE`.
-  - enviar con `responsableIva=false` → no exige FACTURA.
+- Endpoints backend disponibles bajo `/api/informes/{id}/documentos-requeridos`.
+- `GET /` — lista con `cargado`, `porIva`, `claveLogica`, `nombreDisplay`.
+- `POST /{claveLogica}/archivo` — upload multipart, solo CONTRATISTA, solo BORRADOR/DEVUELTO.
+- `GET /{documentoId}/archivo` — descarga, cualquier usuario con acceso.
+- `GET /{documentoId}/preview` — preview EML, retorna `EmlPreviewDto`.
+- `DELETE /{documentoId}/archivo` — soft-delete, solo CONTRATISTA, solo BORRADOR/DEVUELTO.
+- El modelo `DocumentoRequeridoDto` tiene: `id`, `claveLogica`, `nombreDisplay`, `cargado`, `nombreArchivo`, `contentType`, `extension`, `tamanoBytes`, `porIva`.
+- El modelo `EmlPreviewDto` tiene: `asunto`, `remitente`, `destinatarios`, `fecha`, `cuerpoTexto`, `previewParcial`.
 
-Archivos no versionados presentes y no relacionados con T4:
+Archivos no versionados presentes y no relacionados con T5:
 
 - `.agents/`
 - `.claude/`
