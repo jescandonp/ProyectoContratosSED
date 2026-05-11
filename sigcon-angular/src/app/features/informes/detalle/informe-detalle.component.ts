@@ -242,7 +242,7 @@ export class InformeDetalleComponent implements OnInit {
   // ── Aportes SGSSI editables (I6) ─────────────────────────────────────────
 
   private inicializarAportesEdicion(informe: InformeDetalle): void {
-    const rows: AporteSgssiEditRow[] = informe.aportesSgssi.map((a) => ({
+    const rows: AporteSgssiEditRow[] = (informe.aportesSgssi ?? []).map((a) => ({
       item: a.item,
       fechaPago: a.fechaPago,
       valorAportado: a.valorAportado,

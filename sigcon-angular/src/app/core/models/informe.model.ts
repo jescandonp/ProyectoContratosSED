@@ -28,11 +28,11 @@ export interface InformeDetalle extends InformeResumen {
   actividades: ActividadInforme[];
   documentosAdicionales: DocumentoAdicional[];
   observaciones: Observacion[];
-  aportesSgssi: AporteSgssiDto[];
-  numeroDesembolso: number | null;
-  valorDesembolso: number | null;
-  porcentajeEjecucion: number | null;
-  correspondenciaPendiente: boolean | null;
+  aportesSgssi?: AporteSgssiDto[];
+  numeroDesembolso?: number | null;
+  valorDesembolso?: number | null;
+  porcentajeEjecucion?: number | null;
+  correspondenciaPendiente?: boolean | null;
 }
 
 export interface InformeRequest {

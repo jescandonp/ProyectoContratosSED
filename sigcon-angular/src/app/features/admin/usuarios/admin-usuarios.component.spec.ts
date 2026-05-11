@@ -42,4 +42,66 @@ describe('AdminUsuariosComponent', () => {
 
     expect(component.errorForm()).toBe('No se pudo conectar con el backend. Verifica que Spring Boot este iniciado en localhost:8080.');
   });
+
+  it('defaults new contractor users to not responsable IVA', () => {
+    component.abrirFormulario(null);
+
+    expect(component.formUsuario.responsableIva).toBeFalse();
+  });
+
+  it('sends responsable IVA flag when creating user', () => {
+    usuarioService.crearUsuario.and.returnValue(of({
+      id: 7,
+      email: 'contratista@sed.gov.co',
+      nombre: 'Contratista Responsable',
+      cargo: 'Contratista',
+      rol: 'CONTRATISTA',
+      firmaImagen: null,
+      activo: true,
+      sgssiSaludEntidad: null,
+      sgssiPensionEntidad: null,
+      sgssiArlEntidad: null,
+      responsableIva: true
+    }));
+
+    component.abrirFormulario(null);
+    component.formUsuario = {
+      email: 'contratista@sed.gov.co',
+      nombre: 'Contratista Responsable',
+      cargo: 'Contratista',
+      rol: 'CONTRATISTA',
+      responsableIva: true
+    };
+    component.guardarUsuario();
+
+    expect(usuarioService.crearUsuario).toHaveBeenCalledWith(jasmine.objectContaining({ responsableIva: true }));
+  });
+
+  it('shows success message after creating user', () => {
+    usuarioService.crearUsuario.and.returnValue(of({
+      id: 8,
+      email: 'nuevo@sed.gov.co',
+      nombre: 'Usuario Nuevo',
+      cargo: 'Contratista',
+      rol: 'CONTRATISTA',
+      firmaImagen: null,
+      activo: true,
+      sgssiSaludEntidad: null,
+      sgssiPensionEntidad: null,
+      sgssiArlEntidad: null,
+      responsableIva: false
+    }));
+
+    component.abrirFormulario(null);
+    component.formUsuario = {
+      email: 'nuevo@sed.gov.co',
+      nombre: 'Usuario Nuevo',
+      cargo: 'Contratista',
+      rol: 'CONTRATISTA',
+      responsableIva: false
+    };
+    component.guardarUsuario();
+
+    expect(component.mensajeExito()).toBe('Usuario creado correctamente.');
+  });
 });

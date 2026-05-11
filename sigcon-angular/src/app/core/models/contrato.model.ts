@@ -24,9 +24,9 @@ export interface ContratoDetalle extends ContratoResumen {
   supervisor: Usuario | null;
   obligaciones: Obligacion[];
   docsAplicables: DocumentoCatalogo[];
-  dependencia: string | null;
-  formaPago: string | null;
-  modificaciones: string | null;
+  dependencia?: string | null;
+  formaPago?: string | null;
+  modificaciones?: string | null;
 }
 
 export interface ContratoRequest {

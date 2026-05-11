@@ -83,7 +83,6 @@ describe('InformeFormComponent', () => {
     component.actividadesForm.update((rows) => rows.map((row, index) => ({
       ...row,
       descripcion: `Actividad ${index + 1}`,
-      porcentaje: index === 0 ? 60 : 40,
       soporteNombre: `Evidencia ${index + 1}`,
       soporteUrl: `https://sed.example/soporte-${index + 1}`
     })));
@@ -99,8 +98,7 @@ describe('InformeFormComponent', () => {
     expect(actividadService.crear).toHaveBeenCalledTimes(2);
     expect(actividadService.crear).toHaveBeenCalledWith(501, {
       idObligacion: 11,
-      descripcion: 'Actividad 1',
-      porcentaje: 60
+      descripcion: 'Actividad 1'
     });
     expect(soporteService.agregarUrl).toHaveBeenCalledTimes(2);
     expect(soporteService.agregarUrl).toHaveBeenCalledWith(901, { nombre: 'Evidencia 1', url: 'https://sed.example/soporte-1' });
@@ -115,7 +113,6 @@ describe('InformeFormComponent', () => {
     component.actividadesForm.update((rows) => rows.map((row, index) => ({
       ...row,
       descripcion: 'Actividad realizada',
-      porcentaje: 100,
       soporteNombre: `Evidencia ${index + 1}`,
       soporteUrl: `https://sed.example/soporte-${index + 1}`
     })));

@@ -68,7 +68,6 @@ function sampleInformeDetalle(): InformeDetalle {
         ordenObligacion: 1,
         descripcionObligacion: 'Ejecutar actividades del contrato',
         descripcion: 'Actividad ejecutada',
-        porcentaje: 100,
         soportes: [{ id: 1, tipo: 'URL', nombre: 'Evidencia', referencia: 'https://sed.example/soporte' }]
       }
     ],

@@ -300,11 +300,11 @@
             </div>
           } @else {
             <!-- Modo solo lectura SGSSI -->
-            @if (i.aportesSgssi.length === 0) {
+            @if ((i.aportesSgssi ?? []).length === 0) {
               <p class="m-0 text-sm text-[var(--color-on-surface-variant)]">Sin aportes SGSSI registrados.</p>
             } @else {
               <ul class="m-0 list-none space-y-xs p-0">
-                @for (aporte of i.aportesSgssi; track aporte.id) {
+                @for (aporte of (i.aportesSgssi ?? []); track aporte.id) {
                   <li class="flex flex-wrap gap-md rounded-lg border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] px-md py-sm text-sm">
                     <span class="font-semibold text-[var(--color-primary)]">{{ labelSgssi(aporte.item) }}</span>
                     <span class="text-[var(--color-on-surface)]">{{ aporte.entidad }}</span>

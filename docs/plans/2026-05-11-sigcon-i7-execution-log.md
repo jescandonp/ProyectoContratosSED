@@ -50,7 +50,7 @@ I7 se abre como incremento formal posterior a I6 a partir de hallazgos de prueba
 | T0 | Estabilizacion heredada I6/I7 | COMPLETO EN BASE | `3c8accf` |
 | T1 | Spec, plan y execution log I7 | COMPLETO | `31a5381` |
 | T2 | Backend usuario responsable IVA | COMPLETO | `b4f717f` |
-| T3 | Frontend usuario IVA + confirmaciones | PENDIENTE | pendiente |
+| T3 | Frontend usuario IVA + confirmaciones | COMPLETO | pendiente |
 | T4 | Backend documentos requeridos PDF/EML + FACTURA dinamica | PENDIENTE | pendiente |
 | T5 | Validacion envio por documentos requeridos | PENDIENTE | pendiente |
 | T6 | Frontend Documentos Requeridos | PENDIENTE | pendiente |
@@ -87,19 +87,38 @@ I7 se abre como incremento formal posterior a I6 a partir de hallazgos de prueba
   - `UsuarioService.applyRequest()`: persiste `Boolean.TRUE.equals(request.getResponsableIva())`, conservando default `false` si el request omite el valor.
   - `UsuarioServiceTest`: valida default `false` y persistencia `true`.
 
+### 2026-05-11 — T3 Frontend usuario IVA + confirmaciones
+
+- Se aplico TDD sobre `AdminUsuariosComponent`.
+- RED: el spec focalizado fallo inicialmente por ausencia de `responsableIva` en el modelo Angular y por ausencia de `mensajeExito`.
+- GREEN:
+  - `usuario.model.ts`: `Usuario.responsableIva` y `UsuarioRequest.responsableIva`.
+  - `AdminUsuariosComponent`: default `responsableIva=false` al crear usuario.
+  - `AdminUsuariosComponent`: checkbox "Responsable de IVA" en formulario.
+  - `AdminUsuariosComponent`: mensaje posterior a guardado exitoso:
+    - "Usuario creado correctamente."
+    - "Usuario actualizado correctamente."
+  - Se conservaron mensajes de error existentes para fallo de backend.
+- Compatibilidad de compilacion:
+  - Modelos `Usuario`, `ContratoDetalle` e `InformeDetalle` aceptan campos I6 opcionales para tolerar mocks legacy y respuestas parciales.
+  - Se retiraron referencias obsoletas a `porcentaje` por actividad en specs Angular que quedaron desalineados con I6.
+  - `InformeDetalleComponent` tolera `aportesSgssi` ausente como lista vacia.
+
 ---
 
 ## Validaciones Ejecutadas
 
 - `mvn test -Dtest=UsuarioServiceTest` — 2 tests, 0 fallos.
+- `node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run build` desde `sigcon-angular` — exitoso.
+- `node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false --include=src/app/features/admin/usuarios/admin-usuarios.component.spec.ts` desde `sigcon-angular`, fuera del sandbox — 4 specs, 0 fallos.
 
 ---
 
 ## Proximo Punto de Retoma
 
-Continuar con **T3 Frontend usuario IVA + confirmaciones**:
+Continuar con **T4 Backend documentos requeridos PDF/EML + FACTURA dinamica**:
 
-1. Extender modelo Angular de usuario con `responsableIva`.
-2. Agregar campo "Responsable de IVA" en administracion de usuarios con default `No`.
-3. Corregir confirmaciones visuales al crear/editar usuario.
-4. Agregar specs focalizados.
+1. Revisar modelo actual de catalogo/documentos y almacenamiento.
+2. Definir entidad/servicio minimo para archivo requerido por informe si no existe.
+3. Implementar lista de documentos requeridos por informe con `FACTURA` dinamica para responsables IVA.
+4. Implementar upload/download/preview PDF/EML con pruebas backend.

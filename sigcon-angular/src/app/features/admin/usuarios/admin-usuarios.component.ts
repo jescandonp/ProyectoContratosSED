@@ -28,6 +28,12 @@ import { UsuarioService } from '../../../core/services/usuario.service';
         </button>
       </div>
 
+      @if (mensajeExito()) {
+        <div class="rounded border border-[var(--color-primary)] bg-[var(--color-surface-container-low)] px-md py-sm text-sm font-semibold text-[var(--color-primary)]">
+          {{ mensajeExito() }}
+        </div>
+      }
+
       <!-- Filter -->
       <div>
         <select
@@ -144,6 +150,10 @@ import { UsuarioService } from '../../../core/services/usuario.service';
                   <option value="ADMIN">Admin</option>
                 </select>
               </div>
+              <label class="flex items-center gap-sm rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] px-sm py-sm text-sm text-[var(--color-on-surface)]">
+                <input type="checkbox" [(ngModel)]="formUsuario.responsableIva" name="responsableIva" />
+                Responsable de IVA
+              </label>
               @if (errorForm()) {
                 <p class="text-xs text-[var(--color-error)]">{{ errorForm() }}</p>
               }
@@ -177,10 +187,11 @@ export class AdminUsuariosComponent implements OnInit {
   readonly usuarioEditando = signal<Usuario | null>(null);
   readonly guardandoU = signal(false);
   readonly errorForm = signal('');
+  readonly mensajeExito = signal('');
 
   filtroRol: RolUsuario | '' = '';
 
-  formUsuario: UsuarioRequest = { email: '', nombre: '', cargo: null, rol: 'CONTRATISTA' };
+  formUsuario: UsuarioRequest = { email: '', nombre: '', cargo: null, rol: 'CONTRATISTA', responsableIva: false };
 
   constructor(private readonly usuarioService: UsuarioService) {}
 
@@ -197,10 +208,11 @@ export class AdminUsuariosComponent implements OnInit {
   abrirFormulario(u: Usuario | null) {
     this.usuarioEditando.set(u);
     this.errorForm.set('');
+    this.mensajeExito.set('');
     if (u) {
-      this.formUsuario = { email: u.email, nombre: u.nombre, cargo: u.cargo, rol: u.rol };
+      this.formUsuario = { email: u.email, nombre: u.nombre, cargo: u.cargo, rol: u.rol, responsableIva: u.responsableIva === true };
     } else {
-      this.formUsuario = { email: '', nombre: '', cargo: null, rol: 'CONTRATISTA' };
+      this.formUsuario = { email: '', nombre: '', cargo: null, rol: 'CONTRATISTA', responsableIva: false };
     }
     this.mostrarFormulario.set(true);
   }
@@ -215,7 +227,12 @@ export class AdminUsuariosComponent implements OnInit {
       ? this.usuarioService.actualizarUsuario(u.id, this.formUsuario)
       : this.usuarioService.crearUsuario(this.formUsuario);
     op.subscribe({
-      next: () => { this.guardandoU.set(false); this.cerrarFormulario(); this.cargar(); },
+      next: () => {
+        this.guardandoU.set(false);
+        this.mensajeExito.set(u ? 'Usuario actualizado correctamente.' : 'Usuario creado correctamente.');
+        this.cerrarFormulario();
+        this.cargar();
+      },
       error: (err) => {
         this.guardandoU.set(false);
         this.errorForm.set(this.mensajeErrorGuardarUsuario(err));

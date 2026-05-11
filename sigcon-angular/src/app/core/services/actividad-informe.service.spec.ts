@@ -22,8 +22,7 @@ describe('ActividadInformeService', () => {
   it('uses relative I2 actividad endpoints nested under informes', () => {
     const request: ActividadInformeRequest = {
       idObligacion: 21,
-      descripcion: 'Actividad ejecutada',
-      porcentaje: 50
+      descripcion: 'Actividad ejecutada'
     };
 
     service.crear(10, request).subscribe();
@@ -49,7 +48,6 @@ describe('ActividadInformeService', () => {
       ordenObligacion: 1,
       descripcionObligacion: 'Obligacion',
       descripcion: 'Actividad ejecutada',
-      porcentaje: 50,
       soportes: []
     };
   }
