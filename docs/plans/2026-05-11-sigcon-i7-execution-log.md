@@ -53,7 +53,7 @@ I7 se abre como incremento formal posterior a I6 a partir de hallazgos de prueba
 | T3 | Frontend usuario IVA + confirmaciones | COMPLETO | `2f2cb82` |
 | T4 | Backend documentos requeridos PDF/EML + FACTURA dinamica | COMPLETO | `c97c0de` |
 | T5 | Validacion envio por documentos requeridos | COMPLETO | `613bb6e` |
-| T6 | Frontend Documentos Requeridos | PENDIENTE | pendiente |
+| T6 | Frontend Documentos Requeridos | COMPLETO | `e7315bf` |
 | T7 | Email aprobacion contratista + admin configurable | PENDIENTE | pendiente |
 | T8 | Busqueda administrativa global | PENDIENTE | pendiente |
 | T9 | Validacion, docs y cierre | PENDIENTE | pendiente |
@@ -156,7 +156,28 @@ I7 se abre como incremento formal posterior a I6 a partir de hallazgos de prueba
 - `mvn test -Dtest=InformeEstadoServiceTest,InformeEstadoServiceI3Test,InformeEstadoServiceSinRevisorTest` — 28 tests, 0 fallos.
 - `mvn test` (suite completa) — 155 tests, 0 fallos, 0 errores, BUILD SUCCESS.
 
-**Commit:** `613bb6e feat(i7): require invoice document for IVA contractors (T5)`
+### 2026-05-11 — T6 Frontend Documentos Requeridos
+
+**Archivos creados/modificados:**
+- `core/models/documento-requerido.model.ts`: interfaces `DocumentoRequerido`, `EmlPreview` y constante `EXTENSIONES_PERMITIDAS_REQUERIDOS`.
+- `core/services/documento-requerido.service.ts`: servicio con los 5 métodos (`listar`, `cargarArchivo`, `descargarArchivo`, `previewEml`, `eliminarArchivo`).
+- `informe-detalle.component.ts`: inyectado `DocumentoRequeridoService`; signals `documentosRequeridos`, `cargandoRequeridos`, `errorRequeridos`, `emlPreviewActivo`, `cargandoArchivo`; métodos `cargarDocumentosRequeridos`, `seleccionarArchivoRequerido`, `descargarArchivoRequerido`, `verPreviewEml`, `cerrarPreviewEml`, `eliminarArchivoRequerido`, `puedeEditarRequeridos`.
+- `informe-detalle.component.html`: sección "Documentos Requeridos" con badges IVA/Cargado/Pendiente, botones Cargar/Reemplazar/Descargar/Eliminar/Vista previa según estado; modal de preview EML.
+- `informe-detalle.component.spec.ts`: 19 tests nuevos de T6 + provider del nuevo servicio.
+
+**Comportamiento implementado:**
+- En `BORRADOR`/`DEVUELTO`: cargar, reemplazar, eliminar + descargar.
+- En `ENVIADO`/`EN_REVISION`/`APROBADO`: solo descargar y preview EML.
+- Validación de extensión PDF/EML en frontend antes de enviar al backend.
+- FACTURA dinámica muestra badge "IVA" cuando `porIva=true`.
+- Preview EML abre modal con asunto, remitente, destinatarios, fecha y cuerpo texto.
+- Descarga genera Blob y dispara descarga del navegador.
+
+**Validaciones ejecutadas:**
+- `npm run build` — exitoso.
+- `npm test -- --watch=false --include=...informe-detalle.component.spec.ts` — 56 specs, 0 fallos.
+
+**Commit:** `e7315bf feat(i7): manage required documents from informe UI (T6)`
 
 ---
 
@@ -172,17 +193,13 @@ I7 se abre como incremento formal posterior a I6 a partir de hallazgos de prueba
 
 ## Proximo Punto de Retoma
 
-Continuar con **T6 Frontend Documentos Requeridos**:
+Continuar con **T7 Backend Email aprobacion**:
 
-1. Crear modelo Angular `DocumentoRequerido` y `EmlPreview` en `core/models/`.
-2. Crear servicio `DocumentoRequeridoService` con los 5 endpoints.
-3. Agregar seccion "Documentos Requeridos" en `InformeDetalleComponent` / `InformeFormComponent`.
-4. En `BORRADOR`/`DEVUELTO`: cargar/reemplazar/eliminar + visualizar/descargar.
-5. En otros estados: solo visualizar/descargar.
-6. Mostrar `FACTURA` como requerida por IVA con indicador visual.
-7. Validar extension PDF/EML antes de enviar al backend.
-8. Preview PDF (visor embebido o nueva pestaña) y EML (mostrar metadatos + cuerpo texto).
-9. Tests Angular focalizados.
+1. Verificar si ya existe `EmailNotificacionService` (hay un archivo con ese nombre en el proyecto).
+2. Agregar propiedades `sigcon.notifications.admin-email` y `sigcon.notifications.email-enabled` en `application.yml`.
+3. Implementar `EmailNotificacionService` con `JavaMailSender`: si `email-enabled=false` o falta SMTP, registrar log sin bloquear.
+4. En `InformeEstadoService.aprobar()`, invocar el servicio de email después de publicar el evento (efecto secundario no crítico).
+5. Tests: invocación con contratista + admin configurable; fallo de email no revierte aprobación.
 
 ---
 
@@ -191,27 +208,19 @@ Continuar con **T6 Frontend Documentos Requeridos**:
 Estado listo para retomar:
 
 - Rama activa esperada: `feat/sigcon-i7`.
-- HEAD documentado antes del handoff: `613bb6e`.
-- Tareas cerradas: T0, T1, T2, T3, T4, T5.
-- Siguiente tarea: T6.
+- HEAD documentado antes del handoff: `e7315bf`.
+- Tareas cerradas: T0, T1, T2, T3, T4, T5, T6.
+- Siguiente tarea: T7.
 
-Contexto tecnico util para T6:
+Contexto técnico útil para T7:
 
-- Endpoints backend disponibles bajo `/api/informes/{id}/documentos-requeridos`.
-- `GET /` — lista con `cargado`, `porIva`, `claveLogica`, `nombreDisplay`.
-- `POST /{claveLogica}/archivo` — upload multipart, solo CONTRATISTA, solo BORRADOR/DEVUELTO.
-- `GET /{documentoId}/archivo` — descarga, cualquier usuario con acceso.
-- `GET /{documentoId}/preview` — preview EML, retorna `EmlPreviewDto`.
-- `DELETE /{documentoId}/archivo` — soft-delete, solo CONTRATISTA, solo BORRADOR/DEVUELTO.
-- El modelo `DocumentoRequeridoDto` tiene: `id`, `claveLogica`, `nombreDisplay`, `cargado`, `nombreArchivo`, `contentType`, `extension`, `tamanoBytes`, `porIva`.
-- El modelo `EmlPreviewDto` tiene: `asunto`, `remitente`, `destinatarios`, `fecha`, `cuerpoTexto`, `previewParcial`.
+- Ya existe `sigcon-backend/src/main/java/.../application/service/EmailNotificacionService.java` — verificar su estado actual antes de implementar.
+- Ya existe `sigcon-backend/src/main/java/.../application/config/MailProperties.java` — verificar si ya tiene las propiedades necesarias.
+- `spring-boot-starter-mail` ya está en `pom.xml` (agregado en T4).
+- En `InformeEstadoService.aprobar()`, el email va después de `eventoInformeService.publicar(...)` como efecto secundario no crítico.
+- Si falla el email, la aprobación NO se revierte — solo se registra error en log.
+- Destinatarios: `informe.getContrato().getContratista().getEmail()` + `sigcon.notifications.admin-email`.
 
-Archivos no versionados presentes y no relacionados con T5:
-
-- `.agents/`
-- `.claude/`
-- `.kiro/`
-- `Notas_ProyectoContratos/`
-- `skills-lock.json`
-
-No limpiar ni revertir esos archivos salvo instruccion explicita.
+Archivos no versionados presentes y no relacionados:
+- `.agents/`, `.claude/`, `.kiro/`, `Notas_ProyectoContratos/`, `skills-lock.json`
+- No limpiar ni revertir salvo instrucción explícita.
