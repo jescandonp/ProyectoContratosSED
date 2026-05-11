@@ -50,7 +50,7 @@ I7 se abre como incremento formal posterior a I6 a partir de hallazgos de prueba
 | T0 | Estabilizacion heredada I6/I7 | COMPLETO EN BASE | `3c8accf` |
 | T1 | Spec, plan y execution log I7 | COMPLETO | `31a5381` |
 | T2 | Backend usuario responsable IVA | COMPLETO | `b4f717f` |
-| T3 | Frontend usuario IVA + confirmaciones | COMPLETO | pendiente |
+| T3 | Frontend usuario IVA + confirmaciones | COMPLETO | `2f2cb82` |
 | T4 | Backend documentos requeridos PDF/EML + FACTURA dinamica | PENDIENTE | pendiente |
 | T5 | Validacion envio por documentos requeridos | PENDIENTE | pendiente |
 | T6 | Frontend Documentos Requeridos | PENDIENTE | pendiente |
