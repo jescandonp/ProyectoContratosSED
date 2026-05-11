@@ -51,7 +51,7 @@ I7 se abre como incremento formal posterior a I6 a partir de hallazgos de prueba
 | T1 | Spec, plan y execution log I7 | COMPLETO | `31a5381` |
 | T2 | Backend usuario responsable IVA | COMPLETO | `b4f717f` |
 | T3 | Frontend usuario IVA + confirmaciones | COMPLETO | `2f2cb82` |
-| T4 | Backend documentos requeridos PDF/EML + FACTURA dinamica | PENDIENTE | pendiente |
+| T4 | Backend documentos requeridos PDF/EML + FACTURA dinamica | COMPLETO | `c97c0de` |
 | T5 | Validacion envio por documentos requeridos | PENDIENTE | pendiente |
 | T6 | Frontend Documentos Requeridos | PENDIENTE | pendiente |
 | T7 | Email aprobacion contratista + admin configurable | PENDIENTE | pendiente |
@@ -104,6 +104,45 @@ I7 se abre como incremento formal posterior a I6 a partir de hallazgos de prueba
   - Se retiraron referencias obsoletas a `porcentaje` por actividad en specs Angular que quedaron desalineados con I6.
   - `InformeDetalleComponent` tolera `aportesSgssi` ausente como lista vacia.
 
+### 2026-05-11 — T4 Backend documentos requeridos PDF/EML + FACTURA dinamica
+
+**Revision del modelo existente:**
+- `DocumentoCatalogo` / `DocumentoAdicional`: solo guardan referencia textual, no archivos binarios. No cubren el caso de archivo requerido por informe.
+- `DocumentStorageService` / `LocalDocumentStorageService`: ya tienen `storeFile()` y `loadFile()` reutilizables.
+- No existia entidad para archivo requerido por informe → se creo `DocumentoRequeridoInforme`.
+
+**Archivos creados/modificados:**
+- `db/00_setup.sql`: bloque I7 extendido con tabla `SGCN_DOCS_REQUERIDOS` (sequence, tabla, indices, trigger).
+- `sigcon-backend/pom.xml`: agregada dependencia `spring-boot-starter-mail` (incluye `javax.mail` para parseo EML y sera usada en T7).
+- `domain/entity/DocumentoRequeridoInforme.java`: entidad JPA con campos `claveLogica`, `nombreDisplay`, `nombreArchivo`, `contentType`, `extension`, `storagePath`, `tamanoBytes`, auditoria.
+- `domain/repository/DocumentoRequeridoInformeRepository.java`: repositorio Spring Data JPA.
+- `application/dto/informe/DocumentoRequeridoDto.java`: DTO de lista con `cargado`, `porIva`.
+- `application/dto/informe/EmlPreviewDto.java`: DTO de preview EML con `asunto`, `remitente`, `destinatarios`, `fecha`, `cuerpoTexto`, `previewParcial`.
+- `web/exception/ErrorCode.java`: nuevos codigos `DOCUMENTO_REQUERIDO_NO_ENCONTRADO`, `DOCUMENTO_REQUERIDO_FORMATO_INVALIDO`, `DOCUMENTO_REQUERIDO_NO_EDITABLE`, `DOCUMENTO_REQUERIDO_FALTANTE`.
+- `application/service/DocumentoRequeridoInformeService.java`: servicio principal con:
+  - `listar()`: lista requeridos + FACTURA dinamica si `responsableIva=true`.
+  - `cargarArchivo()`: upload PDF/EML con validacion de extension, ownership y estado.
+  - `descargarArchivo()`: descarga con validacion de acceso.
+  - `previewEml()`: parseo EML con `javax.mail` (asunto, remitente, destinatarios, fecha, cuerpo texto, `previewParcial`).
+  - `eliminarArchivo()`: soft-delete con validacion de estado.
+  - `assertDocumentosRequeridosCompletos()`: hook para T5 — verifica FACTURA cargada si `responsableIva=true`.
+- `web/controller/DocumentoRequeridoInformeController.java`: 5 endpoints bajo `/api/informes/{id}/documentos-requeridos`.
+- `test/DocumentoRequeridoInformeServiceTest.java`: 15 tests unitarios con Mockito.
+- `test/SigconBackendSecurityTest.java`: agregado `@MockBean DocumentoRequeridoInformeRepository` para contexto Spring.
+- `test/InformeSecurityTest.java`: agregado `@MockBean DocumentoRequeridoInformeService` para contexto Spring.
+
+**Decisiones de diseno:**
+- `FACTURA` es requerido dinamico: no depende de catalogo manual. Si `informe.contrato.contratista.responsableIva=true`, se expone como pendiente en la lista aunque no exista registro en BD.
+- Separacion clara de `/documentos-requeridos` vs `/documentos-adicionales` (documentos adicionales libres con referencia textual).
+- Preview EML usa `javax.mail` (disponible via `spring-boot-starter-mail`). Si el EML es complejo, retorna `previewParcial=true` y conserva descarga del original.
+- `assertDocumentosRequeridosCompletos()` es el hook que T5 invocara desde `InformeEstadoService.enviar()`.
+
+**Validaciones ejecutadas:**
+- `mvn test -Dtest=DocumentoRequeridoInformeServiceTest` — 15 tests, 0 fallos.
+- `mvn test` (suite completa) — 152 tests, 0 fallos, 0 errores, BUILD SUCCESS.
+
+**Commit:** `c97c0de feat(i7): add required document upload and preview (T4)`
+
 ---
 
 ## Validaciones Ejecutadas
@@ -116,12 +155,12 @@ I7 se abre como incremento formal posterior a I6 a partir de hallazgos de prueba
 
 ## Proximo Punto de Retoma
 
-Continuar con **T4 Backend documentos requeridos PDF/EML + FACTURA dinamica**:
+Continuar con **T5 Backend validacion de envio por documentos requeridos**:
 
-1. Revisar modelo actual de catalogo/documentos y almacenamiento.
-2. Definir entidad/servicio minimo para archivo requerido por informe si no existe.
-3. Implementar lista de documentos requeridos por informe con `FACTURA` dinamica para responsables IVA.
-4. Implementar upload/download/preview PDF/EML con pruebas backend.
+1. En `InformeEstadoService.enviar()`, invocar `documentoRequeridoInformeService.assertDocumentosRequeridosCompletos(informe)` antes de cambiar estado.
+2. El hook ya esta implementado en `DocumentoRequeridoInformeService.assertDocumentosRequeridosCompletos()`.
+3. Agregar tests de envio con `responsableIva=true` (falta FACTURA → error) y `responsableIva=false` (no exige FACTURA).
+4. No iniciar T6 hasta que T5 deje estable el contrato de validacion de envio.
 
 ---
 
@@ -130,23 +169,24 @@ Continuar con **T4 Backend documentos requeridos PDF/EML + FACTURA dinamica**:
 Estado listo para retomar:
 
 - Rama activa esperada: `feat/sigcon-i7`.
-- HEAD documentado antes del handoff: `3be818d`.
-- Tareas cerradas: T0, T1, T2, T3.
-- Siguiente tarea: T4.
-- No iniciar T5/T6 hasta que T4 deje estable el contrato backend de documentos requeridos.
+- HEAD documentado antes del handoff: `c97c0de`.
+- Tareas cerradas: T0, T1, T2, T3, T4.
+- Siguiente tarea: T5.
+- No iniciar T6 hasta que T5 deje estable el contrato de validacion de envio.
 
-Contexto tecnico util para T4:
+Contexto tecnico util para T5:
 
-- Ya existen `DocumentoCatalogo`, `DocumentoAdicional`, `DocumentoAdicionalInformeService`, `DocumentoAdicionalInformeController`.
-- Los documentos adicionales actuales solo guardan `referencia` textual; no cubren archivo requerido por informe ni preview PDF/EML.
-- Ya existe `DocumentStorageService` con `storeFile(...)` y `loadFile(...)`.
-- El nuevo modelo debe mantener separada la seccion **Documentos Requeridos** de soportes de actividad y documentos adicionales libres.
-- `FACTURA` debe resolverse como requerido dinamico si `informe.contrato.contratista.responsableIva == true`.
-- Estados editables para carga/eliminacion: `BORRADOR` y `DEVUELTO`.
-- Estados solo lectura: `ENVIADO`, `EN_REVISION`, `APROBADO`.
-- Formatos permitidos: PDF y `.eml`.
+- `DocumentoRequeridoInformeService.assertDocumentosRequeridosCompletos(Informe)` ya implementado.
+- Lanza `DOCUMENTO_REQUERIDO_FALTANTE` si `responsableIva=true` y FACTURA no cargada.
+- No lanza excepcion si `responsableIva=false`.
+- En `InformeEstadoService.enviar()`, agregar llamada a este metodo despues de `assertDocumentosAdicionalesCompletos(informe)`.
+- Inyectar `DocumentoRequeridoInformeService` en `InformeEstadoService` via constructor.
+- Tests a agregar en `InformeEstadoServiceTest` o clase nueva `InformeEstadoServiceI7Test`:
+  - enviar con `responsableIva=true` y FACTURA cargada → OK.
+  - enviar con `responsableIva=true` y FACTURA faltante → `DOCUMENTO_REQUERIDO_FALTANTE`.
+  - enviar con `responsableIva=false` → no exige FACTURA.
 
-Archivos no versionados presentes y no relacionados con T2/T3:
+Archivos no versionados presentes y no relacionados con T4:
 
 - `.agents/`
 - `.claude/`
