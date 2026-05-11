@@ -317,9 +317,107 @@
           }
         </div>
 
-        <!-- Documentos adicionales -->
-        <div class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg">
+        <!-- Documentos requeridos (I7) -->
+        <div class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg" data-testid="seccion-docs-requeridos">
           <div class="mb-md flex items-center gap-sm">
+            <span class="h-5 w-1 rounded-full bg-[var(--color-error)]"></span>
+            <h3 class="m-0 text-base font-semibold text-[var(--color-on-surface)]">Documentos requeridos</h3>
+          </div>
+
+          @if (errorRequeridos()) {
+            <p class="mb-sm text-xs text-[var(--color-error)]" data-testid="error-requeridos">{{ errorRequeridos() }}</p>
+          }
+
+          @if (documentosRequeridos().length === 0 && !cargandoRequeridos()) {
+            <p class="m-0 text-sm text-[var(--color-on-surface-variant)]" data-testid="requeridos-vacio">Sin documentos requeridos configurados.</p>
+          }
+
+          <ul class="m-0 list-none space-y-sm p-0">
+            @for (doc of documentosRequeridos(); track doc.claveLogica) {
+              <li class="rounded-lg border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] p-md"
+                  [attr.data-testid]="'doc-requerido-' + doc.claveLogica">
+                <div class="flex flex-wrap items-center justify-between gap-sm">
+                  <div class="flex items-center gap-sm">
+                    <span class="text-sm font-semibold text-[var(--color-on-surface)]">{{ doc.nombreDisplay }}</span>
+                    @if (doc.porIva) {
+                      <span class="rounded bg-[var(--color-error-container)] px-xs py-[2px] text-xs font-bold text-[var(--color-on-error-container)]"
+                            data-testid="badge-iva">IVA</span>
+                    }
+                    @if (doc.cargado) {
+                      <span class="rounded bg-[var(--color-primary-container)] px-xs py-[2px] text-xs font-bold text-[var(--color-on-primary-container)]"
+                            data-testid="badge-cargado">Cargado</span>
+                    } @else {
+                      <span class="rounded bg-[var(--color-error-container)] px-xs py-[2px] text-xs font-bold text-[var(--color-on-error-container)]"
+                            data-testid="badge-pendiente">Pendiente</span>
+                    }
+                  </div>
+
+                  <div class="flex flex-wrap items-center gap-xs">
+                    @if (doc.cargado && doc.id) {
+                      <!-- Descargar siempre disponible -->
+                      <button
+                        class="rounded border border-[var(--color-outline-variant)] px-sm py-xs text-xs font-semibold text-[var(--color-on-surface)] hover:bg-[var(--color-surface-container-low)]"
+                        type="button"
+                        [attr.data-testid]="'btn-descargar-' + doc.claveLogica"
+                        (click)="descargarArchivoRequerido(doc.id!, doc.nombreArchivo)"
+                      >Descargar</button>
+
+                      <!-- Preview EML -->
+                      @if (doc.extension === '.eml') {
+                        <button
+                          class="rounded border border-[var(--color-outline-variant)] px-sm py-xs text-xs font-semibold text-[var(--color-on-surface)] hover:bg-[var(--color-surface-container-low)]"
+                          type="button"
+                          [attr.data-testid]="'btn-preview-eml-' + doc.claveLogica"
+                          (click)="verPreviewEml(doc.id!)"
+                        >Vista previa</button>
+                      }
+
+                      <!-- Eliminar solo en estados editables -->
+                      @if (puedeEditarRequeridos(i.estado)) {
+                        <button
+                          class="rounded border border-[var(--color-error)] px-sm py-xs text-xs font-semibold text-[var(--color-error)] hover:opacity-80"
+                          type="button"
+                          [attr.data-testid]="'btn-eliminar-requerido-' + doc.claveLogica"
+                          (click)="eliminarArchivoRequerido(doc.id!, doc.claveLogica)"
+                        >Eliminar</button>
+                      }
+                    }
+
+                    <!-- Cargar / reemplazar solo en estados editables -->
+                    @if (puedeEditarRequeridos(i.estado)) {
+                      <label
+                        class="cursor-pointer rounded bg-[var(--color-primary)] px-sm py-xs text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50"
+                        [attr.data-testid]="'label-cargar-' + doc.claveLogica"
+                      >
+                        {{ cargandoArchivo() === doc.claveLogica ? 'Cargando...' : (doc.cargado ? 'Reemplazar' : 'Cargar') }}
+                        <input
+                          class="sr-only"
+                          type="file"
+                          accept=".pdf,.eml"
+                          [attr.data-testid]="'input-archivo-' + doc.claveLogica"
+                          [disabled]="cargandoArchivo() !== null"
+                          (change)="seleccionarArchivoRequerido(doc.claveLogica, $event)"
+                        />
+                      </label>
+                    }
+                  </div>
+                </div>
+
+                @if (doc.cargado && doc.nombreArchivo) {
+                  <p class="mt-xs text-xs text-[var(--color-on-surface-variant)]">
+                    {{ doc.nombreArchivo }}
+                    @if (doc.tamanoBytes) {
+                      · {{ (doc.tamanoBytes / 1024).toFixed(1) }} KB
+                    }
+                  </p>
+                }
+              </li>
+            }
+          </ul>
+        </div>
+
+        <!-- Documentos adicionales -->
+        <div class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg">          <div class="mb-md flex items-center gap-sm">
             <span class="h-5 w-1 rounded-full bg-[var(--color-secondary-container)]"></span>
             <h3 class="m-0 text-base font-semibold text-[var(--color-on-surface)]">Documentos adicionales</h3>
           </div>
@@ -433,8 +531,66 @@
   }
 </div>
 
-@if (dialogoDevolucionRevision()) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-on-surface)]/40">
+@if (emlPreviewActivo(); as preview) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-on-surface)]/40" data-testid="modal-eml-preview">
+    <div class="w-full max-w-2xl rounded-xl bg-white p-lg shadow-xl">
+      <div class="mb-md flex items-center justify-between">
+        <h2 class="m-0 text-lg font-bold text-[var(--color-on-surface)]">Vista previa del correo</h2>
+        <button class="text-[var(--color-on-surface-variant)] hover:opacity-70" type="button" (click)="cerrarPreviewEml()">✕</button>
+      </div>
+
+      <dl class="space-y-sm text-sm">
+        @if (preview.preview.asunto) {
+          <div>
+            <dt class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Asunto</dt>
+            <dd class="m-0 mt-xs text-[var(--color-on-surface)]" data-testid="eml-asunto">{{ preview.preview.asunto }}</dd>
+          </div>
+        }
+        @if (preview.preview.remitente) {
+          <div>
+            <dt class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">De</dt>
+            <dd class="m-0 mt-xs text-[var(--color-on-surface)]">{{ preview.preview.remitente }}</dd>
+          </div>
+        }
+        @if (preview.preview.destinatarios) {
+          <div>
+            <dt class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Para</dt>
+            <dd class="m-0 mt-xs text-[var(--color-on-surface)]">{{ preview.preview.destinatarios }}</dd>
+          </div>
+        }
+        @if (preview.preview.fecha) {
+          <div>
+            <dt class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Fecha</dt>
+            <dd class="m-0 mt-xs text-[var(--color-on-surface)]">{{ preview.preview.fecha }}</dd>
+          </div>
+        }
+      </dl>
+
+      @if (preview.preview.cuerpoTexto) {
+        <div class="mt-md">
+          <p class="mb-xs text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Cuerpo</p>
+          <pre class="max-h-64 overflow-y-auto whitespace-pre-wrap rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] p-sm text-xs text-[var(--color-on-surface)]" data-testid="eml-cuerpo">{{ preview.preview.cuerpoTexto }}</pre>
+        </div>
+      }
+
+      @if (preview.preview.previewParcial) {
+        <p class="mt-sm text-xs text-[var(--color-on-surface-variant)]">
+          El contenido del correo es complejo. Descargue el archivo original para verlo completo.
+        </p>
+      }
+
+      <div class="mt-md flex justify-end">
+        <button
+          class="rounded border border-[var(--color-outline-variant)] px-md py-sm text-sm font-semibold text-[var(--color-on-surface)]"
+          type="button"
+          (click)="cerrarPreviewEml()"
+        >Cerrar</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (dialogoDevolucionRevision()) {  <div class="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-on-surface)]/40">
     <div class="w-full max-w-lg rounded-xl bg-white p-lg shadow-xl">
       <h2 class="m-0 text-lg font-bold text-[var(--color-on-surface)]">Devolver informe</h2>
       <p class="mt-xs text-sm text-[var(--color-on-surface-variant)]">

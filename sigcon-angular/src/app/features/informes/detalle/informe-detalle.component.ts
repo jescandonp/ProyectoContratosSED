@@ -7,10 +7,12 @@ import { Observable, forkJoin, of, switchMap } from 'rxjs';
 import { EstadoInforme, InformeDetalle } from '../../../core/models/informe.model';
 import { AporteSgssiRequest, ITEM_SGSSI_LABELS, ItemSgssi } from '../../../core/models/aporte-sgssi.model';
 import { DocumentoCatalogo } from '../../../core/models/documento-catalogo.model';
+import { DocumentoRequerido, EmlPreview, EXTENSIONES_PERMITIDAS_REQUERIDOS } from '../../../core/models/documento-requerido.model';
 import { ActividadInformeService } from '../../../core/services/actividad-informe.service';
 import { AporteSgssiService } from '../../../core/services/aporte-sgssi.service';
 import { DocumentoAdicionalService } from '../../../core/services/documento-adicional.service';
 import { DocumentoCatalogoService } from '../../../core/services/documento-catalogo.service';
+import { DocumentoRequeridoService } from '../../../core/services/documento-requerido.service';
 import { InformeService } from '../../../core/services/informe.service';
 import { ObservacionService } from '../../../core/services/observacion.service';
 import { SoporteAdjuntoService } from '../../../core/services/soporte-adjunto.service';
@@ -61,6 +63,13 @@ export class InformeDetalleComponent implements OnInit {
   readonly guardandoAportes = signal(false);
   readonly errorAportes = signal('');
 
+  // I7 — documentos requeridos
+  readonly documentosRequeridos = signal<DocumentoRequerido[]>([]);
+  readonly cargandoRequeridos = signal(false);
+  readonly errorRequeridos = signal('');
+  readonly emlPreviewActivo = signal<{ documentoId: number; preview: EmlPreview } | null>(null);
+  readonly cargandoArchivo = signal<string | null>(null); // claveLogica en curso
+
   // Flujo REVISOR — diálogo de devolución con observación
   readonly dialogoDevolucionRevision = signal(false);
   readonly observacionRevision = signal('');
@@ -78,6 +87,7 @@ export class InformeDetalleComponent implements OnInit {
     private readonly documentoCatalogoService: DocumentoCatalogoService,
     private readonly aporteSgssiService: AporteSgssiService,
     private readonly observacionService: ObservacionService,
+    private readonly documentoRequeridoService: DocumentoRequeridoService,
     private readonly route: ActivatedRoute,
     private readonly router: Router
   ) {}
@@ -102,6 +112,7 @@ export class InformeDetalleComponent implements OnInit {
           this.inicializarAportesEdicion(informe);
           this.cargarCatalogo();
         }
+        this.cargarDocumentosRequeridos(id);
       },
       error: () => this.error.set('No se pudo cargar el informe.')
     });
@@ -395,6 +406,116 @@ export class InformeDetalleComponent implements OnInit {
         this.errorRevision.set('No se pudo devolver el informe. Intente de nuevo.');
       }
     });
+  }
+
+  // ── Documentos requeridos (I7) ───────────────────────────────────────────
+
+  private cargarDocumentosRequeridos(informeId: number): void {
+    this.cargandoRequeridos.set(true);
+    this.documentoRequeridoService.listar(informeId).subscribe({
+      next: (docs) => {
+        this.documentosRequeridos.set(docs);
+        this.cargandoRequeridos.set(false);
+      },
+      error: () => {
+        this.cargandoRequeridos.set(false);
+        // No bloquear la vista si falla la carga de requeridos
+      }
+    });
+  }
+
+  seleccionarArchivoRequerido(claveLogica: string, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const archivo = input.files?.item(0);
+    if (!archivo) return;
+
+    // Validar extensión en frontend antes de enviar
+    const nombre = archivo.name.toLowerCase();
+    const extensionValida = EXTENSIONES_PERMITIDAS_REQUERIDOS.some((ext) => nombre.endsWith(ext));
+    if (!extensionValida) {
+      this.errorRequeridos.set('Solo se permiten archivos PDF y EML.');
+      input.value = '';
+      return;
+    }
+
+    const informe = this.informe();
+    if (!informe) return;
+
+    this.errorRequeridos.set('');
+    this.cargandoArchivo.set(claveLogica);
+
+    this.documentoRequeridoService.cargarArchivo(informe.id, claveLogica, archivo).subscribe({
+      next: (actualizado) => {
+        this.documentosRequeridos.update((docs) => {
+          const idx = docs.findIndex((d) => d.claveLogica === claveLogica);
+          if (idx >= 0) {
+            const copia = [...docs];
+            copia[idx] = actualizado;
+            return copia;
+          }
+          return [...docs, actualizado];
+        });
+        this.cargandoArchivo.set(null);
+        input.value = '';
+      },
+      error: () => {
+        this.cargandoArchivo.set(null);
+        this.errorRequeridos.set('No se pudo cargar el archivo. Verifique el formato e intente de nuevo.');
+        input.value = '';
+      }
+    });
+  }
+
+  descargarArchivoRequerido(documentoId: number, nombreArchivo: string | null): void {
+    const informe = this.informe();
+    if (!informe || !documentoId) return;
+
+    this.documentoRequeridoService.descargarArchivo(informe.id, documentoId).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = nombreArchivo ?? 'documento';
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => this.errorRequeridos.set('No se pudo descargar el archivo.')
+    });
+  }
+
+  verPreviewEml(documentoId: number): void {
+    const informe = this.informe();
+    if (!informe || !documentoId) return;
+
+    this.documentoRequeridoService.previewEml(informe.id, documentoId).subscribe({
+      next: (preview) => this.emlPreviewActivo.set({ documentoId, preview }),
+      error: () => this.errorRequeridos.set('No se pudo cargar el preview del EML.')
+    });
+  }
+
+  cerrarPreviewEml(): void {
+    this.emlPreviewActivo.set(null);
+  }
+
+  eliminarArchivoRequerido(documentoId: number, claveLogica: string): void {
+    const informe = this.informe();
+    if (!informe || !documentoId) return;
+
+    this.documentoRequeridoService.eliminarArchivo(informe.id, documentoId).subscribe({
+      next: () => {
+        this.documentosRequeridos.update((docs) =>
+          docs.map((d) => d.claveLogica === claveLogica
+            ? { ...d, cargado: false, nombreArchivo: null, contentType: null, extension: null, tamanoBytes: null, id: null }
+            : d
+          )
+        );
+      },
+      error: () => this.errorRequeridos.set('No se pudo eliminar el archivo.')
+    });
+  }
+
+  puedeEditarRequeridos(estado: EstadoInforme): boolean {
+    return estado === 'BORRADOR' || estado === 'DEVUELTO';
   }
 
   // ── Navegacion y estado ───────────────────────────────────────────────────

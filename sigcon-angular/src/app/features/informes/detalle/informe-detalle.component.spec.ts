@@ -4,10 +4,12 @@ import { Subject, of, throwError } from 'rxjs';
 
 import { AporteSgssiDto } from '../../../core/models/aporte-sgssi.model';
 import { InformeDetalle } from '../../../core/models/informe.model';
+import { DocumentoRequerido, EmlPreview } from '../../../core/models/documento-requerido.model';
 import { ActividadInformeService } from '../../../core/services/actividad-informe.service';
 import { AporteSgssiService } from '../../../core/services/aporte-sgssi.service';
 import { DocumentoAdicionalService } from '../../../core/services/documento-adicional.service';
 import { DocumentoCatalogoService } from '../../../core/services/documento-catalogo.service';
+import { DocumentoRequeridoService } from '../../../core/services/documento-requerido.service';
 import { InformeService } from '../../../core/services/informe.service';
 import { ObservacionService } from '../../../core/services/observacion.service';
 import { SoporteAdjuntoService } from '../../../core/services/soporte-adjunto.service';
@@ -23,6 +25,7 @@ describe('InformeDetalleComponent', () => {
   let documentoCatalogoService: jasmine.SpyObj<DocumentoCatalogoService>;
   let aporteSgssiService: jasmine.SpyObj<AporteSgssiService>;
   let observacionService: jasmine.SpyObj<ObservacionService>;
+  let documentoRequeridoService: jasmine.SpyObj<DocumentoRequeridoService>;
   let router: jasmine.SpyObj<Router>;
 
   beforeEach(async () => {
@@ -37,6 +40,9 @@ describe('InformeDetalleComponent', () => {
     documentoCatalogoService = jasmine.createSpyObj<DocumentoCatalogoService>('DocumentoCatalogoService', ['listar']);
     aporteSgssiService = jasmine.createSpyObj<AporteSgssiService>('AporteSgssiService', ['guardarTodos']);
     observacionService = jasmine.createSpyObj<ObservacionService>('ObservacionService', ['aprobarRevision', 'devolverRevision']);
+    documentoRequeridoService = jasmine.createSpyObj<DocumentoRequeridoService>('DocumentoRequeridoService', [
+      'listar', 'cargarArchivo', 'descargarArchivo', 'previewEml', 'eliminarArchivo'
+    ]);
     router = jasmine.createSpyObj<Router>('Router', ['navigate']);
 
     informeService.obtenerDetalle.and.returnValue(of(sampleInformeDetalle()));
@@ -51,6 +57,11 @@ describe('InformeDetalleComponent', () => {
     aporteSgssiService.guardarTodos.and.returnValue(of([]));
     observacionService.aprobarRevision.and.returnValue(of({ ...sampleInformeDetalle(), estado: 'EN_REVISION' as const }));
     observacionService.devolverRevision.and.returnValue(of({ ...sampleInformeDetalle(), estado: 'DEVUELTO' as const }));
+    documentoRequeridoService.listar.and.returnValue(of([]));
+    documentoRequeridoService.cargarArchivo.and.returnValue(of(sampleDocRequerido()));
+    documentoRequeridoService.descargarArchivo.and.returnValue(of(new Blob(['pdf'], { type: 'application/pdf' })));
+    documentoRequeridoService.previewEml.and.returnValue(of(sampleEmlPreview()));
+    documentoRequeridoService.eliminarArchivo.and.returnValue(of(void 0));
     router.navigate.and.returnValue(Promise.resolve(true));
 
     await TestBed.configureTestingModule({
@@ -64,6 +75,7 @@ describe('InformeDetalleComponent', () => {
         { provide: DocumentoCatalogoService, useValue: documentoCatalogoService },
         { provide: AporteSgssiService, useValue: aporteSgssiService },
         { provide: ObservacionService, useValue: observacionService },
+        { provide: DocumentoRequeridoService, useValue: documentoRequeridoService },
         { provide: Router, useValue: router }
       ]
     }).compileComponents();
@@ -392,6 +404,186 @@ describe('InformeDetalleComponent', () => {
     expect(component.labelSgssi('PENSION')).toBe('Pensión');
     expect(component.labelSgssi('ARL')).toBe('A.R.L.');
   });
+
+  // ── I7: Documentos requeridos ─────────────────────────────────────────────
+
+  it('muestra la seccion de documentos requeridos', () => {
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="seccion-docs-requeridos"]')).not.toBeNull();
+  });
+
+  it('carga documentos requeridos al inicializar el componente', () => {
+    expect(documentoRequeridoService.listar).toHaveBeenCalledWith(501);
+  });
+
+  it('muestra FACTURA con badge IVA cuando el documento es porIva', () => {
+    component.documentosRequeridos.set([sampleDocRequeridoIva()]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="badge-iva"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="doc-requerido-FACTURA"]')).not.toBeNull();
+  });
+
+  it('muestra badge Pendiente cuando el documento no esta cargado', () => {
+    component.documentosRequeridos.set([{ ...sampleDocRequerido(), cargado: false }]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="badge-pendiente"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="badge-cargado"]')).toBeNull();
+  });
+
+  it('muestra badge Cargado cuando el documento esta cargado', () => {
+    component.documentosRequeridos.set([sampleDocRequerido()]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="badge-cargado"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="badge-pendiente"]')).toBeNull();
+  });
+
+  it('muestra boton cargar en estado BORRADOR', () => {
+    component.documentosRequeridos.set([{ ...sampleDocRequerido(), cargado: false }]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="label-cargar-POLIZA"]')).not.toBeNull();
+  });
+
+  it('no muestra boton cargar en estado ENVIADO', () => {
+    component.informe.set({ ...sampleInformeDetalle(), estado: 'ENVIADO' });
+    component.documentosRequeridos.set([sampleDocRequerido()]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="label-cargar-POLIZA"]')).toBeNull();
+  });
+
+  it('no muestra boton cargar en estado APROBADO', () => {
+    component.informe.set({ ...sampleInformeDetalle(), estado: 'APROBADO', pdfRuta: null });
+    component.documentosRequeridos.set([sampleDocRequerido()]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="label-cargar-POLIZA"]')).toBeNull();
+  });
+
+  it('muestra boton descargar cuando el documento esta cargado', () => {
+    component.documentosRequeridos.set([sampleDocRequerido()]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="btn-descargar-POLIZA"]')).not.toBeNull();
+  });
+
+  it('muestra boton eliminar en BORRADOR cuando el documento esta cargado', () => {
+    component.documentosRequeridos.set([sampleDocRequerido()]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="btn-eliminar-requerido-POLIZA"]')).not.toBeNull();
+  });
+
+  it('no muestra boton eliminar en ENVIADO', () => {
+    component.informe.set({ ...sampleInformeDetalle(), estado: 'ENVIADO' });
+    component.documentosRequeridos.set([sampleDocRequerido()]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="btn-eliminar-requerido-POLIZA"]')).toBeNull();
+  });
+
+  it('rechaza extension no permitida y muestra error', () => {
+    const file = new File(['contenido'], 'documento.docx', { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    const input = document.createElement('input');
+    Object.defineProperty(input, 'files', { value: { item: () => file } });
+    const event = { target: input } as unknown as Event;
+
+    component.seleccionarArchivoRequerido('POLIZA', event);
+
+    expect(component.errorRequeridos()).toContain('PDF');
+    expect(documentoRequeridoService.cargarArchivo).not.toHaveBeenCalled();
+  });
+
+  it('carga archivo PDF valido y actualiza la lista de requeridos', () => {
+    const docCargado = sampleDocRequerido();
+    documentoRequeridoService.cargarArchivo.and.returnValue(of(docCargado));
+    component.documentosRequeridos.set([{ ...docCargado, cargado: false, id: null }]);
+
+    const file = new File(['pdf'], 'poliza.pdf', { type: 'application/pdf' });
+    const input = document.createElement('input');
+    Object.defineProperty(input, 'files', { value: { item: () => file } });
+    const event = { target: input } as unknown as Event;
+
+    component.seleccionarArchivoRequerido('POLIZA', event);
+
+    expect(documentoRequeridoService.cargarArchivo).toHaveBeenCalledWith(501, 'POLIZA', file);
+    expect(component.documentosRequeridos()[0].cargado).toBeTrue();
+  });
+
+  it('carga archivo EML valido', () => {
+    const docEml = { ...sampleDocRequerido(), claveLogica: 'CORREO', extension: '.eml', nombreArchivo: 'correo.eml' };
+    documentoRequeridoService.cargarArchivo.and.returnValue(of(docEml));
+    component.documentosRequeridos.set([{ ...docEml, cargado: false, id: null }]);
+
+    const file = new File(['eml'], 'correo.eml', { type: 'message/rfc822' });
+    const input = document.createElement('input');
+    Object.defineProperty(input, 'files', { value: { item: () => file } });
+    const event = { target: input } as unknown as Event;
+
+    component.seleccionarArchivoRequerido('CORREO', event);
+
+    expect(documentoRequeridoService.cargarArchivo).toHaveBeenCalledWith(501, 'CORREO', file);
+  });
+
+  it('muestra boton preview EML para documentos .eml cargados', () => {
+    component.documentosRequeridos.set([
+      { ...sampleDocRequerido(), claveLogica: 'CORREO', extension: '.eml', nombreArchivo: 'correo.eml' }
+    ]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="btn-preview-eml-CORREO"]')).not.toBeNull();
+  });
+
+  it('no muestra boton preview EML para documentos PDF', () => {
+    component.documentosRequeridos.set([sampleDocRequerido()]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="btn-preview-eml-POLIZA"]')).toBeNull();
+  });
+
+  it('abre el modal de preview EML con los metadatos del correo', () => {
+    component.documentosRequeridos.set([
+      { ...sampleDocRequerido(), id: 10, claveLogica: 'CORREO', extension: '.eml' }
+    ]);
+
+    component.verPreviewEml(10);
+
+    expect(documentoRequeridoService.previewEml).toHaveBeenCalledWith(501, 10);
+    expect(component.emlPreviewActivo()).not.toBeNull();
+    expect(component.emlPreviewActivo()?.preview.asunto).toBe('Asunto de prueba');
+  });
+
+  it('cierra el modal de preview EML', () => {
+    component.emlPreviewActivo.set({ documentoId: 10, preview: sampleEmlPreview() });
+
+    component.cerrarPreviewEml();
+
+    expect(component.emlPreviewActivo()).toBeNull();
+  });
+
+  it('elimina archivo requerido y marca el documento como no cargado', () => {
+    component.documentosRequeridos.set([sampleDocRequerido()]);
+
+    component.eliminarArchivoRequerido(10, 'POLIZA');
+
+    expect(documentoRequeridoService.eliminarArchivo).toHaveBeenCalledWith(501, 10);
+    expect(component.documentosRequeridos()[0].cargado).toBeFalse();
+  });
+
+  it('puedeEditarRequeridos retorna true para BORRADOR y DEVUELTO', () => {
+    expect(component.puedeEditarRequeridos('BORRADOR')).toBeTrue();
+    expect(component.puedeEditarRequeridos('DEVUELTO')).toBeTrue();
+  });
+
+  it('puedeEditarRequeridos retorna false para ENVIADO, EN_REVISION y APROBADO', () => {
+    expect(component.puedeEditarRequeridos('ENVIADO')).toBeFalse();
+    expect(component.puedeEditarRequeridos('EN_REVISION')).toBeFalse();
+    expect(component.puedeEditarRequeridos('APROBADO')).toBeFalse();
+  });
 });
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -445,5 +637,44 @@ function sampleAporte(): AporteSgssiDto {
     entidad: 'Sanitas',
     fechaPago: '2026-04-05',
     valorAportado: 150000,
+  };
+}
+
+function sampleDocRequerido(): DocumentoRequerido {
+  return {
+    id: 10,
+    claveLogica: 'POLIZA',
+    nombreDisplay: 'Póliza de seguro',
+    cargado: true,
+    nombreArchivo: 'poliza.pdf',
+    contentType: 'application/pdf',
+    extension: '.pdf',
+    tamanoBytes: 102400,
+    porIva: false,
+  };
+}
+
+function sampleDocRequeridoIva(): DocumentoRequerido {
+  return {
+    id: 11,
+    claveLogica: 'FACTURA',
+    nombreDisplay: 'Factura (IVA)',
+    cargado: false,
+    nombreArchivo: null,
+    contentType: null,
+    extension: null,
+    tamanoBytes: null,
+    porIva: true,
+  };
+}
+
+function sampleEmlPreview(): EmlPreview {
+  return {
+    asunto: 'Asunto de prueba',
+    remitente: 'remitente@example.com',
+    destinatarios: 'destinatario@example.com',
+    fecha: 'Mon, 11 May 2026 10:00:00 -0500',
+    cuerpoTexto: 'Cuerpo del correo de prueba.',
+    previewParcial: false,
   };
 }
