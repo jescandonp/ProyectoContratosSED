@@ -91,6 +91,12 @@
             <version>9.1.22</version>
         </dependency>
 
+        <!-- I7: Email (JavaMailSender) + javax.mail para parseo EML -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
         <!-- Testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
