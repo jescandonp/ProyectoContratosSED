@@ -279,9 +279,10 @@ I7 queda cerrado funcional y tecnicamente. Siguiente paso recomendado:
 Estado listo para retomar:
 
 - Rama activa esperada: `feat/sigcon-i7`.
-- HEAD documentado antes del cierre T9: `e5ce999`.
+- HEAD local publicado para pruebas funcionales: `6c23858`.
 - Tareas cerradas: T0, T1, T2, T3, T4, T5, T6, T7, T8, T9.
-- Siguiente actividad: publicacion/PR o nuevo incremento.
+- Publicacion remota: `origin/feat/sigcon-i7` creada y configurada como upstream.
+- Siguiente actividad: iniciar pruebas funcionales I7 o abrir PR/merge segun proceso.
 
 Archivos no versionados presentes y no relacionados:
 - `.agents/`, `.claude/`, `.kiro/`, `Notas_ProyectoContratos/`, `skills-lock.json`
