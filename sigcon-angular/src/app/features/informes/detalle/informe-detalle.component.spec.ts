@@ -5,10 +5,9 @@ import { Subject, of, throwError } from 'rxjs';
 import { AporteSgssiDto } from '../../../core/models/aporte-sgssi.model';
 import { InformeDetalle } from '../../../core/models/informe.model';
 import { DocumentoRequerido, EmlPreview } from '../../../core/models/documento-requerido.model';
+import { AuthService } from '../../../core/auth/auth.service';
 import { ActividadInformeService } from '../../../core/services/actividad-informe.service';
 import { AporteSgssiService } from '../../../core/services/aporte-sgssi.service';
-import { DocumentoAdicionalService } from '../../../core/services/documento-adicional.service';
-import { DocumentoCatalogoService } from '../../../core/services/documento-catalogo.service';
 import { DocumentoRequeridoService } from '../../../core/services/documento-requerido.service';
 import { InformeService } from '../../../core/services/informe.service';
 import { ObservacionService } from '../../../core/services/observacion.service';
@@ -21,11 +20,10 @@ describe('InformeDetalleComponent', () => {
   let informeService: jasmine.SpyObj<InformeService>;
   let actividadService: jasmine.SpyObj<ActividadInformeService>;
   let soporteService: jasmine.SpyObj<SoporteAdjuntoService>;
-  let documentoAdicionalService: jasmine.SpyObj<DocumentoAdicionalService>;
-  let documentoCatalogoService: jasmine.SpyObj<DocumentoCatalogoService>;
   let aporteSgssiService: jasmine.SpyObj<AporteSgssiService>;
   let observacionService: jasmine.SpyObj<ObservacionService>;
   let documentoRequeridoService: jasmine.SpyObj<DocumentoRequeridoService>;
+  let authService: jasmine.SpyObj<AuthService>;
   let router: jasmine.SpyObj<Router>;
 
   beforeEach(async () => {
@@ -36,10 +34,9 @@ describe('InformeDetalleComponent', () => {
     ]);
     actividadService = jasmine.createSpyObj<ActividadInformeService>('ActividadInformeService', ['actualizar']);
     soporteService = jasmine.createSpyObj<SoporteAdjuntoService>('SoporteAdjuntoService', ['agregarUrl', 'agregarArchivo', 'eliminar']);
-    documentoAdicionalService = jasmine.createSpyObj<DocumentoAdicionalService>('DocumentoAdicionalService', ['agregar', 'eliminar']);
-    documentoCatalogoService = jasmine.createSpyObj<DocumentoCatalogoService>('DocumentoCatalogoService', ['listar']);
     aporteSgssiService = jasmine.createSpyObj<AporteSgssiService>('AporteSgssiService', ['guardarTodos']);
-    observacionService = jasmine.createSpyObj<ObservacionService>('ObservacionService', ['aprobarRevision', 'devolverRevision']);
+    observacionService = jasmine.createSpyObj<ObservacionService>('ObservacionService', ['aprobarRevision', 'devolverRevision', 'aprobarInforme', 'devolverInforme']);
+    authService = jasmine.createSpyObj<AuthService>('AuthService', ['hasRole']);
     documentoRequeridoService = jasmine.createSpyObj<DocumentoRequeridoService>('DocumentoRequeridoService', [
       'listar', 'cargarArchivo', 'descargarArchivo', 'previewEml', 'eliminarArchivo'
     ]);
@@ -51,12 +48,12 @@ describe('InformeDetalleComponent', () => {
     actividadService.actualizar.and.returnValue(of(sampleInformeDetalle().actividades[0]));
     soporteService.agregarUrl.and.returnValue(of({ id: 99, tipo: 'URL' as const, nombre: 'Nuevo soporte', referencia: 'https://example.com' }));
     soporteService.eliminar.and.returnValue(of(void 0));
-    documentoAdicionalService.agregar.and.returnValue(of({ id: 99, idCatalogo: 301, nombreCatalogo: 'Planilla', obligatorio: true, referencia: 'REF-NEW' }));
-    documentoAdicionalService.eliminar.and.returnValue(of(void 0));
-    documentoCatalogoService.listar.and.returnValue(of({ content: [], totalElements: 0, totalPages: 0, size: 100, number: 0, first: true, last: true }));
     aporteSgssiService.guardarTodos.and.returnValue(of([]));
     observacionService.aprobarRevision.and.returnValue(of({ ...sampleInformeDetalle(), estado: 'EN_REVISION' as const }));
     observacionService.devolverRevision.and.returnValue(of({ ...sampleInformeDetalle(), estado: 'DEVUELTO' as const }));
+    observacionService.aprobarInforme.and.returnValue(of({ ...sampleInformeDetalle(), estado: 'APROBADO' as const }));
+    observacionService.devolverInforme.and.returnValue(of({ ...sampleInformeDetalle(), estado: 'DEVUELTO' as const }));
+    authService.hasRole.and.returnValue(false);
     documentoRequeridoService.listar.and.returnValue(of([]));
     documentoRequeridoService.cargarArchivo.and.returnValue(of(sampleDocRequerido()));
     documentoRequeridoService.descargarArchivo.and.returnValue(of(new Blob(['pdf'], { type: 'application/pdf' })));
@@ -70,9 +67,8 @@ describe('InformeDetalleComponent', () => {
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: '501' }) } } },
         { provide: InformeService, useValue: informeService },
         { provide: ActividadInformeService, useValue: actividadService },
+        { provide: AuthService, useValue: authService },
         { provide: SoporteAdjuntoService, useValue: soporteService },
-        { provide: DocumentoAdicionalService, useValue: documentoAdicionalService },
-        { provide: DocumentoCatalogoService, useValue: documentoCatalogoService },
         { provide: AporteSgssiService, useValue: aporteSgssiService },
         { provide: ObservacionService, useValue: observacionService },
         { provide: DocumentoRequeridoService, useValue: documentoRequeridoService },
@@ -261,26 +257,6 @@ describe('InformeDetalleComponent', () => {
       1001,
       jasmine.objectContaining({ url: 'https://example.com/soporte' })
     );
-  });
-
-  it('agrega documento adicional y recarga el informe', () => {
-    informeService.obtenerDetalle.and.returnValue(of(sampleInformeDetalle()));
-    component.nuevoDocIdCatalogo.set(301);
-    component.nuevoDocReferencia.set('REF-TEST');
-
-    component.agregarDocumentoAdicional();
-
-    expect(documentoAdicionalService.agregar).toHaveBeenCalledWith(501, { idCatalogo: 301, referencia: 'REF-TEST' });
-    expect(informeService.obtenerDetalle).toHaveBeenCalledWith(501);
-  });
-
-  it('elimina documento adicional y recarga el informe', () => {
-    informeService.obtenerDetalle.and.returnValue(of(sampleInformeDetalle()));
-
-    component.eliminarDocumentoAdicional(1);
-
-    expect(documentoAdicionalService.eliminar).toHaveBeenCalledWith(501, 1);
-    expect(informeService.obtenerDetalle).toHaveBeenCalledWith(501);
   });
 
   // ── I6: Aportes SGSSI ────────────────────────────────────────────────────

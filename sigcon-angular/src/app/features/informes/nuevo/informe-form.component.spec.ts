@@ -3,14 +3,10 @@ import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
 import { of } from 'rxjs';
 
 import { ContratoDetalle } from '../../../core/models/contrato.model';
-import { DocumentoCatalogo } from '../../../core/models/documento-catalogo.model';
 import { InformeDetalle } from '../../../core/models/informe.model';
-import { Page } from '../../../core/models/page.model';
 import { ActividadInformeService } from '../../../core/services/actividad-informe.service';
 import { AporteSgssiService } from '../../../core/services/aporte-sgssi.service';
 import { ContratoService } from '../../../core/services/contrato.service';
-import { DocumentoAdicionalService } from '../../../core/services/documento-adicional.service';
-import { DocumentoCatalogoService } from '../../../core/services/documento-catalogo.service';
 import { InformeService } from '../../../core/services/informe.service';
 import { SoporteAdjuntoService } from '../../../core/services/soporte-adjunto.service';
 import { InformeFormComponent } from './informe-form.component';
@@ -21,7 +17,6 @@ describe('InformeFormComponent', () => {
   let informeService: jasmine.SpyObj<InformeService>;
   let actividadService: jasmine.SpyObj<ActividadInformeService>;
   let soporteService: jasmine.SpyObj<SoporteAdjuntoService>;
-  let documentoAdicionalService: jasmine.SpyObj<DocumentoAdicionalService>;
   let router: jasmine.SpyObj<Router>;
 
   const contrato = sampleContrato();
@@ -29,16 +24,13 @@ describe('InformeFormComponent', () => {
 
   beforeEach(async () => {
     const contratoService = jasmine.createSpyObj<ContratoService>('ContratoService', ['obtenerDetalle']);
-    const catalogoService = jasmine.createSpyObj<DocumentoCatalogoService>('DocumentoCatalogoService', ['listar']);
     const aporteSgssiService = jasmine.createSpyObj<AporteSgssiService>('AporteSgssiService', ['guardarTodos']);
     informeService = jasmine.createSpyObj<InformeService>('InformeService', ['crearInforme', 'enviarInforme']);
     actividadService = jasmine.createSpyObj<ActividadInformeService>('ActividadInformeService', ['crear']);
     soporteService = jasmine.createSpyObj<SoporteAdjuntoService>('SoporteAdjuntoService', ['agregarUrl']);
-    documentoAdicionalService = jasmine.createSpyObj<DocumentoAdicionalService>('DocumentoAdicionalService', ['agregar']);
     router = jasmine.createSpyObj<Router>('Router', ['navigate']);
 
     contratoService.obtenerDetalle.and.returnValue(of(contrato));
-    catalogoService.listar.and.returnValue(of(sampleDocumentosPage()));
     informeService.crearInforme.and.returnValue(of(informe));
     informeService.enviarInforme.and.returnValue(of({ ...informe, estado: 'ENVIADO' }));
     actividadService.crear.and.returnValue(of({
@@ -51,7 +43,6 @@ describe('InformeFormComponent', () => {
       soportes: []
     }));
     soporteService.agregarUrl.and.returnValue(of({ id: 1, tipo: 'URL', nombre: 'Evidencia', referencia: 'https://sed.example/soporte' }));
-    documentoAdicionalService.agregar.and.returnValue(of({ id: 1, idCatalogo: 301, nombreCatalogo: 'Planilla', obligatorio: true, referencia: 'DOC-1' }));
     aporteSgssiService.guardarTodos.and.returnValue(of([]));
     router.navigate.and.returnValue(Promise.resolve(true));
 
@@ -60,10 +51,8 @@ describe('InformeFormComponent', () => {
       providers: [
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ contratoId: '10' }) } } },
         { provide: ContratoService, useValue: contratoService },
-        { provide: DocumentoCatalogoService, useValue: catalogoService },
         { provide: InformeService, useValue: informeService },
         { provide: ActividadInformeService, useValue: actividadService },
-        { provide: DocumentoAdicionalService, useValue: documentoAdicionalService },
         { provide: SoporteAdjuntoService, useValue: soporteService },
         { provide: AporteSgssiService, useValue: aporteSgssiService },
         { provide: Router, useValue: router }
@@ -75,13 +64,12 @@ describe('InformeFormComponent', () => {
     fixture.detectChanges();
   });
 
-  it('loads the contract obligations and OPS document catalog', () => {
+  it('loads the contract obligations', () => {
     expect(component.contrato()?.id).toBe(10);
     expect(component.actividadesForm().length).toBe(2);
-    expect(component.documentosForm().length).toBe(2);
   });
 
-  it('saves a draft with one activity per obligation plus support and additional documents', () => {
+  it('saves a draft with one activity per obligation plus support', () => {
     component.fechaInicio.set('2026-05-01');
     component.fechaFin.set('2026-05-31');
     component.actividadesForm.update((rows) => rows.map((row, index) => ({
@@ -90,8 +78,6 @@ describe('InformeFormComponent', () => {
       soporteNombre: `Evidencia ${index + 1}`,
       soporteUrl: `https://sed.example/soporte-${index + 1}`
     })));
-    component.documentosForm.update((docs) => docs.map((doc) => ({ ...doc, referencia: `DOC-${doc.idCatalogo}` })));
-
     component.guardarBorrador();
 
     expect(informeService.crearInforme).toHaveBeenCalledWith(jasmine.objectContaining({
@@ -106,7 +92,6 @@ describe('InformeFormComponent', () => {
     });
     expect(soporteService.agregarUrl).toHaveBeenCalledTimes(2);
     expect(soporteService.agregarUrl).toHaveBeenCalledWith(901, { nombre: 'Evidencia 1', url: 'https://sed.example/soporte-1' });
-    expect(documentoAdicionalService.agregar).toHaveBeenCalledTimes(2);
     expect(router.navigate).toHaveBeenCalledWith(['/informes', 501]);
   });
 
@@ -120,8 +105,6 @@ describe('InformeFormComponent', () => {
       soporteNombre: `Evidencia ${index + 1}`,
       soporteUrl: `https://sed.example/soporte-${index + 1}`
     })));
-    component.documentosForm.update((docs) => docs.map((doc) => ({ ...doc, referencia: `DOC-${doc.idCatalogo}` })));
-
     component.confirmarEnvio();
 
     expect(window.confirm).toHaveBeenCalled();
@@ -173,21 +156,6 @@ function sampleContrato(): ContratoDetalle {
       { id: 12, orden: 2, descripcion: 'Entregar soportes mensuales' }
     ],
     docsAplicables: []
-  };
-}
-
-function sampleDocumentosPage(): Page<DocumentoCatalogo> {
-  return {
-    content: [
-      { id: 301, nombre: 'Planilla', descripcion: null, obligatorio: true, tipoContrato: 'OPS' },
-      { id: 302, nombre: 'Certificacion', descripcion: null, obligatorio: false, tipoContrato: 'OPS' }
-    ],
-    totalElements: 2,
-    totalPages: 1,
-    size: 100,
-    number: 0,
-    first: true,
-    last: true
   };
 }
 

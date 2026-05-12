@@ -62,7 +62,7 @@ class InformeEstadoServiceSinRevisorTest {
     void setUp() {
         service = new InformeEstadoService(
             informeRepository, actividadRepository, soporteRepository,
-            documentoCatalogoRepository, documentoAdicionalRepository, informeService, observacionService,
+            informeService, observacionService,
             pdfInformeService, eventoInformeService, documentoRequeridoInformeService, emailNotificacionService
         );
     }

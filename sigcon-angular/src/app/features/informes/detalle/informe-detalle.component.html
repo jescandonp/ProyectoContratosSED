@@ -77,10 +77,33 @@
               Devolver
             </button>
           }
+          @if (puedeAprobarSupervisor(i)) {
+            <button
+              class="rounded bg-[var(--color-primary)] px-md py-sm text-sm font-semibold text-white disabled:opacity-50"
+              type="button"
+              [disabled]="procesandoSupervisor()"
+              data-testid="btn-aprobar-supervisor-detalle"
+              (click)="aprobarSupervisor()"
+            >
+              Aprobar
+            </button>
+            <button
+              class="rounded border border-[var(--color-error)] px-md py-sm text-sm font-semibold text-[var(--color-error)] disabled:opacity-50"
+              type="button"
+              [disabled]="procesandoSupervisor()"
+              data-testid="btn-devolver-supervisor-detalle"
+              (click)="abrirDevolucionSupervisor()"
+            >
+              Devolver
+            </button>
+          }
         </div>
       </div>
       @if (errorRevision() && !dialogoDevolucionRevision()) {
         <p class="mt-sm text-sm text-[var(--color-error)]">{{ errorRevision() }}</p>
+      }
+      @if (errorSupervisor() && !dialogoDevolucionSupervisor()) {
+        <p class="mt-sm text-sm text-[var(--color-error)]">{{ errorSupervisor() }}</p>
       }
     </section>
 
@@ -121,7 +144,12 @@
                     <div class="mt-sm flex flex-wrap gap-xs">
                       @for (soporte of actividad.soportes; track soporte.id) {
                         <span class="flex items-center gap-xs rounded border border-[var(--color-outline-variant)] bg-white px-sm py-xs text-xs text-[var(--color-on-surface)]">
-                          {{ soporte.nombre }} · {{ soporte.tipo }}
+                          <span>{{ soporte.nombre }}</span>
+                          @if (soporte.tipo === 'URL') {
+                            <a class="font-semibold text-[var(--color-primary)] hover:underline" [href]="soporte.referencia" target="_blank" rel="noopener noreferrer">Abrir</a>
+                          } @else {
+                            <span>{{ soporte.tipo }}</span>
+                          }
                           <button class="ml-xs text-[var(--color-error)] hover:opacity-70" type="button"
                             [attr.data-testid]="'btn-eliminar-soporte-' + soporte.id"
                             (click)="eliminarSoporte(actividad.id, soporte.id)">×</button>
@@ -182,9 +210,16 @@
                   @if (actividad.soportes.length > 0) {
                     <div class="mt-sm flex flex-wrap gap-xs">
                       @for (soporte of actividad.soportes; track soporte.id) {
-                        <span class="rounded border border-[var(--color-outline-variant)] bg-white px-sm py-xs text-xs text-[var(--color-on-surface)]">
-                          {{ soporte.nombre }} · {{ soporte.tipo }}
-                        </span>
+                        @if (soporte.tipo === 'URL') {
+                          <a class="rounded border border-[var(--color-outline-variant)] bg-white px-sm py-xs text-xs font-semibold text-[var(--color-primary)] hover:underline"
+                            [href]="soporte.referencia" target="_blank" rel="noopener noreferrer">
+                            {{ soporte.nombre }} · Abrir
+                          </a>
+                        } @else {
+                          <span class="rounded border border-[var(--color-outline-variant)] bg-white px-sm py-xs text-xs text-[var(--color-on-surface)]">
+                            {{ soporte.nombre }} · {{ soporte.tipo }}
+                          </span>
+                        }
                       }
                     </div>
                   }
@@ -321,7 +356,7 @@
         <div class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg" data-testid="seccion-docs-requeridos">
           <div class="mb-md flex items-center gap-sm">
             <span class="h-5 w-1 rounded-full bg-[var(--color-error)]"></span>
-            <h3 class="m-0 text-base font-semibold text-[var(--color-on-surface)]">Documentos requeridos</h3>
+            <h3 class="m-0 text-base font-semibold text-[var(--color-on-surface)]">Documentos Requeridos</h3>
           </div>
 
           @if (errorRequeridos()) {
@@ -416,76 +451,6 @@
           </ul>
         </div>
 
-        <!-- Documentos adicionales -->
-        <div class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg">          <div class="mb-md flex items-center gap-sm">
-            <span class="h-5 w-1 rounded-full bg-[var(--color-secondary-container)]"></span>
-            <h3 class="m-0 text-base font-semibold text-[var(--color-on-surface)]">Documentos adicionales</h3>
-          </div>
-          @if (esBorrador(i.estado)) {
-            <!-- Modo edicion documentos -->
-            @if (i.documentosAdicionales.length === 0) {
-              <p class="m-0 text-sm text-[var(--color-on-surface-variant)]">Sin documentos adicionales registrados.</p>
-            } @else {
-              <ul class="m-0 list-none space-y-sm p-0">
-                @for (doc of i.documentosAdicionales; track doc.id) {
-                  <li class="flex items-center justify-between gap-md rounded-lg border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] px-md py-sm text-sm">
-                    <span class="font-semibold text-[var(--color-on-surface)]">{{ doc.nombreCatalogo ?? 'Documento' }}</span>
-                    <span class="text-[var(--color-on-surface-variant)]">{{ doc.referencia }}</span>
-                    <button class="ml-sm text-[var(--color-error)] hover:opacity-70" type="button"
-                      [attr.data-testid]="'btn-eliminar-documento-' + doc.id"
-                      (click)="eliminarDocumentoAdicional(doc.id)">×</button>
-                  </li>
-                }
-              </ul>
-            }
-            <!-- Formulario agregar documento -->
-            <div class="mt-md grid grid-cols-1 gap-sm lg:grid-cols-[1fr_1fr_auto] lg:items-end">
-              <label class="block">
-                <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Tipo de documento</span>
-                <select class="h-9 w-full rounded border border-[var(--color-outline-variant)] bg-white px-sm text-sm"
-                  [ngModel]="nuevoDocIdCatalogo()"
-                  (ngModelChange)="nuevoDocIdCatalogo.set($event ? +$event : null)">
-                  <option [ngValue]="null">-- Seleccionar --</option>
-                  @for (cat of catalogoDocumentos(); track cat.id) {
-                    <option [ngValue]="cat.id">{{ cat.nombre }}</option>
-                  }
-                </select>
-              </label>
-              <label class="block">
-                <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Referencia</span>
-                <input class="h-9 w-full rounded border border-[var(--color-outline-variant)] bg-white px-sm text-sm"
-                  type="text"
-                  [ngModel]="nuevoDocReferencia()"
-                  (ngModelChange)="nuevoDocReferencia.set($event)"
-                />
-              </label>
-              <button class="h-9 rounded bg-[var(--color-primary)] px-md text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
-                type="button"
-                [disabled]="guardandoDocumento()"
-                data-testid="btn-agregar-documento"
-                (click)="agregarDocumentoAdicional()">
-                {{ guardandoDocumento() ? '...' : 'Agregar' }}
-              </button>
-            </div>
-            @if (errorDocumento()) {
-              <p class="mt-xs text-xs text-[var(--color-error)]">{{ errorDocumento() }}</p>
-            }
-          } @else {
-            <!-- Modo solo lectura documentos -->
-            @if (i.documentosAdicionales.length === 0) {
-              <p class="m-0 text-sm text-[var(--color-on-surface-variant)]">Sin documentos adicionales registrados.</p>
-            } @else {
-              <ul class="m-0 list-none space-y-sm p-0">
-                @for (doc of i.documentosAdicionales; track doc.id) {
-                  <li class="flex items-center justify-between gap-md rounded-lg border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] px-md py-sm text-sm">
-                    <span class="font-semibold text-[var(--color-on-surface)]">{{ doc.nombreCatalogo ?? 'Documento' }}</span>
-                    <span class="text-[var(--color-on-surface-variant)]">{{ doc.referencia }}</span>
-                  </li>
-                }
-              </ul>
-            }
-          }
-        </div>
       </section>
 
       <aside class="space-y-lg">
@@ -627,6 +592,52 @@
           [disabled]="procesandoRevision()"
           data-testid="btn-confirmar-devolucion-revision"
           (click)="confirmarDevolucionRevision()"
+        >
+          Confirmar devolución
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (dialogoDevolucionSupervisor()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-on-surface)]/40">
+    <div class="w-full max-w-lg rounded-xl bg-white p-lg shadow-xl">
+      <h2 class="m-0 text-lg font-bold text-[var(--color-on-surface)]">Devolver informe</h2>
+      <p class="mt-xs text-sm text-[var(--color-on-surface-variant)]">
+        Registre las observaciones de supervisión para que el contratista pueda corregir el informe.
+      </p>
+
+      <label class="mt-md block">
+        <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">
+          Observación <span class="text-[var(--color-error)]">*</span>
+        </span>
+        <textarea
+          class="min-h-28 w-full resize-y rounded border border-[var(--color-outline-variant)] px-sm py-xs text-sm"
+          placeholder="Indique los motivos de la devolución..."
+          data-testid="textarea-observacion-supervisor"
+          [ngModel]="observacionSupervisor()"
+          (ngModelChange)="observacionSupervisor.set($event)"
+        ></textarea>
+        @if (errorSupervisor()) {
+          <p class="mt-xs text-xs text-[var(--color-error)]">{{ errorSupervisor() }}</p>
+        }
+      </label>
+
+      <div class="mt-md flex justify-end gap-sm">
+        <button
+          class="rounded border border-[var(--color-outline-variant)] px-md py-sm text-sm font-semibold text-[var(--color-on-surface)]"
+          type="button"
+          (click)="cerrarDevolucionSupervisor()"
+        >
+          Cancelar
+        </button>
+        <button
+          class="rounded border border-[var(--color-error)] bg-[var(--color-error)] px-md py-sm text-sm font-semibold text-white disabled:opacity-50"
+          type="button"
+          [disabled]="procesandoSupervisor()"
+          data-testid="btn-confirmar-devolucion-supervisor"
+          (click)="confirmarDevolucionSupervisor()"
         >
           Confirmar devolución
         </button>

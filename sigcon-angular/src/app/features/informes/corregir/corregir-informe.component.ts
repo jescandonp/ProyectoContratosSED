@@ -5,12 +5,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, map, of, switchMap } from 'rxjs';
 
 import { ActividadInforme } from '../../../core/models/actividad-informe.model';
-import { DocumentoCatalogo } from '../../../core/models/documento-catalogo.model';
 import { EstadoInforme, InformeDetalle } from '../../../core/models/informe.model';
 import { Observacion } from '../../../core/models/observacion.model';
 import { ActividadInformeService } from '../../../core/services/actividad-informe.service';
-import { DocumentoAdicionalService } from '../../../core/services/documento-adicional.service';
-import { DocumentoCatalogoService } from '../../../core/services/documento-catalogo.service';
 import { InformeService } from '../../../core/services/informe.service';
 import { SoporteAdjuntoService } from '../../../core/services/soporte-adjunto.service';
 import { StatusChipComponent } from '../../../shared/components/status-chip/status-chip.component';
@@ -21,17 +18,11 @@ interface ActividadFormRow {
   orden: number;
   descripcionObligacion: string;
   descripcion: string;
+  soporteUrlId: number | null;
+  soporteUrlOriginal: string;
   soporteNombre: string;
   soporteUrl: string;
   soporteArchivo: File | null;
-}
-
-interface DocumentoFormRow {
-  idDocumento: number | null;
-  idCatalogo: number;
-  nombreCatalogo: string;
-  obligatorio: boolean;
-  referencia: string;
 }
 
 @Component({
@@ -80,10 +71,6 @@ interface DocumentoFormRow {
               <div class="rounded-lg bg-[var(--color-surface-container-low)] p-md">
                 <p class="m-0 text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Obligaciones</p>
                 <p class="m-0 mt-xs text-xl font-bold text-[var(--color-on-surface)]">{{ actividadesForm().length }}</p>
-              </div>
-              <div class="rounded-lg bg-[var(--color-surface-container-low)] p-md">
-                <p class="m-0 text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Documentos</p>
-                <p class="m-0 mt-xs text-xl font-bold text-[var(--color-on-surface)]">{{ documentosCompletos() }}/{{ documentosForm().length }}</p>
               </div>
             </div>
           </section>
@@ -155,37 +142,6 @@ interface DocumentoFormRow {
                 </div>
               </section>
 
-              <!-- Documentos adicionales -->
-              <section class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg">
-                <div class="mb-md flex items-center gap-sm">
-                  <span class="h-5 w-1 rounded-full bg-[var(--color-secondary-container)]"></span>
-                  <h3 class="m-0 text-base font-semibold text-[var(--color-on-surface)]">Documentos adicionales</h3>
-                </div>
-
-                @if (documentosForm().length === 0) {
-                  <p class="m-0 text-sm text-[var(--color-on-surface-variant)]">No hay documentos OPS configurados en catálogo.</p>
-                } @else {
-                  <div class="space-y-sm">
-                    @for (doc of documentosForm(); track doc.idCatalogo; let i = $index) {
-                      <label class="grid grid-cols-1 gap-sm rounded-lg border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] p-md md:grid-cols-[1fr_18rem] md:items-center">
-                        <span>
-                          <span class="block text-sm font-semibold text-[var(--color-on-surface)]">{{ doc.nombreCatalogo }}</span>
-                          @if (doc.obligatorio) {
-                            <span class="text-xs font-bold uppercase tracking-wider text-[var(--color-error)]">Obligatorio</span>
-                          }
-                        </span>
-                        <input
-                          class="w-full rounded border border-[var(--color-outline-variant)] bg-white px-sm py-xs text-sm"
-                          type="text"
-                          placeholder="Referencia o enlace"
-                          [ngModel]="doc.referencia"
-                          (ngModelChange)="actualizarDocumento(i, $event)"
-                        />
-                      </label>
-                    }
-                  </div>
-                }
-              </section>
             </div>
 
             <!-- Panel lateral: observaciones históricas -->
@@ -278,21 +234,16 @@ interface DocumentoFormRow {
 export class CorregirInformeComponent implements OnInit {
   readonly informe = signal<InformeDetalle | null>(null);
   readonly actividadesForm = signal<ActividadFormRow[]>([]);
-  readonly documentosForm = signal<DocumentoFormRow[]>([]);
   readonly error = signal('');
   readonly guardando = signal(false);
   readonly estadoInvalido = signal(false);
 
   readonly observaciones = computed(() => this.informe()?.observaciones ?? []);
 
-  readonly documentosCompletos = computed(() => this.documentosForm().filter((doc) => doc.referencia.trim()).length);
-
   constructor(
     private readonly informeService: InformeService,
     private readonly actividadService: ActividadInformeService,
     private readonly soporteService: SoporteAdjuntoService,
-    private readonly documentoAdicionalService: DocumentoAdicionalService,
-    private readonly documentoCatalogoService: DocumentoCatalogoService,
     private readonly route: ActivatedRoute,
     private readonly router: Router
   ) {}
@@ -313,7 +264,6 @@ export class CorregirInformeComponent implements OnInit {
         }
         this.informe.set(informe);
         this.poblarFormulario(informe);
-        this.cargarCatalogo(informe);
       },
       error: () => this.error.set('No se pudo cargar el informe.')
     });
@@ -355,10 +305,6 @@ export class CorregirInformeComponent implements OnInit {
 
   actualizarActividad(index: number, patch: Partial<ActividadFormRow>) {
     this.actividadesForm.update((rows) => rows.map((row, i) => i === index ? { ...row, ...patch } : row));
-  }
-
-  actualizarDocumento(index: number, referencia: string) {
-    this.documentosForm.update((docs) => docs.map((doc, i) => i === index ? { ...doc, referencia } : doc));
   }
 
   seleccionarArchivo(index: number, event: Event) {
@@ -407,37 +353,22 @@ export class CorregirInformeComponent implements OnInit {
 
   private poblarFormulario(informe: InformeDetalle) {
     this.actividadesForm.set(
-      informe.actividades.map((actividad) => ({
-        idActividad: actividad.id,
-        idObligacion: actividad.idObligacion ?? 0,
-        orden: actividad.ordenObligacion ?? 0,
-        descripcionObligacion: actividad.descripcionObligacion ?? '',
-        descripcion: actividad.descripcion,
-        soporteNombre: '',
-        soporteUrl: '',
-        soporteArchivo: null
-      }))
+      informe.actividades.map((actividad) => {
+        const soporteUrl = actividad.soportes.find((soporte) => soporte.tipo === 'URL');
+        return {
+          idActividad: actividad.id,
+          idObligacion: actividad.idObligacion ?? 0,
+          orden: actividad.ordenObligacion ?? 0,
+          descripcionObligacion: actividad.descripcionObligacion ?? '',
+          descripcion: actividad.descripcion,
+          soporteUrlId: soporteUrl?.id ?? null,
+          soporteUrlOriginal: soporteUrl?.referencia ?? '',
+          soporteNombre: soporteUrl?.nombre ?? '',
+          soporteUrl: soporteUrl?.referencia ?? '',
+          soporteArchivo: null
+        };
+      })
     );
-  }
-
-  private cargarCatalogo(informe: InformeDetalle) {
-    this.documentoCatalogoService.listar({ tipoContrato: 'OPS', size: 100 }).subscribe({
-      next: (page) => {
-        this.documentosForm.set(
-          page.content.map((doc) => {
-            const existente = informe.documentosAdicionales.find((d) => d.idCatalogo === doc.id);
-            return {
-              idDocumento: existente?.id ?? null,
-              idCatalogo: doc.id,
-              nombreCatalogo: doc.nombre,
-              obligatorio: doc.obligatorio,
-              referencia: existente?.referencia ?? ''
-            };
-          })
-        );
-      },
-      error: () => this.error.set('No se pudo cargar el catálogo documental OPS.')
-    });
   }
 
   private guardarDetalle(informe: InformeDetalle) {
@@ -453,15 +384,7 @@ export class CorregirInformeComponent implements OnInit {
           idObligacion: row.idObligacion,
           descripcion: row.descripcion.trim(),
         }).pipe(switchMap((actividad) => this.guardarSoportesNuevos(row, actividad)));
-      }),
-      ...this.documentosForm()
-        .filter((doc) => doc.referencia.trim() && !doc.idDocumento)
-        .map((doc) =>
-          this.documentoAdicionalService.agregar(informe.id, {
-            idCatalogo: doc.idCatalogo,
-            referencia: doc.referencia.trim()
-          })
-        )
+      })
     ];
 
     return (operaciones.length ? forkJoin(operaciones) : of([])).pipe(map(() => informe));
@@ -470,8 +393,13 @@ export class CorregirInformeComponent implements OnInit {
   private guardarSoportesNuevos(row: ActividadFormRow, actividad: ActividadInforme) {
     const operaciones = [];
     const soporteNombre = row.soporteNombre.trim() || `Soporte obligación ${row.orden}`;
-    if (row.soporteUrl.trim()) {
-      operaciones.push(this.soporteService.agregarUrl(actividad.id, { nombre: soporteNombre, url: row.soporteUrl.trim() }));
+    const soporteUrl = row.soporteUrl.trim();
+    if (soporteUrl && soporteUrl !== row.soporteUrlOriginal) {
+      const agregarUrl = this.soporteService.agregarUrl(actividad.id, { nombre: soporteNombre, url: soporteUrl });
+      operaciones.push(row.soporteUrlId
+        ? this.soporteService.eliminar(actividad.id, row.soporteUrlId).pipe(switchMap(() => agregarUrl))
+        : agregarUrl
+      );
     }
     if (row.soporteArchivo) {
       operaciones.push(this.soporteService.agregarArchivo(actividad.id, row.soporteArchivo));
@@ -482,10 +410,6 @@ export class CorregirInformeComponent implements OnInit {
   private validarFormulario() {
     if (this.actividadesForm().some((row) => !row.descripcion.trim())) {
       this.error.set('Debe registrar la actividad realizada para cada obligación.');
-      return false;
-    }
-    if (this.documentosForm().some((doc) => doc.obligatorio && !doc.referencia.trim())) {
-      this.error.set('Debe registrar la referencia de los documentos obligatorios.');
       return false;
     }
     return true;

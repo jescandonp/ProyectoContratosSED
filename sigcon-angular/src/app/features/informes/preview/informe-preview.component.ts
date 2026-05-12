@@ -78,39 +78,22 @@ import { StatusChipComponent } from '../../../shared/components/status-chip/stat
                   @if (actividad.soportes.length > 0) {
                     <div class="mt-sm flex flex-wrap gap-xs pl-10">
                       @for (soporte of actividad.soportes; track soporte.id) {
-                        <span class="rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] px-sm py-xs text-xs text-[var(--color-on-surface)]">
-                          {{ soporte.nombre }}: {{ soporte.referencia }}
-                        </span>
+                        @if (soporte.tipo === 'URL') {
+                          <a class="rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] px-sm py-xs text-xs font-semibold text-[var(--color-primary)] hover:underline"
+                            [href]="soporte.referencia" target="_blank" rel="noopener noreferrer">
+                            {{ soporte.nombre }} · Abrir
+                          </a>
+                        } @else {
+                          <span class="rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] px-sm py-xs text-xs text-[var(--color-on-surface)]">
+                            {{ soporte.nombre }} · {{ soporte.tipo }}
+                          </span>
+                        }
                       }
                     </div>
                   }
                 </div>
               }
             </div>
-          </section>
-
-          <section class="border-t border-[var(--color-outline-variant)] pt-lg">
-            <h3 class="m-0 mb-md text-base font-semibold text-[var(--color-on-surface)]">Documentos adicionales</h3>
-            @if (i.documentosAdicionales.length === 0) {
-              <p class="m-0 text-sm text-[var(--color-on-surface-variant)]">Sin documentos adicionales registrados.</p>
-            } @else {
-              <table class="w-full border-collapse text-left text-sm">
-                <thead>
-                  <tr class="border-b border-[var(--color-outline-variant)] text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">
-                    <th class="py-sm">Documento</th>
-                    <th class="py-sm">Referencia</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (doc of i.documentosAdicionales; track doc.id) {
-                    <tr class="border-b border-[var(--color-outline-variant)]">
-                      <td class="py-sm text-[var(--color-on-surface)]">{{ doc.nombreCatalogo ?? 'Documento' }}</td>
-                      <td class="py-sm text-[var(--color-on-surface-variant)]">{{ doc.referencia }}</td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            }
           </section>
         </article>
       } @else if (!error()) {

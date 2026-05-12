@@ -72,7 +72,7 @@ class InformeEstadoServiceI3Test {
     void setUp() {
         service = new InformeEstadoService(
             informeRepository, actividadRepository, soporteRepository,
-            documentoCatalogoRepository, documentoAdicionalRepository, informeService, observacionService,
+            informeService, observacionService,
             pdfInformeService, eventoInformeService, documentoRequeridoInformeService, emailNotificacionService
         );
     }
@@ -167,8 +167,6 @@ class InformeEstadoServiceI3Test {
         ActividadInforme actividad = actividad(101L);
         when(actividadRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.singletonList(actividad));
         when(soporteRepository.existsByActividadIdAndTipoAndActivoTrue(101L, TipoSoporte.URL)).thenReturn(true);
-        when(documentoCatalogoRepository.findByTipoContratoAndActivoTrue(informe.getContrato().getTipo()))
-            .thenReturn(Collections.emptyList());
         when(informeRepository.save(any(Informe.class))).thenAnswer(inv -> inv.getArgument(0));
         when(informeService.buildDetalle(informe)).thenReturn(new InformeDetalleDto());
 

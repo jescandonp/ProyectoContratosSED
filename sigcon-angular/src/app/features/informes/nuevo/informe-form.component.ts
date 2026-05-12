@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, map, of, switchMap } from 'rxjs';
@@ -6,13 +6,10 @@ import { forkJoin, map, of, switchMap } from 'rxjs';
 import { ActividadInforme } from '../../../core/models/actividad-informe.model';
 import { AporteSgssiRequest, ITEM_SGSSI_LABELS, ItemSgssi } from '../../../core/models/aporte-sgssi.model';
 import { ContratoDetalle } from '../../../core/models/contrato.model';
-import { DocumentoCatalogo } from '../../../core/models/documento-catalogo.model';
 import { InformeDetalle } from '../../../core/models/informe.model';
 import { ActividadInformeService } from '../../../core/services/actividad-informe.service';
 import { AporteSgssiService } from '../../../core/services/aporte-sgssi.service';
 import { ContratoService } from '../../../core/services/contrato.service';
-import { DocumentoAdicionalService } from '../../../core/services/documento-adicional.service';
-import { DocumentoCatalogoService } from '../../../core/services/documento-catalogo.service';
 import { InformeService } from '../../../core/services/informe.service';
 import { SoporteAdjuntoService } from '../../../core/services/soporte-adjunto.service';
 
@@ -24,13 +21,6 @@ interface ActividadFormRow {
   soporteNombre: string;
   soporteUrl: string;
   soporteArchivo: File | null;
-}
-
-interface DocumentoFormRow {
-  idCatalogo: number;
-  nombreCatalogo: string;
-  obligatorio: boolean;
-  referencia: string;
 }
 
 interface AporteSgssiRow {
@@ -149,10 +139,6 @@ const ITEMS_SGSSI: ItemSgssi[] = ['SALUD', 'PENSION', 'ARL'];
             <div class="rounded-lg bg-[var(--color-surface-container-low)] p-md">
               <p class="m-0 text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Aportes SGSSI</p>
               <p class="m-0 mt-xs text-xl font-bold text-[var(--color-on-surface)]">{{ aportesForm().length }}</p>
-            </div>
-            <div class="rounded-lg bg-[var(--color-surface-container-low)] p-md">
-              <p class="m-0 text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Documentos</p>
-              <p class="m-0 mt-xs text-xl font-bold text-[var(--color-on-surface)]">{{ documentosCompletos() }}/{{ documentosForm().length }}</p>
             </div>
           </div>
         </section>
@@ -304,41 +290,11 @@ const ITEMS_SGSSI: ItemSgssi[] = ['SALUD', 'PENSION', 'ARL'];
           </div>
         </section>
 
-        <!-- Documentos adicionales -->
-        <section class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg">
-          <div class="mb-md flex items-center gap-sm">
-            <span class="h-5 w-1 rounded-full bg-[var(--color-secondary-container)]"></span>
-            <h3 class="m-0 text-base font-semibold text-[var(--color-on-surface)]">Documentos adicionales</h3>
-          </div>
-
-          @if (documentosForm().length === 0) {
-            <p class="m-0 text-sm text-[var(--color-on-surface-variant)]">No hay documentos OPS configurados en catálogo.</p>
-          } @else {
-            <div class="space-y-sm">
-              @for (doc of documentosForm(); track doc.idCatalogo; let i = $index) {
-                <label class="grid grid-cols-1 gap-sm rounded-lg border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] p-md md:grid-cols-[1fr_18rem] md:items-center">
-                    <span>
-                      <span class="block text-sm font-semibold text-[var(--color-on-surface)]">{{ doc.nombreCatalogo }}</span>
-                      <span class="text-xs font-bold uppercase tracking-wider text-[var(--color-error)]">Obligatorio</span>
-                    </span>
-                  <input
-                    class="w-full rounded border border-[var(--color-outline-variant)] bg-white px-sm py-xs text-sm"
-                    type="text"
-                    placeholder="Referencia o enlace"
-                    [ngModel]="doc.referencia"
-                    (ngModelChange)="actualizarDocumento(i, $event)"
-                  />
-                </label>
-              }
-            </div>
-          }
-        </section>
-
         <!-- Barra fija de acciones -->
         <div class="fixed inset-x-0 bottom-0 z-10 border-t border-[var(--color-outline-variant)] bg-white/95 px-lg py-md backdrop-blur">
           <div class="mx-auto flex max-w-6xl items-center justify-between gap-md">
             <p class="m-0 text-sm text-[var(--color-on-surface-variant)]">
-              {{ guardando() ? 'Guardando informe...' : 'Revise actividades, aportes SGSSI y documentos antes de enviar.' }}
+              {{ guardando() ? 'Guardando informe...' : 'Revise actividades y aportes SGSSI antes de enviar.' }}
             </p>
             <div class="flex gap-sm">
               <button class="rounded border border-[var(--color-outline-variant)] px-md py-sm text-sm font-semibold text-[var(--color-on-surface)]" type="button" (click)="volverAContrato()">
@@ -368,7 +324,6 @@ export class InformeFormComponent implements OnInit {
   readonly fechaInicio = signal('');
   readonly fechaFin = signal('');
   readonly actividadesForm = signal<ActividadFormRow[]>([]);
-  readonly documentosForm = signal<DocumentoFormRow[]>([]);
   readonly aportesForm = signal<AporteSgssiRow[]>([]);
   readonly error = signal('');
   readonly guardando = signal(false);
@@ -379,15 +334,11 @@ export class InformeFormComponent implements OnInit {
   readonly porcentajeEjecucion = signal<number | null>(null);
   readonly correspondenciaPendiente = signal<boolean>(false);
 
-  readonly documentosCompletos = computed(() => this.documentosForm().filter((doc) => doc.referencia.trim()).length);
-
   constructor(
     private readonly contratoService: ContratoService,
-    private readonly documentoCatalogoService: DocumentoCatalogoService,
     private readonly informeService: InformeService,
     private readonly actividadService: ActividadInformeService,
     private readonly soporteService: SoporteAdjuntoService,
-    private readonly documentoAdicionalService: DocumentoAdicionalService,
     private readonly aporteSgssiService: AporteSgssiService,
     private readonly route: ActivatedRoute,
     private readonly router: Router
@@ -420,11 +371,6 @@ export class InformeFormComponent implements OnInit {
         );
       },
       error: () => this.error.set('No se pudo cargar el contrato para crear el informe.')
-    });
-
-    this.documentoCatalogoService.listar({ tipoContrato: 'OPS', size: 100 }).subscribe({
-      next: (page) => this.documentosForm.set(page.content.map((doc) => this.toDocumentoForm(doc))),
-      error: () => this.error.set('No se pudo cargar el catálogo documental OPS.')
     });
   }
 
@@ -468,10 +414,6 @@ export class InformeFormComponent implements OnInit {
     this.actividadesForm.update((rows) => rows.map((row, i) => i === index ? { ...row, ...patch } : row));
   }
 
-  actualizarDocumento(index: number, referencia: string) {
-    this.documentosForm.update((docs) => docs.map((doc, i) => i === index ? { ...doc, referencia } : doc));
-  }
-
   seleccionarArchivo(index: number, event: Event) {
     const input = event.target as HTMLInputElement;
     this.actualizarActividad(index, { soporteArchivo: input.files?.item(0) ?? null });
@@ -510,13 +452,6 @@ export class InformeFormComponent implements OnInit {
       }).pipe(switchMap((actividad) => this.guardarSoportes(row, actividad)))
     );
 
-    const documentoOps = this.documentosForm()
-      .filter((doc) => doc.referencia.trim())
-      .map((doc) => this.documentoAdicionalService.agregar(informe.id, {
-        idCatalogo: doc.idCatalogo,
-        referencia: doc.referencia.trim()
-      }));
-
     const aportesValidos: AporteSgssiRequest[] = this.aportesForm()
       .filter((row) => row.fechaPago && row.valorAportado != null && row.entidad.trim())
       .map((row) => ({
@@ -529,7 +464,7 @@ export class InformeFormComponent implements OnInit {
       ? [this.aporteSgssiService.guardarTodos(informe.id, aportesValidos)]
       : [];
 
-    const todas = [...actividadOps, ...documentoOps, ...aportesOp];
+    const todas = [...actividadOps, ...aportesOp];
     return (todas.length ? forkJoin(todas) : of([])).pipe(map(() => informe));
   }
 
@@ -557,28 +492,6 @@ export class InformeFormComponent implements OnInit {
       this.error.set('Debe registrar la actividad realizada para cada obligación.');
       return false;
     }
-    if (this.documentosForm().some((doc) => doc.obligatorio && !doc.referencia.trim())) {
-      this.error.set('Debe registrar la referencia de los documentos obligatorios.');
-      return false;
-    }
     return true;
-  }
-
-  private esUrlHttp(value: string): boolean {
-    try {
-      const url = new URL(value.trim());
-      return url.protocol === 'http:' || url.protocol === 'https:';
-    } catch {
-      return false;
-    }
-  }
-
-  private toDocumentoForm(doc: DocumentoCatalogo): DocumentoFormRow {
-    return {
-      idCatalogo: doc.id,
-      nombreCatalogo: doc.nombre,
-      obligatorio: doc.obligatorio,
-      referencia: ''
-    };
   }
 }

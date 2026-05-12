@@ -3,12 +3,8 @@ import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
 import { of } from 'rxjs';
 
 import { ActividadInforme } from '../../../core/models/actividad-informe.model';
-import { DocumentoCatalogo } from '../../../core/models/documento-catalogo.model';
 import { InformeDetalle } from '../../../core/models/informe.model';
-import { Page } from '../../../core/models/page.model';
 import { ActividadInformeService } from '../../../core/services/actividad-informe.service';
-import { DocumentoAdicionalService } from '../../../core/services/documento-adicional.service';
-import { DocumentoCatalogoService } from '../../../core/services/documento-catalogo.service';
 import { InformeService } from '../../../core/services/informe.service';
 import { SoporteAdjuntoService } from '../../../core/services/soporte-adjunto.service';
 import { CorregirInformeComponent } from './corregir-informe.component';
@@ -19,7 +15,6 @@ describe('CorregirInformeComponent', () => {
   let informeService: jasmine.SpyObj<InformeService>;
   let actividadService: jasmine.SpyObj<ActividadInformeService>;
   let soporteService: jasmine.SpyObj<SoporteAdjuntoService>;
-  let documentoAdicionalService: jasmine.SpyObj<DocumentoAdicionalService>;
   let router: jasmine.SpyObj<Router>;
 
   const informeDevuelto = sampleInformeDevuelto();
@@ -39,10 +34,6 @@ describe('CorregirInformeComponent', () => {
       'agregarUrl',
       'agregarArchivo'
     ]);
-    documentoAdicionalService = jasmine.createSpyObj<DocumentoAdicionalService>('DocumentoAdicionalService', [
-      'agregar'
-    ]);
-    const catalogoService = jasmine.createSpyObj<DocumentoCatalogoService>('DocumentoCatalogoService', ['listar']);
     router = jasmine.createSpyObj<Router>('Router', ['navigate']);
 
     informeService.obtenerDetalle.and.returnValue(of(informeDevuelto));
@@ -51,8 +42,6 @@ describe('CorregirInformeComponent', () => {
     actividadService.actualizar.and.returnValue(of(sampleActividad()));
     actividadService.crear.and.returnValue(of(sampleActividad()));
     soporteService.agregarUrl.and.returnValue(of({ id: 1, tipo: 'URL', nombre: 'Soporte', referencia: 'https://example.com' }));
-    documentoAdicionalService.agregar.and.returnValue(of({ id: 1, idCatalogo: 301, nombreCatalogo: 'Planilla', obligatorio: true, referencia: 'DOC-1' }));
-    catalogoService.listar.and.returnValue(of(sampleCatalogoPage()));
     router.navigate.and.returnValue(Promise.resolve(true));
 
     await TestBed.configureTestingModule({
@@ -62,8 +51,6 @@ describe('CorregirInformeComponent', () => {
         { provide: InformeService, useValue: informeService },
         { provide: ActividadInformeService, useValue: actividadService },
         { provide: SoporteAdjuntoService, useValue: soporteService },
-        { provide: DocumentoAdicionalService, useValue: documentoAdicionalService },
-        { provide: DocumentoCatalogoService, useValue: catalogoService },
         { provide: Router, useValue: router }
       ]
     }).compileComponents();
@@ -84,12 +71,6 @@ describe('CorregirInformeComponent', () => {
     expect(component.observaciones()[0].texto).toBe('Falta soporte en obligación 1');
   });
 
-  it('pre-fills existing document references from the informe', () => {
-    expect(component.documentosForm().length).toBe(2);
-    const planilla = component.documentosForm().find((d) => d.idCatalogo === 301);
-    expect(planilla?.referencia).toBe('DOC-EXISTENTE');
-  });
-
   it('does not allow editing when estado is not BORRADOR or DEVUELTO', async () => {
     informeService.obtenerDetalle.and.returnValue(of(informeAprobado));
     fixture = TestBed.createComponent(CorregirInformeComponent);
@@ -103,10 +84,6 @@ describe('CorregirInformeComponent', () => {
     component.actividadesForm.update((rows) =>
       rows.map((row) => ({ ...row, descripcion: 'Actividad corregida' }))
     );
-    component.documentosForm.update((docs) =>
-      docs.map((doc) => ({ ...doc, referencia: doc.referencia || `REF-${doc.idCatalogo}` }))
-    );
-
     component.guardarBorrador();
 
     expect(informeService.actualizarInforme).toHaveBeenCalledWith(501, jasmine.objectContaining({
@@ -126,10 +103,6 @@ describe('CorregirInformeComponent', () => {
     component.actividadesForm.update((rows) =>
       rows.map((row) => ({ ...row, descripcion: 'Actividad corregida' }))
     );
-    component.documentosForm.update((docs) =>
-      docs.map((doc) => ({ ...doc, referencia: doc.referencia || `REF-${doc.idCatalogo}` }))
-    );
-
     component.confirmarReenvio();
 
     expect(window.confirm).toHaveBeenCalled();
@@ -208,17 +181,3 @@ function sampleInformeAprobado(): InformeDetalle {
   };
 }
 
-function sampleCatalogoPage(): Page<DocumentoCatalogo> {
-  return {
-    content: [
-      { id: 301, nombre: 'Planilla', descripcion: null, obligatorio: true, tipoContrato: 'OPS' },
-      { id: 302, nombre: 'Certificacion', descripcion: null, obligatorio: false, tipoContrato: 'OPS' }
-    ],
-    totalElements: 2,
-    totalPages: 1,
-    size: 100,
-    number: 0,
-    first: true,
-    last: true
-  };
-}
