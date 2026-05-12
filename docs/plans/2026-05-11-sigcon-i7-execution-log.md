@@ -436,3 +436,82 @@ sqlplus SED_SIGCON/<password>@localhost:1521/XEPDB1 @db/04_apply_i7_schema.sql
 
 **Siguiente paso:**
 - Iniciar implementacion de T11 solo despues de este registro documental y commit de documentacion previa.
+
+---
+
+## T11 — Implementacion 2026-05-12
+
+### 2026-05-12 — Busqueda global avanzada e informes devueltos editables
+
+**Cambios backend:**
+
+**DTOs nuevos:**
+- `BusquedaAdminFiltros.java`: filtros combinados (q, estadoContrato, fechaInicio, fechaFin, contratistaId, revisorId, estadoInforme, pagina, tamano).
+- `BusquedaAdminPageResponse.java`: respuesta paginada con contratos, totalElementos, paginaActual, totalPaginas, tamano.
+- `ContratoResultadoDto.java`: extendido con `contratistaId` y lista `informes` anidados.
+- `InformeResultadoDto.java`: extendido con `contratoId` y `revisorNombre`.
+
+**Repositorios extendidos:**
+- `ContratoRepository.buscarContratosConFiltros()`: query JPQL con filtros opcionales de estadoContrato, contratistaId, revisorId; paginado.
+- `InformeRepository.buscarInformesPorContrato()`: query JPQL con filtros opcionales de q, rango de fechas, estadoInforme, revisorId; ordenado por fechaFin DESC.
+
+**Servicio refactorizado:**
+- `BusquedaAdminService.buscarConFiltros()`: filtros combinados, paginacion de 20, ordenamiento (periodo reciente, prioridad operativa de estado, numero contrato, contratista). Contratos con informes anidados. Omite contratos sin informes cuando hay filtros de informe activos.
+- `BusquedaAdminService.buscar()`: mantiene compatibilidad T8 legacy.
+
+**Controller extendido:**
+- `AdminBusquedaController`: nuevo endpoint `GET /api/admin/busqueda/avanzada` con todos los filtros como query params.
+
+**Tests backend:**
+- `BusquedaAdminServiceTest`: 6 tests nuevos T11 (filtros combinados, informes anidados, omision por filtros, inclusion sin filtros, ordenamiento, paginacion).
+- Suite completa: 176 tests, 0 fallos, BUILD SUCCESS.
+
+**Cambios frontend:**
+
+**Servicio extendido:**
+- `BusquedaAdminService.buscarAvanzado()`: llama a `/api/admin/busqueda/avanzada` con filtros combinados.
+- Nuevas interfaces: `BusquedaAdminFiltros`, `BusquedaAdminPageResponse`.
+- `ContratoResultado` extendido con `informes?: InformeResultado[]`.
+- `InformeResultado` extendido con `contratoId`, `revisorNombre`.
+
+**AdminBusquedaComponent actualizado:**
+- Formulario con selectores de estado contrato y estado informe.
+- Busqueda usa `buscarAvanzado()` con filtros combinados.
+- Resultados: contratos con informes anidados, paginacion con botones Anterior/Siguiente.
+- Mantiene secciones legacy (contratistas, contratos, informes) para compatibilidad.
+
+**CorregirInformeComponent actualizado:**
+- Aportes SGSSI editables en estado `DEVUELTO`: agregar, eliminar, actualizar campo a campo.
+- Precarga aportes desde datos existentes del informe; si no hay, precarga filas con entidades predeterminadas del contratista (SALUD/PENSION/ARL).
+- Documentos requeridos editables en `DEVUELTO`: cargar, descargar, eliminar.
+- Template separado en `corregir-informe.component.html`.
+- Guarda aportes SGSSI validos al guardar borrador.
+
+**InformeDetalleComponent actualizado:**
+- Inicializa aportes en `BORRADOR` y `DEVUELTO` (antes solo en `BORRADOR`).
+- `inicializarAportesEdicion()`: precarga entidades predeterminadas del contratista cuando no hay aportes existentes.
+
+**Tests Angular actualizados:**
+- `admin-busqueda.component.spec.ts`: 15 tests (filtros combinados, paginacion, contratos con informes anidados).
+- `corregir-informe.component.spec.ts`: 12 tests (precarga aportes, agregar/eliminar, guardar, documentos requeridos).
+- `informe-detalle.component.spec.ts`: ajustados para reflejar precarga de 3 filas SGSSI.
+- `informe-preview.component.spec.ts`: ajustado para reflejar ausencia de documentos adicionales (T10).
+- Suite completa: 152 specs, 0 fallos.
+
+**Validaciones ejecutadas:**
+- `mvn test "-Dtest=BusquedaAdminServiceTest"` — 13 tests, 0 fallos.
+- `mvn test` (suite completa) — 176 tests, 0 fallos, BUILD SUCCESS.
+- `npm run build` — exitoso.
+- `npm test -- --watch=false --include ...admin-busqueda.component.spec.ts --include ...corregir-informe.component.spec.ts` — 28 specs, 0 fallos.
+- `npm test -- --watch=false` (suite completa) — 152 specs, 0 fallos.
+
+**Commit:** `dae3809 fix: apply SIGCON I7 T11 post-test functional fixes`
+
+---
+
+## Punto de Retoma Post-T11
+
+- Rama activa: `feat/sigcon-i7`.
+- HEAD: `dae3809`.
+- T11 implementado y validado.
+- Siguiente actividad: pruebas funcionales de busqueda avanzada y flujo de informe DEVUELTO, o publicar rama y abrir PR.
