@@ -318,3 +318,63 @@ sqlplus SED_SIGCON/<password>@localhost:1521/XEPDB1 @db/04_apply_i7_schema.sql
 - Ejecutar la migracion en la BD objetivo.
 - Volver a levantar backend.
 - Validar `http://localhost:8080/actuator/health`.
+
+---
+
+## Fix Post-Revision Funcional 2026-05-12
+
+### 2026-05-12 — Correccion de flujo de informes y documentos requeridos
+
+**Origen:**
+- Revision funcional del 12/05/2026 sobre el flujo de informes I7 con perfiles Contratista, Revisor y Supervisor.
+
+**Hallazgos confirmados:**
+- Al guardar en `BORRADOR`, el informe no debia perder relaciones ya guardadas entre actividades reportadas, soportes, URLs y documentos requeridos.
+- La pantalla mostraba dos bloques documentales: `Documentos requeridos` y `Documentos adicionales`; el flujo esperado tiene una sola seccion funcional: `Documentos Requeridos`.
+- Los documentos como `Soporte_Correspondencia` y `Aportes Pago Planilla Seguridad Social` hacen parte de la configuracion administrada, no de un cargue adicional libre.
+- En estado `ENVIADO`, el perfil Contratista veia opciones que no correspondian al estado del flujo.
+- En vista Revisor/Supervisor, las URLs de soportes asociados a actividades se presentaban de forma incorrecta.
+- En el flujo Supervisor, al revisar un informe `EN_REVISION`, la vista podia quedar sin acciones efectivas para aprobar o devolver.
+- La gestion completa de documentos requeridos configurados debia permitir adjuntar, visualizar/descargar, reemplazar y eliminar mientras el informe estuviera en `BORRADOR` o `DEVUELTO`.
+
+**Decisiones funcionales aplicadas:**
+- Guardar borrador conserva el ultimo estado completo del informe; cualquier modificacion posterior parte de esa base.
+- Solo existe la seccion `Documentos Requeridos`.
+- No hay cargue funcional de documentos adicionales.
+- En `ENVIADO`, el Contratista solo ve `Vista previa`.
+- La URL o soporte de cada actividad se muestra como nombre del soporte mas accion `Abrir`.
+- La relacion actividad-soporte se mantiene uno a uno por ahora.
+- Supervisor:
+  - aprobar: `EN_REVISION` -> `APROBADO`
+  - devolver: `EN_REVISION` -> `DEVUELTO`
+  - la devolucion exige observacion.
+
+**Cambios backend:**
+- `DocumentoRequeridoInformeService` ahora expone como documentos requeridos los documentos configurados en el catalogo administrativo del contrato.
+- `InformeEstadoService.enviar()` deja de bloquear el envio por no existir registros de documentos adicionales libres.
+- Tests de documentos requeridos y estados cubren la nueva interpretacion funcional.
+
+**Cambios frontend:**
+- `informe-detalle.component` muestra una unica seccion `Documentos Requeridos`.
+- Las acciones de documentos requeridos quedan habilitadas para Contratista solo en estados editables.
+- Para Contratista en `ENVIADO`, se ocultan acciones de editar, revisar, aprobar o devolver; solo queda `Vista previa`.
+- Revisor y Supervisor visualizan soportes de actividades como nombre + boton/enlace `Abrir`.
+- Supervisor conserva acciones de aprobar/devolver en `EN_REVISION`, con observacion obligatoria al devolver.
+- `corregir-informe.component` precarga el soporte existente y reemplaza la URL solo cuando el contratista cambia el archivo.
+
+**Validaciones ejecutadas:**
+- `mvn test "-Dtest=DocumentoRequeridoInformeServiceTest,InformeEstadoServiceTest,InformeEstadoServiceI3Test,InformeEstadoServiceSinRevisorTest"` — 45 tests, 0 fallos, 0 errores, BUILD SUCCESS.
+- `node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false --include src/app/features/informes/detalle/informe-detalle.component.spec.ts --include src/app/features/informes/nuevo/informe-form.component.spec.ts --include src/app/features/informes/corregir/corregir-informe.component.spec.ts` — 65 specs, 0 fallos.
+
+**Commit de implementacion:** `3581409 fix: correct SIGCON informe workflow findings`
+
+**Publicacion:**
+- Rama publicada: `origin/feat/sigcon-i7`.
+- Deploy pendiente a cargo del usuario, segun instruccion recibida.
+
+**Siguiente punto de validacion funcional:**
+- Crear/editar informe como Contratista y guardar en borrador verificando persistencia de relaciones.
+- Confirmar que solo aparece `Documentos Requeridos`.
+- Enviar informe y validar que Contratista solo vea `Vista previa`.
+- Revisar soportes como Revisor/Supervisor y abrir enlaces asociados.
+- Aprobar y devolver como Supervisor desde `EN_REVISION`, validando cambio de estado y observacion obligatoria al devolver.

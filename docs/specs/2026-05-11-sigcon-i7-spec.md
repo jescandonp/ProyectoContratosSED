@@ -2,7 +2,7 @@
 ## Usuario IVA, Documentos Requeridos, Email de Aprobacion y Busqueda Administrativa
 
 > **Metodologia:** Spec-Driven Development (SDD) — Spec-Anchored
-> **Version:** 1.0 — **Fecha:** 2026-05-11
+> **Version:** 1.1 — **Fecha:** 2026-05-12
 > **Constitucion:** `docs/CONSTITUTION.md`
 > **Arquitectura:** `docs/ARCHITECTURE.md`
 > **PRD de referencia:** `docs/specs/2026-04-30-sigcon-prd.md`
@@ -10,6 +10,22 @@
 > **Rama:** `feat/sigcon-i7`
 > **Feature name:** `usuario-iva-documentos-email-busqueda`
 > **Estado:** Listo para planificacion e implementacion
+
+---
+
+## 0.1 Ajuste Funcional Post-Pruebas — 2026-05-12
+
+La revision funcional del 2026-05-12 sobre la rama `feat/sigcon-i7` deja estas precisiones obligatorias para cerrar el flujo de informes:
+
+- `Guardar borrador` debe persistir el ultimo estado completo del informe. Al reabrir o corregir, la pantalla debe partir de esa base sin perder relaciones entre actividades reportadas, soportes URL/archivo y documentos requeridos.
+- La aplicacion debe mostrar una sola seccion documental del informe: **Documentos Requeridos**.
+- No existe cargue de "documentos adicionales" en el flujo funcional. Todo documento exigido proviene de la configuracion del Admin y se gestiona como documento requerido.
+- En `BORRADOR` y `DEVUELTO`, el contratista puede adjuntar, visualizar/descargar, reemplazar y eliminar documentos requeridos.
+- En `ENVIADO`, el contratista solo debe ver `Vista previa`; no debe ver acciones de editar, revisar, aprobar ni devolver.
+- En vista de revisor/supervisor, los soportes asociados a actividades deben mostrarse como nombre del soporte + enlace/boton `Abrir`; la relacion funcional actual es uno a uno.
+- En `EN_REVISION`, el supervisor debe poder `Aprobar` (`EN_REVISION -> APROBADO`) o `Devolver` (`EN_REVISION -> DEVUELTO`), exigiendo observacion obligatoria al devolver.
+
+Commit de correccion asociado: `3581409 fix: correct SIGCON informe workflow findings`.
 
 ---
 
@@ -68,7 +84,7 @@ I7 queda cerrado cuando:
 - En estados `ENVIADO`, `EN_REVISION` y `APROBADO`, los documentos requeridos son solo lectura: visualizar y descargar.
 - La regla de seguridad vigente permanece: un contratista no puede consultar informes ni documentos de otro contratista.
 - La notificacion email de I7 complementa las notificaciones in-app existentes, no las reemplaza.
-- Los documentos requeridos son diferentes de soportes de actividades y documentos adicionales libres. I7 limita la nueva carga/preview/descarga a la seccion "Documentos Requeridos".
+- Los documentos requeridos son diferentes de soportes de actividades. I7 concentra todo documento exigido por configuracion del Admin en la seccion "Documentos Requeridos"; no hay cargue funcional de documentos adicionales.
 
 ---
 

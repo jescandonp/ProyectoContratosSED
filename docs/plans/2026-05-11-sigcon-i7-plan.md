@@ -2,7 +2,7 @@
 ## Usuario IVA, Documentos Requeridos, Email de Aprobacion y Busqueda Administrativa
 
 > **Metodologia:** Spec-Driven Development (SDD) — Spec-Anchored
-> **Version:** 1.0 — **Fecha:** 2026-05-11
+> **Version:** 1.1 — **Fecha:** 2026-05-12
 > **Spec de referencia:** `docs/specs/2026-05-11-sigcon-i7-spec.md`
 > **Rama:** `feat/sigcon-i7` (base: `feat/sigcon-i6`)
 > **Estado:** Listo para ejecucion
@@ -25,6 +25,7 @@ Incremento de **9 tareas**. El orden prioriza estabilizacion, modelo de usuario,
 | T7 | Backend — Email aprobacion | Servicio email configurable y disparo al aprobar informe |
 | T8 | Backend/Frontend — Busqueda admin | Endpoint y pantalla global por texto + rango de periodo de informe |
 | T9 | Validacion y cierre | Tests, guia funcional, execution log, commits y punto de retoma |
+| T10 | Correccion funcional post-revision | Hallazgos 12/05/2026: borrador preserva relaciones, una sola seccion Documentos Requeridos, permisos por rol, soportes como Abrir y acciones supervisor |
 
 ---
 
@@ -285,6 +286,50 @@ Si las pruebas Angular fallan por `spawn EPERM`, reintentar fuera del sandbox an
 
 ---
 
+## T10 — Correccion funcional post-revision 2026-05-12
+
+**Origen:** revision funcional del 2026-05-12 sobre I7 publicado para pruebas.
+
+**Hallazgos cubiertos:**
+
+1. Guardar borrador perdia o reconstruia relaciones de actividades reportadas, soportes y documentos.
+2. La UI mostraba dos bloques documentales: "Documentos requeridos" y "Documentos adicionales".
+3. El contratista veia acciones que no corresponden despues de enviar.
+4. Revisor/supervisor veian soportes URL con presentacion incorrecta.
+5. Supervisor quedaba sin acciones funcionales para aprobar/devolver desde el detalle.
+6. Documentos requeridos configurados por Admin no estaban completamente integrados como adjuntables/visualizables.
+
+**Acciones implementadas:**
+
+1. Backend:
+   - `DocumentoRequeridoInformeService` lista y valida documentos configurados por Admin como requeridos del informe.
+   - `InformeEstadoService.enviar()` deja de validar documentos adicionales y delega la exigencia documental a documentos requeridos.
+2. Frontend:
+   - Retirar secciones de documentos adicionales de nuevo/correccion/detalle/preview.
+   - Mantener solo **Documentos Requeridos**.
+   - Mostrar soportes URL como nombre + `Abrir`.
+   - Controlar acciones por rol: revisor solo revisa en `ENVIADO`; supervisor aprueba/devuelve en `EN_REVISION`; contratista en `ENVIADO` solo consulta/vista previa.
+   - En correccion, precargar el soporte URL existente y solo reemplazarlo si cambia.
+3. Tests:
+   - Ajustar specs Angular de informe nuevo, detalle y correccion.
+   - Ajustar tests backend de documentos requeridos y estado de informe.
+
+**Validacion requerida:**
+
+```powershell
+Set-Location sigcon-backend
+mvn test "-Dtest=DocumentoRequeridoInformeServiceTest,InformeEstadoServiceTest,InformeEstadoServiceI3Test,InformeEstadoServiceSinRevisorTest"
+```
+
+```powershell
+Set-Location sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false --include src/app/features/informes/detalle/informe-detalle.component.spec.ts --include src/app/features/informes/nuevo/informe-form.component.spec.ts --include src/app/features/informes/corregir/corregir-informe.component.spec.ts
+```
+
+**Commit asociado:** `3581409 fix: correct SIGCON informe workflow findings`
+
+---
+
 ## Orden de Ejecucion
 
 ```text
@@ -309,4 +354,3 @@ T7 y T8 pueden ejecutarse despues de T2 sin depender de T4, pero se recomienda c
 | Email falla en ambiente local | Config `email-enabled=false` y log sin rollback |
 | Busqueda amplia se vuelve lenta | Limitar resultados y paginar si el patron existente lo exige |
 | Documentos requeridos se mezclan con soportes | Servicios/rutas separadas y copy UI explicito |
-
