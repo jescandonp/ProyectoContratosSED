@@ -1,8 +1,8 @@
 # SIGCON - Guia De Pruebas Funcionales
 
-Estado: guia operativa para pruebas manuales I1-I3  
-Fecha: 2026-05-04  
-Rama objetivo: `feat/sigcon-i3`  
+Estado: guia operativa para pruebas manuales I1-I7  
+Fecha: 2026-05-12  
+Rama objetivo: `main` o `feat/sigcon-i7`  
 Marco: SDD Spec-Anchored por incrementos
 
 ## 1. Objetivo
@@ -14,6 +14,7 @@ Esta guia cubre:
 - Incremento 1: autenticacion local-dev, usuarios, contratos, catalogo y acceso por rol.
 - Incremento 2: creacion y gestion de informes, actividades, soportes, documentos y revision.
 - Incremento 3: aprobacion final, PDF institucional y notificaciones.
+- Incrementos 4-7: edicion administrativa, PDF institucional, SGSSI, usuario IVA, documentos requeridos, email de aprobacion y busqueda administrativa.
 
 ## 2. Prerrequisitos
 
@@ -29,6 +30,14 @@ sqlplus SED_SIGCON/Sigcon2026Local1@localhost:1521/XEPDB1 @db/01_datos_prueba.sq
 ```
 
 Si el usuario ya existe y los scripts ya fueron ejecutados, no repetir `00_setup.sql` sobre el mismo esquema porque no es idempotente.
+
+Para una base existente anterior a I7, ejecutar la migracion incremental antes de levantar backend:
+
+```powershell
+sqlplus SED_SIGCON/Sigcon2026Local1@localhost:1521/XEPDB1 @db/04_apply_i7_schema.sql
+```
+
+Esta migracion resuelve el error de arranque `Schema-validation: missing table [sgcn_docs_requeridos]`.
 
 ### 2.2 Backend
 

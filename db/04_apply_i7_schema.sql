@@ -1,0 +1,127 @@
+-- ============================================================
+-- SIGCON I7 - Migracion incremental para esquemas existentes
+-- ============================================================
+--
+-- Uso:
+--   Ejecutar conectado como propietario del esquema SIGCON antes de levantar
+--   el backend I7 cuando la base ya existia antes del incremento.
+--
+-- Objetos I7:
+--   - SGCN_USUARIOS.RESPONSABLE_IVA
+--   - SGCN_DOCS_REQUERIDOS_SEQ
+--   - SGCN_DOCS_REQUERIDOS
+--   - Indices y trigger de auditoria de documentos requeridos
+
+SET SERVEROUTPUT ON;
+
+DECLARE
+    v_count NUMBER;
+BEGIN
+    SELECT COUNT(*)
+      INTO v_count
+      FROM USER_TAB_COLUMNS
+     WHERE TABLE_NAME = 'SGCN_USUARIOS'
+       AND COLUMN_NAME = 'RESPONSABLE_IVA';
+
+    IF v_count = 0 THEN
+        EXECUTE IMMEDIATE 'ALTER TABLE SGCN_USUARIOS ADD (RESPONSABLE_IVA NUMBER(1) DEFAULT 0 NOT NULL)';
+        DBMS_OUTPUT.PUT_LINE('OK: columna SGCN_USUARIOS.RESPONSABLE_IVA creada.');
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('SKIP: columna SGCN_USUARIOS.RESPONSABLE_IVA ya existe.');
+    END IF;
+END;
+/
+
+DECLARE
+    v_count NUMBER;
+BEGIN
+    SELECT COUNT(*)
+      INTO v_count
+      FROM USER_SEQUENCES
+     WHERE SEQUENCE_NAME = 'SGCN_DOCS_REQUERIDOS_SEQ';
+
+    IF v_count = 0 THEN
+        EXECUTE IMMEDIATE 'CREATE SEQUENCE SGCN_DOCS_REQUERIDOS_SEQ START WITH 1 INCREMENT BY 1 NOCACHE';
+        DBMS_OUTPUT.PUT_LINE('OK: secuencia SGCN_DOCS_REQUERIDOS_SEQ creada.');
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('SKIP: secuencia SGCN_DOCS_REQUERIDOS_SEQ ya existe.');
+    END IF;
+END;
+/
+
+DECLARE
+    v_count NUMBER;
+BEGIN
+    SELECT COUNT(*)
+      INTO v_count
+      FROM USER_TABLES
+     WHERE TABLE_NAME = 'SGCN_DOCS_REQUERIDOS';
+
+    IF v_count = 0 THEN
+        EXECUTE IMMEDIATE '
+            CREATE TABLE SGCN_DOCS_REQUERIDOS (
+                ID              NUMBER          DEFAULT SGCN_DOCS_REQUERIDOS_SEQ.NEXTVAL PRIMARY KEY,
+                ID_INFORME      NUMBER          NOT NULL,
+                CLAVE_LOGICA    VARCHAR2(100)   NOT NULL,
+                NOMBRE_DISPLAY  VARCHAR2(200)   NOT NULL,
+                NOMBRE_ARCHIVO  VARCHAR2(500),
+                CONTENT_TYPE    VARCHAR2(100),
+                EXTENSION       VARCHAR2(10),
+                STORAGE_PATH    VARCHAR2(1000),
+                TAMANO_BYTES    NUMBER(15),
+                ACTIVO          NUMBER(1)       DEFAULT 1 NOT NULL,
+                CREATED_AT      TIMESTAMP       DEFAULT SYSTIMESTAMP NOT NULL,
+                CREATED_BY      VARCHAR2(200),
+                UPDATED_AT      TIMESTAMP,
+                CONSTRAINT FK_DOCS_REQUERIDOS_INFORME FOREIGN KEY (ID_INFORME) REFERENCES SGCN_INFORMES(ID),
+                CONSTRAINT CHK_DOCS_REQUERIDOS_ACTIVO CHECK (ACTIVO IN (0,1))
+            )';
+        DBMS_OUTPUT.PUT_LINE('OK: tabla SGCN_DOCS_REQUERIDOS creada.');
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('SKIP: tabla SGCN_DOCS_REQUERIDOS ya existe.');
+    END IF;
+END;
+/
+
+DECLARE
+    v_count NUMBER;
+BEGIN
+    SELECT COUNT(*)
+      INTO v_count
+      FROM USER_INDEXES
+     WHERE INDEX_NAME = 'IDX_DOCS_REQUERIDOS_INFORME';
+
+    IF v_count = 0 THEN
+        EXECUTE IMMEDIATE 'CREATE INDEX IDX_DOCS_REQUERIDOS_INFORME ON SGCN_DOCS_REQUERIDOS(ID_INFORME)';
+        DBMS_OUTPUT.PUT_LINE('OK: indice IDX_DOCS_REQUERIDOS_INFORME creado.');
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('SKIP: indice IDX_DOCS_REQUERIDOS_INFORME ya existe.');
+    END IF;
+END;
+/
+
+DECLARE
+    v_count NUMBER;
+BEGIN
+    SELECT COUNT(*)
+      INTO v_count
+      FROM USER_INDEXES
+     WHERE INDEX_NAME = 'IDX_DOCS_REQUERIDOS_CLAVE';
+
+    IF v_count = 0 THEN
+        EXECUTE IMMEDIATE 'CREATE INDEX IDX_DOCS_REQUERIDOS_CLAVE ON SGCN_DOCS_REQUERIDOS(ID_INFORME, CLAVE_LOGICA)';
+        DBMS_OUTPUT.PUT_LINE('OK: indice IDX_DOCS_REQUERIDOS_CLAVE creado.');
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('SKIP: indice IDX_DOCS_REQUERIDOS_CLAVE ya existe.');
+    END IF;
+END;
+/
+
+CREATE OR REPLACE TRIGGER TRG_DOCS_REQUERIDOS_AUDIT
+BEFORE UPDATE ON SGCN_DOCS_REQUERIDOS FOR EACH ROW
+BEGIN
+    :NEW.UPDATED_AT := SYSTIMESTAMP;
+END;
+/
+
+PROMPT OK: migracion incremental I7 aplicada.

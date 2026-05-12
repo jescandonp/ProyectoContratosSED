@@ -287,3 +287,34 @@ Estado listo para retomar:
 Archivos no versionados presentes y no relacionados:
 - `.agents/`, `.claude/`, `.kiro/`, `Notas_ProyectoContratos/`, `skills-lock.json`
 - No limpiar ni revertir salvo instrucción explícita.
+
+---
+
+## Fix Post-Merge Para Pruebas Funcionales
+
+### 2026-05-12 — Migracion incremental I7 para esquemas existentes
+
+**Hallazgo:**
+- Al levantar backend contra una BD ya existente, Hibernate fallo con:
+  `Schema-validation: missing table [sgcn_docs_requeridos]`.
+
+**Causa:**
+- El DDL de I7 estaba en `db/00_setup.sql`, pero ese archivo no es idempotente y no debe reejecutarse completo sobre esquemas existentes.
+- La BD objetivo no tenia aplicado el bloque I7 que crea `SGCN_DOCS_REQUERIDOS`.
+
+**Resolucion:**
+- Se agrega `db/04_apply_i7_schema.sql`, migracion incremental e idempotente para:
+  - `SGCN_USUARIOS.RESPONSABLE_IVA`
+  - `SGCN_DOCS_REQUERIDOS_SEQ`
+  - `SGCN_DOCS_REQUERIDOS`
+  - indices y trigger de auditoria
+- Se actualiza `docs/ARRANQUE.md` y `docs/GUIA_PRUEBAS_FUNCIONALES.md` para indicar que, en bases existentes anteriores a I7, debe ejecutarse:
+
+```powershell
+sqlplus SED_SIGCON/<password>@localhost:1521/XEPDB1 @db/04_apply_i7_schema.sql
+```
+
+**Siguiente punto de retoma:**
+- Ejecutar la migracion en la BD objetivo.
+- Volver a levantar backend.
+- Validar `http://localhost:8080/actuator/health`.

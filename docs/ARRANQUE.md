@@ -168,7 +168,7 @@ GRANT CREATE SESSION, CREATE TABLE, CREATE SEQUENCE, CREATE TRIGGER, CREATE INDE
 GRANT UNLIMITED TABLESPACE TO SED_SIGCON;
 ```
 
-### 2. Ejecutar DDL I1 + I2 + I3
+### 2. Ejecutar DDL y datos base
 
 ```powershell
 # Conectar con sqlplus y ejecutar en orden:
@@ -176,8 +176,25 @@ sqlplus SED_SIGCON/<password>@localhost:1521/XEPDB1 @db/00_setup.sql
 sqlplus SED_SIGCON/<password>@localhost:1521/XEPDB1 @db/01_datos_prueba.sql
 ```
 
-`db/00_setup.sql` contiene DDL de I1–I6. I4 e I5 no agregaron DDL. I6 agrega bloque al final con cabecera `-- ============================================================ SIGCON I6`.
+`db/00_setup.sql` contiene DDL acumulado hasta I7. I4 e I5 no agregaron DDL. I6 e I7 agregan bloques al final.
 `db/01_datos_prueba.sql` solo debe ejecutarse en ambientes de desarrollo local.
+
+### 3. Actualizar esquemas existentes a I7
+
+Si el esquema ya existia antes de I7, no repetir `db/00_setup.sql` completo. Ejecutar solo la migracion incremental I7:
+
+```powershell
+sqlplus SED_SIGCON/<password>@localhost:1521/XEPDB1 @db/04_apply_i7_schema.sql
+```
+
+Este script crea de forma idempotente:
+
+- `SGCN_USUARIOS.RESPONSABLE_IVA`
+- `SGCN_DOCS_REQUERIDOS_SEQ`
+- `SGCN_DOCS_REQUERIDOS`
+- indices y trigger de auditoria de documentos requeridos
+
+Si al levantar backend aparece `Schema-validation: missing table [sgcn_docs_requeridos]`, falta ejecutar esta migracion en la BD objetivo.
 
 ## Configuracion I3: PDF Y Email
 
