@@ -2,7 +2,7 @@
 ## Usuario IVA, Documentos Requeridos, Email de Aprobacion y Busqueda Administrativa
 
 > **Metodologia:** Spec-Driven Development (SDD) — Spec-Anchored
-> **Version:** 1.1 — **Fecha:** 2026-05-12
+> **Version:** 1.2 — **Fecha:** 2026-05-12
 > **Constitucion:** `docs/CONSTITUTION.md`
 > **Arquitectura:** `docs/ARCHITECTURE.md`
 > **PRD de referencia:** `docs/specs/2026-04-30-sigcon-prd.md`
@@ -29,6 +29,68 @@ Commit de correccion asociado: `3581409 fix: correct SIGCON informe workflow fin
 
 ---
 
+## 0.2 Mejora Funcional Post-Pruebas — 2026-05-12
+
+La siguiente correccion debe documentarse y planearse antes de implementar, manteniendo el flujo SDD del incremento:
+
+### 0.2.1 Busqueda global con filtros combinados y paginacion
+
+La busqueda global administrativa debe evolucionar de busqueda simple a busqueda combinada, manteniendo el texto libre como criterio opcional.
+
+Filtros requeridos:
+
+- Texto libre opcional.
+- Estado del contrato.
+- Rango de periodo del informe (`fechaInicio` / `fechaFin` del informe).
+- Contratista.
+- Revisor.
+- Estado del informe.
+
+Resultado esperado:
+
+- La respuesta debe permitir visualizar ambos niveles: contrato e informes asociados que coincidan con los filtros.
+- Si un contrato coincide por texto o estado, pero el filtro de informe restringe por periodo/estado/revisor, deben mostrarse solo los informes que cumplen los criterios aplicables.
+- La UI debe dejar claro el contexto del contrato y el detalle de informes encontrados.
+
+Paginacion:
+
+- Tamano inicial: 20 registros por pagina.
+- El backend debe recibir pagina y tamano.
+- La UI debe permitir navegar entre paginas y mostrar total o rango visible cuando el backend lo exponga.
+
+Ordenamiento propuesto por defecto:
+
+1. Periodo de informe mas reciente primero.
+2. Estado del informe con prioridad operativa: `EN_REVISION`, `ENVIADO`, `DEVUELTO`, `BORRADOR`, `APROBADO`.
+3. Numero de contrato ascendente.
+4. Contratista ascendente.
+
+### 0.2.2 Informe devuelto editable y reenviable
+
+Cuando un informe queda en estado `DEVUELTO`, el contratista debe poder corregirlo integralmente y volverlo a enviar.
+
+Reglas funcionales:
+
+- El estado `DEVUELTO` es editable para el contratista propietario del informe.
+- El contratista puede modificar:
+  - actividades reportadas;
+  - descripcion o detalle de actividades;
+  - soportes asociados a cada actividad;
+  - aportes al Sistema General de Seguridad Social;
+  - documentos requeridos configurados;
+  - demas informacion editable del informe.
+- Al reenviar, el estado debe pasar de `DEVUELTO` a `ENVIADO` para que regrese al flujo de revision.
+- Debe conservarse el motivo/observacion de devolucion para orientar la correccion.
+- Los documentos requeridos ya cargados deben mantenerse y permitir visualizar, reemplazar o eliminar mientras el informe este `DEVUELTO`.
+
+Reglas para aportes de seguridad social:
+
+- Los datos actuales se editan en pantalla; no se reemplaza toda la seccion como bloque opaco.
+- Al crear o diligenciar un informe, deben precargarse los datos predeterminados del usuario contratista para `SALUD`, `PENSION` y `ARL` cuando existan.
+- La precarga no impide que el contratista ajuste entidad, fecha, valor o soporte segun corresponda al periodo reportado.
+
+---
+
 ## 1. Alcance del Incremento
 
 ### 1.1 Problema que resuelve
@@ -50,7 +112,7 @@ Las pruebas funcionales posteriores a I6 dejaron cinco necesidades:
 | Documentos Requeridos | Carga, preview y descarga de documentos requeridos del informe; solo PDF y `.eml` | CONTRATISTA / ADMIN / REVISION |
 | Factura IVA | Documento requerido dinamico `FACTURA` por cada informe cuando el contratista es responsable de IVA | CONTRATISTA |
 | Email aprobacion | Notificar al contratista y a correo administrador configurable cuando el informe pasa a `APROBADO` | Sistema |
-| Busqueda global admin | Busqueda por texto y rango de periodo de informe, con resultados agrupados por contratistas, contratos e informes | ADMIN |
+| Busqueda global admin | Busqueda por texto opcional, filtros combinados, paginacion y resultados por contratos e informes | ADMIN |
 
 ### 1.3 Fuera de este incremento
 
@@ -72,7 +134,8 @@ I7 queda cerrado cuando:
 - La seccion Documentos Requeridos permite adjuntar, visualizar y descargar solo PDF y `.eml`.
 - El preview `.eml` muestra asunto, remitente, fecha y cuerpo texto basico cuando sea posible; el archivo original siempre se puede descargar.
 - Al aprobar un informe se dispara notificacion email al contratista y al correo administrador configurable.
-- El administrador cuenta con busqueda global por contratista, contrato o informe, con rango de fechas aplicado al periodo del informe (`fechaInicio` / `fechaFin`).
+- El administrador cuenta con busqueda global por texto opcional y filtros combinados: estado del contrato, periodo del informe, contratista, revisor y estado del informe, con paginacion inicial de 20 registros.
+- Un informe `DEVUELTO` puede ser corregido integralmente por el contratista y reenviado a estado `ENVIADO`.
 
 ---
 

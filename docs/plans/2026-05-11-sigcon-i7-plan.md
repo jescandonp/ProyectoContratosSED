@@ -2,7 +2,7 @@
 ## Usuario IVA, Documentos Requeridos, Email de Aprobacion y Busqueda Administrativa
 
 > **Metodologia:** Spec-Driven Development (SDD) — Spec-Anchored
-> **Version:** 1.1 — **Fecha:** 2026-05-12
+> **Version:** 1.2 — **Fecha:** 2026-05-12
 > **Spec de referencia:** `docs/specs/2026-05-11-sigcon-i7-spec.md`
 > **Rama:** `feat/sigcon-i7` (base: `feat/sigcon-i6`)
 > **Estado:** Listo para ejecucion
@@ -11,7 +11,7 @@
 
 ## Resumen Ejecutivo
 
-Incremento de **9 tareas**. El orden prioriza estabilizacion, modelo de usuario, documentos requeridos/factura, email y busqueda administrativa.
+Incremento de **11 tareas**. El orden prioriza estabilizacion, modelo de usuario, documentos requeridos/factura, email, busqueda administrativa y ajustes post-pruebas con validacion.
 
 | Tarea | Scope | Descripcion |
 |-------|-------|-------------|
@@ -26,6 +26,7 @@ Incremento de **9 tareas**. El orden prioriza estabilizacion, modelo de usuario,
 | T8 | Backend/Frontend — Busqueda admin | Endpoint y pantalla global por texto + rango de periodo de informe |
 | T9 | Validacion y cierre | Tests, guia funcional, execution log, commits y punto de retoma |
 | T10 | Correccion funcional post-revision | Hallazgos 12/05/2026: borrador preserva relaciones, una sola seccion Documentos Requeridos, permisos por rol, soportes como Abrir y acciones supervisor |
+| T11 | Mejora funcional post-pruebas | Busqueda global con filtros combinados/paginacion y correccion integral de informes `DEVUELTO` |
 
 ---
 
@@ -330,6 +331,101 @@ node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=f
 
 ---
 
+## T11 — Mejora funcional post-pruebas 2026-05-12
+
+**Origen:** pruebas funcionales posteriores al ajuste `3581409`.
+
+**Regla de secuencia SDD:**
+
+1. Levantar hallazgos y decisiones funcionales.
+2. Actualizar spec.
+3. Actualizar plan.
+4. Registrar punto de partida en execution log.
+5. Solo despues corregir codigo y ejecutar validaciones.
+
+**Hallazgos/mejoras cubiertas:**
+
+1. Busqueda global requiere filtros combinados ademas de texto libre opcional.
+2. Busqueda global debe soportar paginacion para volumen alto de registros.
+3. Busqueda global debe retornar contratos e informes asociados que cumplan filtros.
+4. Informe en estado `DEVUELTO` no permite al contratista modificar actividades, soportes ni aportes de seguridad social.
+5. Al diligenciar informe, no se estan usando los datos predeterminados del usuario para `SALUD`, `PENSION` y `ARL`.
+
+**Decisiones funcionales cerradas:**
+
+- Texto libre de busqueda queda opcional.
+- Filtros combinables:
+  - estado del contrato;
+  - rango de periodo del informe;
+  - contratista;
+  - revisor;
+  - estado del informe.
+- Resultado de busqueda: contratos e informes.
+- Paginacion inicial: 20 registros por pagina.
+- Ordenamiento default:
+  1. periodo de informe mas reciente primero;
+  2. prioridad operativa de estado: `EN_REVISION`, `ENVIADO`, `DEVUELTO`, `BORRADOR`, `APROBADO`;
+  3. numero de contrato ascendente;
+  4. contratista ascendente.
+- En `DEVUELTO`, el contratista puede editar todo el informe.
+- Reenvio de `DEVUELTO` pasa a `ENVIADO`.
+- Aportes de seguridad social se editan campo a campo.
+- Al crear/diligenciar informe, se deben precargar datos predeterminados del usuario para `SALUD`, `PENSION` y `ARL`, sin bloquear ajustes del contratista.
+
+**Archivos candidatos a revisar antes de implementar:**
+
+- Backend busqueda:
+  - `sigcon-backend/src/main/java/.../BusquedaAdminController.java`
+  - `sigcon-backend/src/main/java/.../BusquedaAdminService.java`
+  - DTOs de busqueda administrativa.
+  - tests `*Busqueda*Test`.
+- Backend informes/estado:
+  - `InformeService`
+  - `InformeEstadoService`
+  - DTOs de crear/actualizar informe.
+  - tests `InformeServiceTest`, `InformeEstadoServiceTest`.
+- Backend usuarios/aportes:
+  - modelo/DTO de usuario contratista con datos predeterminados de seguridad social.
+  - servicio que construye el formulario o respuesta inicial de informe.
+- Frontend busqueda:
+  - pantalla `/admin/busqueda`.
+  - servicio Angular de busqueda.
+  - specs de busqueda admin.
+- Frontend informe devuelto:
+  - `informe-detalle.component`
+  - `corregir-informe.component`
+  - `informe-form.component`
+  - servicios/modelos de informe y aportes.
+
+**Plan de implementacion posterior a este registro documental:**
+
+1. Escribir/ajustar tests backend de busqueda con filtros combinados, paginacion y ordenamiento.
+2. Implementar contrato API paginado para busqueda administrativa.
+3. Ajustar UI de busqueda para filtros, paginador y orden visible.
+4. Escribir/ajustar tests backend para edicion integral de `DEVUELTO` y reenvio a `ENVIADO`.
+5. Ajustar frontend de correccion para habilitar actividades, soportes, documentos requeridos y aportes en `DEVUELTO`.
+6. Precargar aportes de seguridad social desde datos predeterminados del usuario al crear/diligenciar informe.
+7. Ejecutar pruebas focalizadas backend y frontend.
+8. Actualizar execution log con resultados, commit y estado de publicacion.
+
+**Validacion esperada:**
+
+```powershell
+Set-Location sigcon-backend
+mvn test "-Dtest=*Busqueda*Test,InformeServiceTest,InformeEstadoServiceTest"
+```
+
+```powershell
+Set-Location sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false --include src/app/features/admin/busqueda/*.spec.ts --include src/app/features/informes/**/*.spec.ts
+```
+
+**Commit sugerido de documentacion previa:** `docs: define SIGCON I7 post-test functional fixes`
+
+**Commit sugerido de implementacion posterior:** `fix: apply SIGCON I7 post-test functional fixes`
+
+---
+
 ## Orden de Ejecucion
 
 ```text
@@ -339,6 +435,8 @@ T4 -> T5 -> T6
 T7
 T8
 T9
+T10
+T11
 ```
 
 T7 y T8 pueden ejecutarse despues de T2 sin depender de T4, pero se recomienda cerrar documentos/factura antes de busqueda para evitar mezclar validaciones funcionales.

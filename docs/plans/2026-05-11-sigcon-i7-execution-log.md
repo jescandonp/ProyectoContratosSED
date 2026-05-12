@@ -378,3 +378,61 @@ sqlplus SED_SIGCON/<password>@localhost:1521/XEPDB1 @db/04_apply_i7_schema.sql
 - Enviar informe y validar que Contratista solo vea `Vista previa`.
 - Revisar soportes como Revisor/Supervisor y abrir enlaces asociados.
 - Aprobar y devolver como Supervisor desde `EN_REVISION`, validando cambio de estado y observacion obligatoria al devolver.
+
+---
+
+## Punto de Partida SDD Post-Pruebas 2026-05-12
+
+### 2026-05-12 — Busqueda global avanzada e informes devueltos editables
+
+**Estado de la actividad:**
+- Fase documental SDD iniciada antes de corregir codigo.
+- No se ejecutan cambios de implementacion en este punto.
+
+**Secuencia acordada:**
+1. Levantar hallazgos y decisiones funcionales.
+2. Actualizar spec correspondiente.
+3. Actualizar plan/tareas del incremento.
+4. Registrar punto de partida en execution log.
+5. Implementar correcciones.
+6. Ejecutar validaciones.
+7. Cerrar execution log con resultados, commits y publicacion.
+
+**Hallazgos/mejoras levantadas:**
+- Busqueda global requiere combinacion de filtros, no solo busqueda por texto.
+- La busqueda debe permitir filtrar por:
+  - estado del contrato;
+  - rango de periodo del informe;
+  - contratista;
+  - revisor;
+  - estado del informe.
+- El texto libre sigue disponible, pero debe ser opcional.
+- La busqueda debe retornar contratos e informes asociados.
+- Se requiere paginacion para escenarios con muchos registros.
+- En estado `DEVUELTO`, el contratista debe poder ajustar cualquier informacion del informe y reenviarlo.
+- Actualmente no se pueden modificar correctamente actividades, soportes ni aportes de seguridad social desde `DEVUELTO`.
+- Los datos predeterminados del usuario para `SALUD`, `PENSION` y `ARL` deben usarse para precargar aportes al diligenciar informe, permitiendo ajustes manuales.
+
+**Decisiones funcionales confirmadas:**
+- Paginacion inicial: 20 registros por pagina.
+- Ordenamiento default propuesto:
+  1. periodo de informe mas reciente primero;
+  2. prioridad operativa de estado: `EN_REVISION`, `ENVIADO`, `DEVUELTO`, `BORRADOR`, `APROBADO`;
+  3. numero de contrato ascendente;
+  4. contratista ascendente.
+- En `DEVUELTO`, el contratista puede editar:
+  - actividades reportadas;
+  - descripcion/detalle de actividades;
+  - soportes;
+  - aportes a seguridad social;
+  - documentos requeridos;
+  - demas informacion editable del informe.
+- Al reenviar informe devuelto, el estado cambia de `DEVUELTO` a `ENVIADO`.
+- Los aportes de seguridad social se editan campo a campo, no como reemplazo completo de seccion.
+
+**Documentos actualizados antes de implementar:**
+- `docs/specs/2026-05-11-sigcon-i7-spec.md` — version 1.2, seccion `0.2 Mejora Funcional Post-Pruebas`.
+- `docs/plans/2026-05-11-sigcon-i7-plan.md` — version 1.2, tarea `T11`.
+
+**Siguiente paso:**
+- Iniciar implementacion de T11 solo despues de este registro documental y commit de documentacion previa.
