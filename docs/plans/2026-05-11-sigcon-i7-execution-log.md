@@ -55,7 +55,7 @@ I7 se abre como incremento formal posterior a I6 a partir de hallazgos de prueba
 | T5 | Validacion envio por documentos requeridos | COMPLETO | `613bb6e` |
 | T6 | Frontend Documentos Requeridos | COMPLETO | `e7315bf` |
 | T7 | Email aprobacion contratista + admin configurable | COMPLETO | `5be4064` |
-| T8 | Busqueda administrativa global | PENDIENTE | pendiente |
+| T8 | Busqueda administrativa global | COMPLETO | `fb2a0d3` |
 | T9 | Validacion, docs y cierre | PENDIENTE | pendiente |
 
 ---
@@ -156,7 +156,33 @@ I7 se abre como incremento formal posterior a I6 a partir de hallazgos de prueba
 - `mvn test -Dtest=InformeEstadoServiceTest,InformeEstadoServiceI3Test,InformeEstadoServiceSinRevisorTest` — 28 tests, 0 fallos.
 - `mvn test` (suite completa) — 155 tests, 0 fallos, 0 errores, BUILD SUCCESS.
 
-### 2026-05-11 — T7 Backend Email aprobacion contratista + admin configurable
+### 2026-05-11 — T8 Búsqueda administrativa global
+
+**Backend:**
+- DTOs: `ContratistaResultadoDto`, `ContratoResultadoDto`, `InformeResultadoDto`, `BusquedaAdminResponse`.
+- Queries JPQL en repositorios: `UsuarioRepository.buscarContratistas()`, `ContratoRepository.buscarContratos()`, `InformeRepository.buscarInformes()` (con rango de fechas opcional).
+- `BusquedaAdminService`: agrupa resultados de los tres repositorios, límite 50 por grupo.
+- `AdminBusquedaController`: `GET /api/admin/busqueda?q=&fechaInicio=&fechaFin=`, solo ADMIN.
+- `BusquedaAdminServiceTest`: 7 tests unitarios.
+- `SigconBackendSecurityTest`: 3 tests nuevos (admin puede buscar, contratista no puede, no autenticado no puede).
+- `InformeSecurityTest`: `@MockBean BusquedaAdminService` agregado para contexto Spring.
+
+**Frontend:**
+- `BusquedaAdminService` Angular: método `buscar(q, fechaInicio?, fechaFin?)`.
+- `AdminBusquedaComponent`: formulario con input texto + rango de fechas + botón buscar; resultados agrupados en tres secciones con navegación al detalle.
+- Ruta `/admin/busqueda` registrada con `roleGuard(['ADMIN'])`.
+- Acceso rápido agregado al `AdminDashboardComponent`.
+- `AdminBusquedaComponent.spec.ts`: 12 tests.
+
+**Validaciones ejecutadas:**
+- `mvn test -Dtest=BusquedaAdminServiceTest,SigconBackendSecurityTest` — 21 tests, 0 fallos.
+- `mvn test` (suite completa) — 170 tests, 0 fallos, BUILD SUCCESS.
+- `npm run build` — exitoso.
+- `npm test -- --watch=false --include=...admin-busqueda.component.spec.ts` — 12 specs, 0 fallos.
+
+**Commit:** `fb2a0d3 feat(i7): add admin global search (T8)`
+
+---
 
 **Análisis del estado previo:**
 - `EmailNotificacionService` ya existía con `enviar()` vía Microsoft Graph.
@@ -215,7 +241,29 @@ I7 se abre como incremento formal posterior a I6 a partir de hallazgos de prueba
 
 ## Proximo Punto de Retoma
 
-Continuar con **T8 Búsqueda administrativa global**:
+Continuar con **T9 Validación, documentación y cierre**:
+
+1. Ejecutar suite completa backend: `mvn test`.
+2. Ejecutar suite completa frontend: `npm test -- --watch=false`.
+3. Actualizar `docs/GUIA_PRUEBAS_FUNCIONALES.md` con escenarios I7.
+4. Actualizar `README.md` con I7 como último incremento cerrado.
+5. Actualizar `docs/ARRANQUE.md` con SHA de cierre I7.
+6. Cerrar execution log con resultados finales.
+
+---
+
+## Handoff Para Siguiente Herramienta
+
+Estado listo para retomar:
+
+- Rama activa esperada: `feat/sigcon-i7`.
+- HEAD documentado antes del handoff: `fb2a0d3`.
+- Tareas cerradas: T0, T1, T2, T3, T4, T5, T6, T7, T8.
+- Siguiente tarea: T9.
+
+Archivos no versionados presentes y no relacionados:
+- `.agents/`, `.claude/`, `.kiro/`, `Notas_ProyectoContratos/`, `skills-lock.json`
+- No limpiar ni revertir salvo instrucción explícita.
 
 **Backend:**
 - Endpoint `GET /api/admin/busqueda?q=&fechaInicio=&fechaFin=`
