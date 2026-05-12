@@ -77,6 +77,21 @@ import { RouterLink } from '@angular/router';
             <p class="mt-xs text-xs text-[var(--color-on-surface-variant)]">Consultar historial de informes por contrato</p>
           </div>
         </a>
+
+        <a
+          class="flex flex-col gap-md rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg no-underline transition-all hover:border-[var(--color-primary)] hover:shadow-md"
+          routerLink="/admin/busqueda"
+        >
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--color-tertiary-container,#e8d5f0)]">
+            <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+          </div>
+          <div>
+            <p class="m-0 text-base font-semibold text-[var(--color-on-surface)]">Búsqueda global</p>
+            <p class="mt-xs text-xs text-[var(--color-on-surface-variant)]">Buscar contratistas, contratos e informes</p>
+          </div>
+        </a>
       </div>
     </div>
   `

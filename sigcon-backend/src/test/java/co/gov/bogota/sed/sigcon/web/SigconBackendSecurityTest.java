@@ -108,6 +108,10 @@ class SigconBackendSecurityTest {
     @MockBean
     private co.gov.bogota.sed.sigcon.domain.repository.DocumentoRequeridoInformeRepository documentoRequeridoInformeRepository;
 
+    // I7 services — mocked to keep context loadable without Oracle.
+    @MockBean
+    private co.gov.bogota.sed.sigcon.application.service.BusquedaAdminService busquedaAdminService;
+
     @MockBean
     private JpaMetamodelMappingContext jpaMetamodelMappingContext;
 
@@ -249,6 +253,42 @@ class SigconBackendSecurityTest {
         mockMvc.perform(put("/api/admin/contratos/10")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(validContractJson("OPS-2026-010")))
+            .andExpect(status().isUnauthorized());
+    }
+
+    // ── T8: GET /api/admin/busqueda ──────────────────────────────────────────
+
+    @Test
+    void adminPuedeBuscarGlobalmente() throws Exception {
+        co.gov.bogota.sed.sigcon.application.dto.busqueda.BusquedaAdminResponse respuesta =
+            new co.gov.bogota.sed.sigcon.application.dto.busqueda.BusquedaAdminResponse(
+                java.util.Collections.emptyList(),
+                java.util.Collections.emptyList(),
+                java.util.Collections.emptyList()
+            );
+        when(busquedaAdminService.buscar(any(), any(), any())).thenReturn(respuesta);
+
+        mockMvc.perform(get("/api/admin/busqueda")
+                .param("q", "Ana")
+                .with(httpBasic(ADMIN_EMAIL, "admin123")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.contratistas").isArray())
+            .andExpect(jsonPath("$.contratos").isArray())
+            .andExpect(jsonPath("$.informes").isArray());
+    }
+
+    @Test
+    void contratistaNoAdminNoPuedeBuscarGlobalmente() throws Exception {
+        mockMvc.perform(get("/api/admin/busqueda")
+                .param("q", "Ana")
+                .with(httpBasic(CONTRACTOR_EMAIL, "contratista123")))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void usuarioNoAutenticadoNoPuedeBuscarGlobalmente() throws Exception {
+        mockMvc.perform(get("/api/admin/busqueda")
+                .param("q", "Ana"))
             .andExpect(status().isUnauthorized());
     }
 

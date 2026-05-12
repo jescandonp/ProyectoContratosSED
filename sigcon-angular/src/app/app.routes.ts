@@ -131,6 +131,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/admin/catalogo/admin-catalogo.component').then((m) => m.AdminCatalogoComponent),
         title: 'Catálogo — Admin SIGCON'
+      },
+      {
+        path: 'admin/busqueda',
+        canActivate: [roleGuard(['ADMIN'])],
+        loadComponent: () =>
+          import('./features/admin/busqueda/admin-busqueda.component').then((m) => m.AdminBusquedaComponent),
+        title: 'Búsqueda global — Admin SIGCON'
       }
     ]
   },

@@ -144,6 +144,10 @@ class InformeSecurityTest {
     @MockBean
     private co.gov.bogota.sed.sigcon.application.service.DocumentoRequeridoInformeService documentoRequeridoInformeService;
 
+    // I7 búsqueda admin — mocked to keep context loadable without Oracle.
+    @MockBean
+    private co.gov.bogota.sed.sigcon.application.service.BusquedaAdminService busquedaAdminService;
+
     @MockBean
     private JpaMetamodelMappingContext jpaMetamodelMappingContext;
 
