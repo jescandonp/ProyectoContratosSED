@@ -56,7 +56,7 @@ I7 se abre como incremento formal posterior a I6 a partir de hallazgos de prueba
 | T6 | Frontend Documentos Requeridos | COMPLETO | `e7315bf` |
 | T7 | Email aprobacion contratista + admin configurable | COMPLETO | `5be4064` |
 | T8 | Busqueda administrativa global | COMPLETO | `fb2a0d3` |
-| T9 | Validacion, docs y cierre | PENDIENTE | pendiente |
+| T9 | Validacion, docs y cierre | COMPLETO | pendiente de commit de cierre |
 
 ---
 
@@ -231,24 +231,46 @@ I7 se abre como incremento formal posterior a I6 a partir de hallazgos de prueba
 
 ---
 
+### 2026-05-11 — T9 Validacion, documentacion y cierre
+
+**Inconsistencia detectada antes de cerrar:**
+- El handoff recibido indicaba `HEAD=5be4064`, T7 cerrada y siguiente tarea T8.
+- El estado real de la rama ya estaba en `e5ce999`, con T8 completa y T9 pendiente.
+- El bloque antiguo de handoff para T7/T8 quedo obsoleto por commits posteriores. Se reemplaza por este cierre T9.
+
+**Cambios de cierre:**
+- `README.md`: actualizado para declarar I7 como ultimo incremento cerrado y apuntar al execution log I7.
+- `docs/ARRANQUE.md`: actualizado a I7, agrega spec/plan/log I7 y resume alcance implementado.
+- `docs/GUIA_PRUEBAS_FUNCIONALES.md`: agrega escenarios funcionales I7 para usuario IVA, documentos requeridos, FACTURA, email de aprobacion y busqueda administrativa.
+- `app.routes.spec.ts`: actualiza la superficie de rutas esperada con `/admin/busqueda`.
+- `informe-form.component.spec.ts`: ajusta providers y expectativas a los cambios vigentes del formulario.
+
+**Validaciones ejecutadas:**
+- `mvn test "-Dtest=EmailNotificacionServiceTest,InformeEstadoServiceTest,BusquedaAdminServiceTest,SigconBackendSecurityTest"` — 43 tests, 0 fallos.
+- `mvn test` desde `sigcon-backend` — 170 tests, 0 fallos, 0 errores, BUILD SUCCESS.
+- `node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run build` desde `sigcon-angular` — exitoso.
+- `node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false --include=src/app/app.routes.spec.ts --include=src/app/features/informes/nuevo/informe-form.component.spec.ts` — 6 specs, 0 fallos.
+- `node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false` desde `sigcon-angular` — 145 specs, 0 fallos.
+
+**Commit:** pendiente de generar.
+
+---
+
 ## Validaciones Ejecutadas
 
-- `mvn test -Dtest=UsuarioServiceTest` — 2 tests, 0 fallos.
-- `node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run build` desde `sigcon-angular` — exitoso.
-- `node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false --include=src/app/features/admin/usuarios/admin-usuarios.component.spec.ts` desde `sigcon-angular`, fuera del sandbox — 4 specs, 0 fallos.
+- Backend completo: `mvn test` — 170 tests, 0 fallos.
+- Frontend build: `npm run build` — exitoso.
+- Frontend completo: `npm test -- --watch=false` — 145 specs, 0 fallos.
 
 ---
 
 ## Proximo Punto de Retoma
 
-Continuar con **T9 Validación, documentación y cierre**:
+I7 queda cerrado funcional y tecnicamente. Siguiente paso recomendado:
 
-1. Ejecutar suite completa backend: `mvn test`.
-2. Ejecutar suite completa frontend: `npm test -- --watch=false`.
-3. Actualizar `docs/GUIA_PRUEBAS_FUNCIONALES.md` con escenarios I7.
-4. Actualizar `README.md` con I7 como último incremento cerrado.
-5. Actualizar `docs/ARRANQUE.md` con SHA de cierre I7.
-6. Cerrar execution log con resultados finales.
+1. Revisar `git status --short --branch`.
+2. Publicar `feat/sigcon-i7` si el flujo de repositorio lo requiere.
+3. Abrir PR o preparar merge hacia `main` segun el proceso del proyecto.
 
 ---
 
@@ -257,66 +279,9 @@ Continuar con **T9 Validación, documentación y cierre**:
 Estado listo para retomar:
 
 - Rama activa esperada: `feat/sigcon-i7`.
-- HEAD documentado antes del handoff: `fb2a0d3`.
-- Tareas cerradas: T0, T1, T2, T3, T4, T5, T6, T7, T8.
-- Siguiente tarea: T9.
-
-Archivos no versionados presentes y no relacionados:
-- `.agents/`, `.claude/`, `.kiro/`, `Notas_ProyectoContratos/`, `skills-lock.json`
-- No limpiar ni revertir salvo instrucción explícita.
-
-**Backend:**
-- Endpoint `GET /api/admin/busqueda?q=&fechaInicio=&fechaFin=`
-- Solo ADMIN.
-- `q` busca en contratistas (nombre, email), contratos (numero, objeto) e informes (numero, estado).
-- `fechaInicio`/`fechaFin` filtran por periodo del informe: `informe.fechaInicio <= fechaFin AND informe.fechaFin >= fechaInicio`.
-- Respuesta agrupada: `{ contratistas: [...], contratos: [...], informes: [...] }`.
-
-**Frontend:**
-- Ruta `/admin/busqueda`.
-- Input texto libre + rango de fechas.
-- Resultados agrupados en tres secciones con navegación al detalle.
-
----
-
-## Handoff Para Siguiente Herramienta
-
-Estado listo para retomar:
-
-- Rama activa esperada: `feat/sigcon-i7`.
-- HEAD documentado antes del handoff: `5be4064`.
-- Tareas cerradas: T0, T1, T2, T3, T4, T5, T6, T7.
-- Siguiente tarea: T8.
-
-Archivos no versionados presentes y no relacionados:
-- `.agents/`, `.claude/`, `.kiro/`, `Notas_ProyectoContratos/`, `skills-lock.json`
-- No limpiar ni revertir salvo instrucción explícita.
-
-1. Verificar si ya existe `EmailNotificacionService` (hay un archivo con ese nombre en el proyecto).
-2. Agregar propiedades `sigcon.notifications.admin-email` y `sigcon.notifications.email-enabled` en `application.yml`.
-3. Implementar `EmailNotificacionService` con `JavaMailSender`: si `email-enabled=false` o falta SMTP, registrar log sin bloquear.
-4. En `InformeEstadoService.aprobar()`, invocar el servicio de email después de publicar el evento (efecto secundario no crítico).
-5. Tests: invocación con contratista + admin configurable; fallo de email no revierte aprobación.
-
----
-
-## Handoff Para Siguiente Herramienta
-
-Estado listo para retomar:
-
-- Rama activa esperada: `feat/sigcon-i7`.
-- HEAD documentado antes del handoff: `e7315bf`.
-- Tareas cerradas: T0, T1, T2, T3, T4, T5, T6.
-- Siguiente tarea: T7.
-
-Contexto técnico útil para T7:
-
-- Ya existe `sigcon-backend/src/main/java/.../application/service/EmailNotificacionService.java` — verificar su estado actual antes de implementar.
-- Ya existe `sigcon-backend/src/main/java/.../application/config/MailProperties.java` — verificar si ya tiene las propiedades necesarias.
-- `spring-boot-starter-mail` ya está en `pom.xml` (agregado en T4).
-- En `InformeEstadoService.aprobar()`, el email va después de `eventoInformeService.publicar(...)` como efecto secundario no crítico.
-- Si falla el email, la aprobación NO se revierte — solo se registra error en log.
-- Destinatarios: `informe.getContrato().getContratista().getEmail()` + `sigcon.notifications.admin-email`.
+- HEAD documentado antes del cierre T9: `e5ce999`.
+- Tareas cerradas: T0, T1, T2, T3, T4, T5, T6, T7, T8, T9.
+- Siguiente actividad: publicacion/PR o nuevo incremento.
 
 Archivos no versionados presentes y no relacionados:
 - `.agents/`, `.claude/`, `.kiro/`, `Notas_ProyectoContratos/`, `skills-lock.json`

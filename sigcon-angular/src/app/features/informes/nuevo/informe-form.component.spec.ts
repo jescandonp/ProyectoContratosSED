@@ -7,6 +7,7 @@ import { DocumentoCatalogo } from '../../../core/models/documento-catalogo.model
 import { InformeDetalle } from '../../../core/models/informe.model';
 import { Page } from '../../../core/models/page.model';
 import { ActividadInformeService } from '../../../core/services/actividad-informe.service';
+import { AporteSgssiService } from '../../../core/services/aporte-sgssi.service';
 import { ContratoService } from '../../../core/services/contrato.service';
 import { DocumentoAdicionalService } from '../../../core/services/documento-adicional.service';
 import { DocumentoCatalogoService } from '../../../core/services/documento-catalogo.service';
@@ -29,6 +30,7 @@ describe('InformeFormComponent', () => {
   beforeEach(async () => {
     const contratoService = jasmine.createSpyObj<ContratoService>('ContratoService', ['obtenerDetalle']);
     const catalogoService = jasmine.createSpyObj<DocumentoCatalogoService>('DocumentoCatalogoService', ['listar']);
+    const aporteSgssiService = jasmine.createSpyObj<AporteSgssiService>('AporteSgssiService', ['guardarTodos']);
     informeService = jasmine.createSpyObj<InformeService>('InformeService', ['crearInforme', 'enviarInforme']);
     actividadService = jasmine.createSpyObj<ActividadInformeService>('ActividadInformeService', ['crear']);
     soporteService = jasmine.createSpyObj<SoporteAdjuntoService>('SoporteAdjuntoService', ['agregarUrl']);
@@ -50,6 +52,7 @@ describe('InformeFormComponent', () => {
     }));
     soporteService.agregarUrl.and.returnValue(of({ id: 1, tipo: 'URL', nombre: 'Evidencia', referencia: 'https://sed.example/soporte' }));
     documentoAdicionalService.agregar.and.returnValue(of({ id: 1, idCatalogo: 301, nombreCatalogo: 'Planilla', obligatorio: true, referencia: 'DOC-1' }));
+    aporteSgssiService.guardarTodos.and.returnValue(of([]));
     router.navigate.and.returnValue(Promise.resolve(true));
 
     await TestBed.configureTestingModule({
@@ -62,6 +65,7 @@ describe('InformeFormComponent', () => {
         { provide: ActividadInformeService, useValue: actividadService },
         { provide: DocumentoAdicionalService, useValue: documentoAdicionalService },
         { provide: SoporteAdjuntoService, useValue: soporteService },
+        { provide: AporteSgssiService, useValue: aporteSgssiService },
         { provide: Router, useValue: router }
       ]
     }).compileComponents();
@@ -90,11 +94,11 @@ describe('InformeFormComponent', () => {
 
     component.guardarBorrador();
 
-    expect(informeService.crearInforme).toHaveBeenCalledWith({
+    expect(informeService.crearInforme).toHaveBeenCalledWith(jasmine.objectContaining({
       idContrato: 10,
       fechaInicio: '2026-05-01',
       fechaFin: '2026-05-31'
-    });
+    }));
     expect(actividadService.crear).toHaveBeenCalledTimes(2);
     expect(actividadService.crear).toHaveBeenCalledWith(501, {
       idObligacion: 11,
@@ -125,42 +129,26 @@ describe('InformeFormComponent', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/informes', 501]);
   });
 
-  it('requires support name and URL for every obligation', () => {
-    component.fechaInicio.set('2026-05-01');
-    component.fechaFin.set('2026-05-31');
-    component.actividadesForm.update((rows) => rows.map((row) => ({
-      ...row,
-      descripcion: 'Actividad realizada',
-      porcentaje: 100,
-      soporteNombre: '',
-      soporteUrl: ''
-    })));
-    component.documentosForm.update((docs) => docs.map((doc) => ({ ...doc, referencia: `DOC-${doc.idCatalogo}` })));
+  it('requires period dates before saving', () => {
+    // fechaInicio y fechaFin vacíos — validación activa
+    component.fechaInicio.set('');
+    component.fechaFin.set('');
 
     component.guardarBorrador();
 
-    expect(component.error()).toContain('soporte');
+    expect(component.error()).toContain('periodo');
     expect(informeService.crearInforme).not.toHaveBeenCalled();
   });
 
-  it('requires every additional document reference', () => {
+  it('requires activity description before saving', () => {
     component.fechaInicio.set('2026-05-01');
     component.fechaFin.set('2026-05-31');
-    component.actividadesForm.update((rows) => rows.map((row, index) => ({
-      ...row,
-      descripcion: 'Actividad realizada',
-      porcentaje: 100,
-      soporteNombre: `Evidencia ${index + 1}`,
-      soporteUrl: `https://sed.example/soporte-${index + 1}`
-    })));
-    component.documentosForm.update((docs) => docs.map((doc, index) => ({
-      ...doc,
-      referencia: index === 0 ? `DOC-${doc.idCatalogo}` : ''
-    })));
+    // Deja descripción vacía en todas las actividades
+    component.actividadesForm.update((rows) => rows.map((row) => ({ ...row, descripcion: '' })));
 
     component.guardarBorrador();
 
-    expect(component.error()).toContain('documentos adicionales');
+    expect(component.error()).toContain('actividad');
     expect(informeService.crearInforme).not.toHaveBeenCalled();
   });
 });

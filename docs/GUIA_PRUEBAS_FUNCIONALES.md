@@ -626,3 +626,99 @@ El período de aportes SGSSI se calcula automáticamente como el mes anterior a 
 | Firma del revisor causa NPE en PDF | Ausencia de null-check antes de `readSignatureBytes` | Verificar bloque try/catch en `PdfInformeService.generarYPersistir()` |
 | Dependencia no aparece en el PDF | Campo no incluido en `generarPdf()` template | Verificar que `informe.getContrato().getDependencia()` se referencia en `InformePdfTemplateService` |
 | Lista de dependencias vacía en el formulario | Constante `SED_DEPENDENCIAS` no importada | Verificar import desde `sed-dependencias.constants.ts` |
+
+---
+
+## 15. Incremento 7 — Usuario IVA, Documentos Requeridos, Email de Aprobación y Búsqueda Administrativa
+
+> Rama: `feat/sigcon-i7`
+> Fecha: 2026-05-11
+
+### 15.1 Usuario Responsable de IVA
+
+Entrar como `ADMIN`.
+
+| ID | Acción | Datos | Esperado |
+|---|---|---|---|
+| I7-U-01 | Crear usuario contratista sin marcar IVA | Formulario con "Responsable de IVA" desmarcado | Usuario creado con `responsableIva = false`; mensaje "Usuario creado correctamente." |
+| I7-U-02 | Crear usuario contratista marcando IVA | Checkbox "Responsable de IVA" marcado | Usuario creado con `responsableIva = true`; mensaje "Usuario creado correctamente." |
+| I7-U-03 | Editar usuario y cambiar IVA a true | Usuario existente con IVA=false | Cambio persistido; mensaje "Usuario actualizado correctamente." |
+| I7-U-04 | Editar usuario y cambiar IVA a false | Usuario existente con IVA=true | Cambio persistido; mensaje "Usuario actualizado correctamente." |
+| I7-U-05 | Crear usuario con email duplicado | Email ya existente | Mensaje de error claro visible en el formulario |
+| I7-U-06 | Verificar default visual | Abrir formulario de nuevo usuario | Checkbox "Responsable de IVA" desmarcado por defecto |
+
+### 15.2 Documentos Requeridos — Contratista NO Responsable de IVA
+
+Entrar como `CONTRATISTA` con `responsableIva = false`.
+
+| ID | Acción | Datos | Esperado |
+|---|---|---|---|
+| I7-DR-01 | Abrir informe en BORRADOR | Informe del contratista | Sección "Documentos Requeridos" visible; sin FACTURA en la lista |
+| I7-DR-02 | Cargar archivo PDF | Seleccionar archivo `.pdf` | Archivo cargado; badge "Cargado" aparece; botones Descargar y Eliminar visibles |
+| I7-DR-03 | Cargar archivo EML | Seleccionar archivo `.eml` | Archivo cargado; botón "Vista previa" aparece |
+| I7-DR-04 | Intentar cargar archivo DOCX | Seleccionar archivo `.docx` | Error: "Solo se permiten archivos PDF y EML." |
+| I7-DR-05 | Ver preview EML | Clic en "Vista previa" de un EML cargado | Modal con asunto, remitente, fecha y cuerpo texto |
+| I7-DR-06 | Descargar archivo | Clic en "Descargar" | Descarga del archivo original |
+| I7-DR-07 | Eliminar archivo | Clic en "Eliminar" en BORRADOR | Badge vuelve a "Pendiente"; botón Eliminar desaparece |
+| I7-DR-08 | Enviar informe sin documentos requeridos pendientes | Todos los requeridos cargados | Informe pasa a ENVIADO |
+
+### 15.3 Documentos Requeridos — Contratista Responsable de IVA (FACTURA)
+
+Entrar como `CONTRATISTA` con `responsableIva = true`.
+
+| ID | Acción | Datos | Esperado |
+|---|---|---|---|
+| I7-FAC-01 | Abrir informe en BORRADOR | Informe del contratista IVA | Sección "Documentos Requeridos" muestra FACTURA con badge "IVA" y badge "Pendiente" |
+| I7-FAC-02 | Intentar enviar sin FACTURA | Clic en "Enviar" | Error: "debe cargar la FACTURA antes de enviar el informe" |
+| I7-FAC-03 | Cargar FACTURA (PDF) | Seleccionar archivo `.pdf` | Badge cambia a "Cargado"; badge "IVA" permanece |
+| I7-FAC-04 | Enviar informe con FACTURA cargada | Todos los requeridos cargados | Informe pasa a ENVIADO |
+| I7-FAC-05 | Verificar solo lectura en ENVIADO | Abrir informe ENVIADO | Botones Cargar/Eliminar ausentes; Descargar disponible |
+| I7-FAC-06 | Verificar solo lectura en APROBADO | Abrir informe APROBADO | Solo Descargar disponible |
+
+### 15.4 Email de Aprobación
+
+| ID | Acción | Datos | Esperado |
+|---|---|---|---|
+| I7-EMAIL-01 | Aprobar informe como SUPERVISOR | Informe en EN_REVISION | Estado pasa a APROBADO; en logs del backend aparece "EMAIL SIMULADO [local-dev]" para el contratista |
+| I7-EMAIL-02 | Verificar log de admin | `SIGCON_ADMIN_EMAIL` no configurado en local-dev | Log: "EMAIL ADMIN no configurado — omitiendo copia admin" |
+| I7-EMAIL-03 | Verificar que la aprobación no se revierte si el email falla | Simular error de email | Estado permanece APROBADO; error registrado en log sin excepción |
+
+> **Nota local-dev:** `sigcon.mail.enabled=false`. Los emails se simulan en logs. No se requiere SMTP real.
+
+### 15.5 Búsqueda Administrativa Global
+
+Entrar como `ADMIN`.
+
+| ID | Acción | Datos | Esperado |
+|---|---|---|---|
+| I7-BUS-01 | Navegar a Admin → Búsqueda global | Clic en tarjeta "Búsqueda global" en el dashboard | Pantalla de búsqueda visible con formulario |
+| I7-BUS-02 | Buscar por nombre de contratista | Texto: nombre parcial del contratista | Sección "Contratistas" muestra resultados con nombre y email |
+| I7-BUS-03 | Buscar por número de contrato | Texto: "OPS-2026" | Sección "Contratos" muestra contratos que coinciden |
+| I7-BUS-04 | Buscar por estado de informe | Texto: "APROBADO" | Sección "Informes" muestra informes en estado APROBADO |
+| I7-BUS-05 | Filtrar por rango de periodo | fechaInicio=2026-05-01, fechaFin=2026-05-31 | Solo informes cuyo periodo cruza el rango aparecen |
+| I7-BUS-06 | Buscar sin texto con rango de fechas | q vacío, fechas definidas | Todos los informes que cruzan el rango |
+| I7-BUS-07 | Navegar al detalle de contrato | Clic en "Ver detalle" de un contrato | Redirige a `/contratos/{id}` |
+| I7-BUS-08 | Navegar al detalle de informe | Clic en "Ver detalle" de un informe | Redirige a `/informes/{id}` |
+| I7-BUS-09 | Acceso como CONTRATISTA | Navegar a `/admin/busqueda` | Redireccionado o acceso denegado |
+| I7-BUS-10 | Búsqueda sin resultados | Texto inexistente | Las tres secciones muestran "Sin resultados." |
+
+### 15.6 Pruebas Negativas I7
+
+| ID | Caso | Esperado |
+|---|---|---|
+| I7-NEG-01 | Contratista intenta cargar documento de otro contratista | `POST /api/informes/{id}/documentos-requeridos/...` con informe ajeno | 403 ACCESO_DENEGADO |
+| I7-NEG-02 | Cargar documento en informe ENVIADO | Informe en estado ENVIADO | 409 DOCUMENTO_REQUERIDO_NO_EDITABLE |
+| I7-NEG-03 | Cargar archivo con extensión no permitida | `.xlsx`, `.docx`, `.png` | 400 DOCUMENTO_REQUERIDO_FORMATO_INVALIDO |
+| I7-NEG-04 | Acceder a búsqueda global como REVISOR | `GET /api/admin/busqueda` | 403 Forbidden |
+| I7-NEG-05 | Acceder a búsqueda global sin autenticar | Sin credenciales | 401 Unauthorized |
+
+### 15.7 Diagnóstico de Errores Comunes I7
+
+| Síntoma | Causa probable | Solución |
+|---------|---------------|----------|
+| FACTURA no aparece en la lista | `responsableIva = false` en el usuario | Verificar campo en `SGCN_USUARIOS.RESPONSABLE_IVA` |
+| Error al cargar archivo | Extensión no permitida o archivo vacío | Verificar que el archivo es `.pdf` o `.eml` |
+| Preview EML vacío | EML complejo o sin cuerpo texto | Normal — `previewParcial=true`; descargar el original |
+| Email no aparece en logs | `sigcon.mail.enabled=false` y log level INFO no visible | Verificar configuración de logging |
+| Búsqueda no retorna resultados | Término no coincide con datos de prueba | Usar términos presentes en `db/01_datos_prueba.sql` |
+| 403 en búsqueda como ADMIN | Sesión expirada o rol incorrecto | Cerrar sesión y volver a entrar como ADMIN |

@@ -4,7 +4,7 @@ describe('app routes', () => {
   it('exposes the exact I3 route surface implemented through Task 9', () => {
     const paths = collectUrlPaths(routes);
 
-    expect(paths.length).toBe(20);
+    expect(paths.length).toBe(21);
     expect(paths).toEqual(jasmine.arrayWithExactContents([
       '',
       'login',
@@ -25,6 +25,7 @@ describe('app routes', () => {
       'admin/contratos/:id/editar',
       'admin/usuarios',
       'admin/documentos-catalogo',
+      'admin/busqueda',
       '**'
     ]));
   });

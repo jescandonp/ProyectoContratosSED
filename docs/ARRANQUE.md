@@ -1,8 +1,8 @@
 # ARRANQUE SIGCON
 
-> Estado: Incremento 6 completado.
+> Estado: Incremento 7 completado.
 > Metodologia: Spec-Driven Development (SDD), nivel Spec-Anchored.
-> Ultima actualizacion: 2026-05-09 — cierre I6 (PDF institucional + aportes SGSSI + datos complementarios).
+> Ultima actualizacion: 2026-05-11 — cierre I7 (Usuario IVA, Documentos Requeridos, Email de Aprobacion, Busqueda Administrativa).
 
 ## Orden De Documentos
 
@@ -16,8 +16,9 @@
 8. Spec tecnica I4: `docs/specs/2026-05-04-sigcon-i4-spec.md`
 9. Spec tecnica I5: `docs/specs/2026-05-04-sigcon-i5-spec.md`
 10. Spec tecnica I6: `docs/specs/2026-05-09-sigcon-i6-spec.md`
-11. Plan I6: `docs/plans/2026-05-09-sigcon-i6-plan.md`
-12. Log de ejecucion I6: `docs/plans/2026-05-09-sigcon-i6-execution-log.md`
+11. Spec tecnica I7: `docs/specs/2026-05-11-sigcon-i7-spec.md`
+12. Plan I7: `docs/plans/2026-05-11-sigcon-i7-plan.md`
+13. Log de ejecucion I7: `docs/plans/2026-05-11-sigcon-i7-execution-log.md`
 
 ## Estado GitHub
 
@@ -25,23 +26,37 @@ Repositorio remoto: `https://github.com/jescandonp/ProyectoContratosSED.git`
 
 | Rama | SHA HEAD local | Estado |
 |---|---:|---|
-| `main` | `3768101` | Pendiente push post-I6 |
+| `main` | `3768101` | Pendiente push post-I7 |
 | `feat/sigcon-i1` | `be26bbe` | Sincronizada |
 | `feat/sigcon-i2` | `0658cef` | Sincronizada |
 | `feat/sigcon-i3` | `9be9c73` | Sincronizada |
 | `feat/sigcon-i4` | `7b61d09` | Sincronizada |
 | `feat/sigcon-i5` | `0cc76a9` | Sincronizada |
-| `feat/sigcon-i6` | `df9762c` | Local — pendiente push + PR a main |
+| `feat/sigcon-i6` | `df9762c` | Sincronizada |
+| `feat/sigcon-i7` | `ver git log` | Local — pendiente push + PR a main |
 
-Para retomar o continuar desde I6:
+Para retomar o continuar desde I7:
 
 ```powershell
 git clone https://github.com/jescandonp/ProyectoContratosSED.git
 Set-Location ProyectoContratosSED
-git checkout feat/sigcon-i6
+git checkout feat/sigcon-i7
 ```
 
 El lider tecnico puede cambiar apuntamientos locales despues del clone usando los valores reales del ambiente SED para Oracle, WebLogic, Azure AD y rutas compartidas de firmas.
+
+## Alcance I7 (implementado)
+
+Incluye:
+- **Usuario responsable de IVA** — campo `responsableIva` en `SGCN_USUARIOS`; formulario admin con checkbox; mensajes de confirmación al crear/editar.
+- **Documentos requeridos por informe** — nueva tabla `SGCN_DOCS_REQUERIDOS`; endpoints carga/descarga/preview/eliminar bajo `/api/informes/{id}/documentos-requeridos`; solo PDF y `.eml`.
+- **FACTURA dinámica** — si `responsableIva=true`, el informe exige FACTURA antes de enviarse; no depende de parametrización manual.
+- **Preview EML** — modal con asunto, remitente, destinatarios, fecha y cuerpo texto; descarga del original siempre disponible.
+- **Sección "Documentos Requeridos" en UI** — editable en BORRADOR/DEVUELTO; solo lectura en ENVIADO/EN_REVISION/APROBADO.
+- **Email de aprobación** — `EmailNotificacionService.notificarAprobacion()` envía al contratista y al admin configurable (`SIGCON_ADMIN_EMAIL`); fallo no revierte aprobación.
+- **Búsqueda administrativa global** — `GET /api/admin/busqueda?q=&fechaInicio=&fechaFin=`; resultados agrupados por contratistas, contratos e informes; ruta Angular `/admin/busqueda`.
+- 170 tests backend, 0 fallos. Build Angular exitoso.
+- Spec, plan y log de ejecución I7 versionados.
 
 ## Alcance I6 (implementado)
 
