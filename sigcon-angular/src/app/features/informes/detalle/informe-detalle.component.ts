@@ -103,7 +103,7 @@ export class InformeDetalleComponent implements OnInit {
         this.informe.set(informe);
         this.periodoFechaInicio = informe.fechaInicio;
         this.periodoFechaFin = informe.fechaFin;
-        if (informe.estado === 'BORRADOR') {
+        if (informe.estado === 'BORRADOR' || informe.estado === 'DEVUELTO') {
           this.inicializarEstadoEdicion(informe);
           this.inicializarAportesEdicion(informe);
         }
@@ -241,13 +241,28 @@ export class InformeDetalleComponent implements OnInit {
   // ── Aportes SGSSI editables (I6) ─────────────────────────────────────────
 
   private inicializarAportesEdicion(informe: InformeDetalle): void {
-    const rows: AporteSgssiEditRow[] = (informe.aportesSgssi ?? []).map((a) => ({
-      item: a.item,
-      fechaPago: a.fechaPago,
-      valorAportado: a.valorAportado,
-      entidad: a.entidad,
-    }));
-    this.aportesEdicion.set(rows);
+    const aportesExistentes = informe.aportesSgssi ?? [];
+    if (aportesExistentes.length > 0) {
+      this.aportesEdicion.set(aportesExistentes.map((a) => ({
+        item: a.item,
+        fechaPago: a.fechaPago,
+        valorAportado: a.valorAportado,
+        entidad: a.entidad,
+      })));
+    } else {
+      // T11: precargar con datos predeterminados del contratista si existen
+      const contratista = informe.contratista;
+      const rows: AporteSgssiEditRow[] = (['SALUD', 'PENSION', 'ARL'] as const).map((item) => {
+        let entidad = '';
+        if (contratista) {
+          if (item === 'SALUD') entidad = contratista.sgssiSaludEntidad ?? '';
+          else if (item === 'PENSION') entidad = contratista.sgssiPensionEntidad ?? '';
+          else if (item === 'ARL') entidad = contratista.sgssiArlEntidad ?? '';
+        }
+        return { item, fechaPago: '', valorAportado: null, entidad };
+      });
+      this.aportesEdicion.set(rows);
+    }
   }
 
   agregarAporteEdicion(): void {

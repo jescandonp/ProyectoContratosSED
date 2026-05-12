@@ -1,0 +1,258 @@
+<div class="space-y-lg pb-24">
+  <nav class="flex items-center gap-xs text-sm text-[var(--color-on-surface-variant)]">
+    <button class="text-[var(--color-primary)] hover:underline" type="button" (click)="volverADetalle()">Informes</button>
+    <span>/</span>
+    <span>{{ informe()?.contratoNumero ?? 'Corrección' }}</span>
+    <span>/</span>
+    <span>Corrección</span>
+  </nav>
+
+  @if (error()) {
+    <div class="rounded-xl border border-[var(--color-error-container)] bg-[var(--color-error-container)] px-lg py-md text-sm text-[var(--color-on-error-container)]">
+      {{ error() }}
+    </div>
+  }
+
+  @if (estadoInvalido()) {
+    <div class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-xl text-center text-sm text-[var(--color-on-surface-variant)]">
+      Este informe no puede ser corregido en su estado actual.
+      <button class="ml-sm text-[var(--color-primary)] hover:underline" type="button" (click)="volverADetalle()">Volver al detalle</button>
+    </div>
+  }
+
+  @if (informe(); as i) {
+    @if (!estadoInvalido()) {
+      <!-- Cabecera del informe -->
+      <section class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg">
+        <div class="flex flex-col gap-md lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <p class="m-0 text-xs font-bold uppercase tracking-wider text-[var(--color-primary)]">Corrección de informe</p>
+            <h2 class="m-0 mt-xs text-2xl font-bold text-[var(--color-on-surface)]">{{ i.contratoNumero }} — Informe No. {{ i.numero }}</h2>
+            <p class="m-0 mt-xs text-sm text-[var(--color-on-surface-variant)]">{{ i.fechaInicio }} a {{ i.fechaFin }}</p>
+          </div>
+          <div class="flex items-center gap-sm">
+            <app-status-chip [value]="i.estado" [label]="estadoLabel(i.estado)" [tone]="estadoTone(i.estado)" />
+          </div>
+        </div>
+        <div class="mt-lg grid grid-cols-1 gap-md md:grid-cols-2">
+          <div class="rounded-lg bg-[var(--color-surface-container-low)] p-md">
+            <p class="m-0 text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Obligaciones</p>
+            <p class="m-0 mt-xs text-xl font-bold text-[var(--color-on-surface)]">{{ actividadesForm().length }}</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="grid grid-cols-1 gap-lg lg:grid-cols-3">
+        <!-- Columna principal -->
+        <div class="space-y-lg lg:col-span-2">
+          <!-- Actividades -->
+          <section class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg">
+            <div class="mb-md flex items-center gap-sm">
+              <span class="h-5 w-1 rounded-full bg-[var(--color-primary)]"></span>
+              <h3 class="m-0 text-base font-semibold text-[var(--color-on-surface)]">Actividades por obligación</h3>
+            </div>
+            <div class="space-y-md">
+              @for (row of actividadesForm(); track row.idObligacion; let idx = $index) {
+                <article class="rounded-lg border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] p-md">
+                  <div class="mb-sm flex items-start gap-sm">
+                    <span class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)] text-xs font-bold text-white">
+                      {{ row.orden }}
+                    </span>
+                    <div>
+                      <p class="m-0 text-sm font-semibold text-[var(--color-on-surface)]">Obligación {{ row.orden }}</p>
+                      <p class="m-0 mt-xs text-sm text-[var(--color-on-surface-variant)]">{{ row.descripcionObligacion }}</p>
+                    </div>
+                  </div>
+                  <label class="block">
+                    <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Actividad realizada</span>
+                    <textarea
+                      class="min-h-28 w-full resize-y rounded border border-[var(--color-outline-variant)] px-sm py-xs text-sm"
+                      [ngModel]="row.descripcion"
+                      (ngModelChange)="actualizarActividad(idx, { descripcion: $event })"
+                    ></textarea>
+                  </label>
+                  <div class="mt-md grid grid-cols-1 gap-md lg:grid-cols-3">
+                    <label class="block">
+                      <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Nombre soporte</span>
+                      <input class="w-full rounded border border-[var(--color-outline-variant)] px-sm py-xs text-sm" type="text"
+                        [ngModel]="row.soporteNombre" (ngModelChange)="actualizarActividad(idx, { soporteNombre: $event })" />
+                    </label>
+                    <label class="block">
+                      <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">URL soporte</span>
+                      <input class="w-full rounded border border-[var(--color-outline-variant)] px-sm py-xs text-sm" type="url"
+                        [ngModel]="row.soporteUrl" (ngModelChange)="actualizarActividad(idx, { soporteUrl: $event })" />
+                    </label>
+                    <label class="block">
+                      <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Archivo</span>
+                      <input class="w-full rounded border border-[var(--color-outline-variant)] bg-white px-sm py-xs text-sm" type="file"
+                        (change)="seleccionarArchivo(idx, $event)" />
+                    </label>
+                  </div>
+                </article>
+              }
+            </div>
+          </section>
+
+          <!-- Aportes SGSSI (T11) -->
+          <section class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg" data-testid="seccion-aportes-sgssi">
+            <div class="mb-md flex items-center justify-between gap-sm">
+              <div class="flex items-center gap-sm">
+                <span class="h-5 w-1 rounded-full bg-[var(--color-secondary-container)]"></span>
+                <h3 class="m-0 text-base font-semibold text-[var(--color-on-surface)]">Aportes Seguridad Social</h3>
+              </div>
+              <button class="text-xs font-semibold text-[var(--color-primary)] hover:underline" type="button"
+                data-testid="btn-agregar-aporte" (click)="agregarAporte()">+ Agregar</button>
+            </div>
+            @if (errorAportes()) {
+              <p class="mb-sm text-xs text-[var(--color-error)]">{{ errorAportes() }}</p>
+            }
+            @if (aportesEdicion().length === 0) {
+              <p class="m-0 text-sm text-[var(--color-on-surface-variant)]">Sin aportes registrados. Use "+ Agregar" para añadir.</p>
+            } @else {
+              <div class="space-y-sm">
+                @for (row of aportesEdicion(); track $index; let idx = $index) {
+                  <div class="grid grid-cols-1 gap-sm rounded-lg border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] p-sm sm:grid-cols-4"
+                       [attr.data-testid]="'aporte-row-' + idx">
+                    <label class="block">
+                      <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Ítem</span>
+                      <select class="h-8 w-full rounded border border-[var(--color-outline-variant)] bg-white px-xs text-sm"
+                        [ngModel]="row.item" (ngModelChange)="actualizarAporte(idx, { item: $event })">
+                        @for (item of itemsSgssi; track item) {
+                          <option [value]="item">{{ labelSgssi(item) }}</option>
+                        }
+                      </select>
+                    </label>
+                    <label class="block">
+                      <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Fecha pago</span>
+                      <input class="h-8 w-full rounded border border-[var(--color-outline-variant)] bg-white px-xs text-sm" type="date"
+                        [ngModel]="row.fechaPago" (ngModelChange)="actualizarAporte(idx, { fechaPago: $event })" />
+                    </label>
+                    <label class="block">
+                      <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Entidad</span>
+                      <input class="h-8 w-full rounded border border-[var(--color-outline-variant)] bg-white px-xs text-sm" type="text"
+                        [ngModel]="row.entidad" (ngModelChange)="actualizarAporte(idx, { entidad: $event })" />
+                    </label>
+                    <div class="flex items-end gap-xs">
+                      <label class="block flex-1">
+                        <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Valor</span>
+                        <input class="h-8 w-full rounded border border-[var(--color-outline-variant)] bg-white px-xs text-sm" type="number" min="0"
+                          [ngModel]="row.valorAportado" (ngModelChange)="actualizarAporte(idx, { valorAportado: $event })" />
+                      </label>
+                      <button class="mb-px h-8 rounded border border-[var(--color-error)] px-sm text-xs text-[var(--color-error)] hover:bg-[var(--color-error-container)]"
+                        type="button" (click)="eliminarAporte(idx)">✕</button>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </section>
+
+          <!-- Documentos Requeridos (T11) -->
+          @if (documentosRequeridos().length > 0) {
+            <section class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg" data-testid="seccion-documentos-requeridos">
+              <div class="mb-md flex items-center gap-sm">
+                <span class="h-5 w-1 rounded-full bg-[var(--color-error)]"></span>
+                <h3 class="m-0 text-base font-semibold text-[var(--color-on-surface)]">Documentos Requeridos</h3>
+              </div>
+              @if (errorRequeridos()) {
+                <p class="mb-sm text-xs text-[var(--color-error)]">{{ errorRequeridos() }}</p>
+              }
+              <ul class="m-0 list-none space-y-xs p-0">
+                @for (doc of documentosRequeridos(); track doc.claveLogica) {
+                  <li class="flex items-center justify-between gap-md rounded-lg border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] px-md py-sm text-sm">
+                    <div class="flex items-center gap-sm">
+                      @if (doc.porIva) {
+                        <span class="rounded bg-[var(--color-error-container)] px-xs py-px text-xs font-bold text-[var(--color-on-error-container)]">IVA</span>
+                      }
+                      <span class="font-semibold text-[var(--color-on-surface)]">{{ doc.nombreDisplay }}</span>
+                      @if (doc.cargado) {
+                        <span class="rounded bg-[var(--color-primary-container)] px-xs py-px text-xs text-[var(--color-on-primary-container)]">Cargado</span>
+                      } @else {
+                        <span class="rounded bg-[var(--color-error-container)] px-xs py-px text-xs text-[var(--color-on-error-container)]">Pendiente</span>
+                      }
+                    </div>
+                    <div class="flex items-center gap-xs">
+                      @if (doc.cargado && doc.id) {
+                        <button class="text-xs font-semibold text-[var(--color-primary)] hover:underline" type="button"
+                          (click)="descargarDocumento(doc.id!, doc.nombreArchivo)">Descargar</button>
+                        <button class="text-xs font-semibold text-[var(--color-error)] hover:underline" type="button"
+                          (click)="eliminarDocumento(doc.id!, doc.claveLogica)">Eliminar</button>
+                      }
+                      <label class="cursor-pointer text-xs font-semibold text-[var(--color-primary)] hover:underline">
+                        {{ doc.cargado ? 'Reemplazar' : 'Cargar' }}
+                        <input class="sr-only" type="file" accept=".pdf,.eml" (change)="cargarDocumento(doc.claveLogica, $event)" />
+                      </label>
+                    </div>
+                  </li>
+                }
+              </ul>
+            </section>
+          }
+        </div>
+
+        <!-- Panel lateral: observaciones -->
+        <aside class="space-y-lg">
+          <div class="rounded-xl border border-[var(--color-error-container)] bg-white p-lg">
+            <div class="mb-md flex items-center gap-sm">
+              <span class="h-5 w-1 rounded-full bg-[var(--color-error)]"></span>
+              <h3 class="m-0 text-base font-semibold text-[var(--color-on-surface)]">Observaciones recibidas</h3>
+            </div>
+            @if (observaciones().length === 0) {
+              <p class="m-0 text-sm text-[var(--color-on-surface-variant)]">Sin observaciones registradas.</p>
+            } @else {
+              <ul class="m-0 list-none space-y-sm p-0">
+                @for (obs of observaciones(); track obs.id) {
+                  <li class="rounded-lg border border-[var(--color-error-container)] bg-[var(--color-error-container)] p-sm text-sm">
+                    <div class="flex items-center justify-between gap-xs">
+                      <span class="font-bold text-[var(--color-on-error-container)]">{{ rolLabel(obs.autorRol) }}</span>
+                      @if (obs.fecha) {
+                        <span class="text-xs text-[var(--color-on-surface-variant)]">{{ obs.fecha | slice:0:10 }}</span>
+                      }
+                    </div>
+                    <p class="m-0 mt-xs text-[var(--color-on-error-container)]">{{ obs.texto }}</p>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+          <div class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg">
+            <h3 class="mb-md text-base font-semibold text-[var(--color-on-surface)]">Actores</h3>
+            <dl class="space-y-md text-sm">
+              <div>
+                <dt class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Supervisor</dt>
+                <dd class="m-0 mt-xs text-[var(--color-on-surface)]">{{ informe()?.supervisor?.nombre ?? 'No asignado' }}</dd>
+              </div>
+              <div>
+                <dt class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Revisor</dt>
+                <dd class="m-0 mt-xs text-[var(--color-on-surface)]">{{ informe()?.revisor?.nombre ?? 'No asignado' }}</dd>
+              </div>
+            </dl>
+          </div>
+        </aside>
+      </div>
+    }
+  } @else if (!error() && !estadoInvalido()) {
+    <div class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-xl text-center text-sm text-[var(--color-on-surface-variant)]">
+      Cargando informe...
+    </div>
+  }
+
+  <!-- Barra de acciones fija -->
+  @if (informe() && !estadoInvalido()) {
+    <div class="fixed inset-x-0 bottom-0 z-10 border-t border-[var(--color-outline-variant)] bg-white/95 px-lg py-md backdrop-blur">
+      <div class="mx-auto flex max-w-6xl items-center justify-between gap-md">
+        <p class="m-0 text-sm text-[var(--color-on-surface-variant)]">
+          {{ guardando() ? 'Guardando correcciones...' : 'Revise las observaciones y corrija las actividades antes de reenviar.' }}
+        </p>
+        <div class="flex gap-sm">
+          <button class="rounded border border-[var(--color-outline-variant)] px-md py-sm text-sm font-semibold text-[var(--color-on-surface)]"
+            type="button" (click)="volverADetalle()">Cancelar</button>
+          <button class="rounded border border-[var(--color-primary)] px-md py-sm text-sm font-semibold text-[var(--color-primary)] disabled:opacity-50"
+            type="button" [disabled]="guardando()" (click)="guardarBorrador()">Guardar borrador</button>
+          <button class="rounded bg-[var(--color-primary)] px-md py-sm text-sm font-semibold text-white disabled:opacity-50"
+            type="button" [disabled]="guardando()" (click)="confirmarReenvio()">Reenviar informe</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

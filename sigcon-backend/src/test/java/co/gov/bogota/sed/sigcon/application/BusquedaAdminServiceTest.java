@@ -1,5 +1,7 @@
 package co.gov.bogota.sed.sigcon.application;
 
+import co.gov.bogota.sed.sigcon.application.dto.busqueda.BusquedaAdminFiltros;
+import co.gov.bogota.sed.sigcon.application.dto.busqueda.BusquedaAdminPageResponse;
 import co.gov.bogota.sed.sigcon.application.dto.busqueda.BusquedaAdminResponse;
 import co.gov.bogota.sed.sigcon.application.service.BusquedaAdminService;
 import co.gov.bogota.sed.sigcon.domain.entity.Contrato;
@@ -17,6 +19,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
@@ -28,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -43,6 +49,8 @@ class BusquedaAdminServiceTest {
     void setUp() {
         service = new BusquedaAdminService(usuarioRepository, contratoRepository, informeRepository);
     }
+
+    // ── Tests T8 legacy (buscar simple) ──────────────────────────────────────
 
     @Test
     void buscarRetornaGruposVaciosCuandoNoHayResultados() {
@@ -115,9 +123,6 @@ class BusquedaAdminServiceTest {
             .thenReturn(Collections.emptyList());
 
         service.buscar("", inicio, fin);
-
-        // La verificación implícita es que el mock fue llamado con los parámetros correctos
-        // (Mockito lanzaría si no coincide)
     }
 
     @Test
@@ -153,6 +158,138 @@ class BusquedaAdminServiceTest {
         assertThat(resp.getContratistas()).hasSize(2);
         assertThat(resp.getContratos()).hasSize(1);
         assertThat(resp.getInformes()).hasSize(1);
+    }
+
+    // ── Tests T11: filtros combinados + paginación ────────────────────────────
+
+    @Test
+    void buscarConFiltrosRetornaPaginaVaciaCuandoNoHayContratos() {
+        when(contratoRepository.buscarContratosConFiltros(any(), nullable(EstadoContrato.class), nullable(Long.class), nullable(Long.class), any(Pageable.class)))
+            .thenReturn(Page.empty());
+
+        BusquedaAdminFiltros filtros = new BusquedaAdminFiltros();
+        filtros.setQ("inexistente");
+
+        BusquedaAdminPageResponse resp = service.buscarConFiltros(filtros);
+
+        assertThat(resp.getContratos()).isEmpty();
+        assertThat(resp.getTotalElementos()).isZero();
+    }
+
+    @Test
+    void buscarConFiltrosRetornaContratoConInformesAnidados() {
+        Usuario c1 = contratista(1L, "Ana García", "ana@sed.gov.co");
+        Contrato contrato = contrato(10L, "OPS-2026-001", c1);
+        Informe informe = informe(50L, 1, EstadoInforme.EN_REVISION,
+            LocalDate.of(2026, 5, 1), LocalDate.of(2026, 5, 31), contrato);
+
+        Page<Contrato> pagina = new PageImpl<>(Collections.singletonList(contrato));
+        when(contratoRepository.buscarContratosConFiltros(any(), nullable(EstadoContrato.class), nullable(Long.class), nullable(Long.class), any(Pageable.class)))
+            .thenReturn(pagina);
+        when(informeRepository.buscarInformesPorContrato(eq(10L), any(), nullable(LocalDate.class), nullable(LocalDate.class), nullable(EstadoInforme.class), nullable(Long.class)))
+            .thenReturn(Collections.singletonList(informe));
+
+        BusquedaAdminFiltros filtros = new BusquedaAdminFiltros();
+        filtros.setQ("OPS");
+
+        BusquedaAdminPageResponse resp = service.buscarConFiltros(filtros);
+
+        assertThat(resp.getContratos()).hasSize(1);
+        assertThat(resp.getContratos().get(0).getNumero()).isEqualTo("OPS-2026-001");
+        assertThat(resp.getContratos().get(0).getInformes()).hasSize(1);
+        assertThat(resp.getContratos().get(0).getInformes().get(0).getEstado()).isEqualTo("EN_REVISION");
+    }
+
+    @Test
+    void buscarConFiltrosOmiteContratoSinInformesCuandoHayFiltrosDeInforme() {
+        Usuario c1 = contratista(1L, "Ana García", "ana@sed.gov.co");
+        Contrato contrato = contrato(10L, "OPS-2026-001", c1);
+
+        Page<Contrato> pagina = new PageImpl<>(Collections.singletonList(contrato));
+        when(contratoRepository.buscarContratosConFiltros(any(), nullable(EstadoContrato.class), nullable(Long.class), nullable(Long.class), any(Pageable.class)))
+            .thenReturn(pagina);
+        when(informeRepository.buscarInformesPorContrato(eq(10L), any(), nullable(LocalDate.class), nullable(LocalDate.class), nullable(EstadoInforme.class), nullable(Long.class)))
+            .thenReturn(Collections.emptyList());
+
+        BusquedaAdminFiltros filtros = new BusquedaAdminFiltros();
+        filtros.setEstadoInforme(EstadoInforme.EN_REVISION);
+
+        BusquedaAdminPageResponse resp = service.buscarConFiltros(filtros);
+
+        assertThat(resp.getContratos()).isEmpty();
+    }
+
+    @Test
+    void buscarConFiltrosIncluyeContratoSinInformesCuandoNoHayFiltrosDeInforme() {
+        Usuario c1 = contratista(1L, "Ana García", "ana@sed.gov.co");
+        Contrato contrato = contrato(10L, "OPS-2026-001", c1);
+
+        Page<Contrato> pagina = new PageImpl<>(Collections.singletonList(contrato));
+        when(contratoRepository.buscarContratosConFiltros(any(), nullable(EstadoContrato.class), nullable(Long.class), nullable(Long.class), any(Pageable.class)))
+            .thenReturn(pagina);
+        when(informeRepository.buscarInformesPorContrato(eq(10L), any(), nullable(LocalDate.class), nullable(LocalDate.class), nullable(EstadoInforme.class), nullable(Long.class)))
+            .thenReturn(Collections.emptyList());
+
+        BusquedaAdminFiltros filtros = new BusquedaAdminFiltros();
+        filtros.setQ("OPS");
+
+        BusquedaAdminPageResponse resp = service.buscarConFiltros(filtros);
+
+        assertThat(resp.getContratos()).hasSize(1);
+        assertThat(resp.getContratos().get(0).getInformes()).isEmpty();
+    }
+
+    @Test
+    void buscarConFiltrosOrdenaInformesPorPeriodoMasRecientePrimero() {
+        Usuario c1 = contratista(1L, "Ana García", "ana@sed.gov.co");
+        Contrato contrato = contrato(10L, "OPS-2026-001", c1);
+        Informe informeAntiguo = informe(51L, 1, EstadoInforme.APROBADO,
+            LocalDate.of(2026, 3, 1), LocalDate.of(2026, 3, 31), contrato);
+        Informe informeReciente = informe(52L, 2, EstadoInforme.EN_REVISION,
+            LocalDate.of(2026, 5, 1), LocalDate.of(2026, 5, 31), contrato);
+
+        Page<Contrato> pagina = new PageImpl<>(Collections.singletonList(contrato));
+        when(contratoRepository.buscarContratosConFiltros(any(), nullable(EstadoContrato.class), nullable(Long.class), nullable(Long.class), any(Pageable.class)))
+            .thenReturn(pagina);
+        when(informeRepository.buscarInformesPorContrato(eq(10L), any(), nullable(LocalDate.class), nullable(LocalDate.class), nullable(EstadoInforme.class), nullable(Long.class)))
+            .thenReturn(Arrays.asList(informeAntiguo, informeReciente));
+
+        BusquedaAdminFiltros filtros = new BusquedaAdminFiltros();
+
+        BusquedaAdminPageResponse resp = service.buscarConFiltros(filtros);
+
+        assertThat(resp.getContratos().get(0).getInformes()).hasSize(2);
+        // El más reciente (mayo) debe ir primero
+        assertThat(resp.getContratos().get(0).getInformes().get(0).getId()).isEqualTo(52L);
+        assertThat(resp.getContratos().get(0).getInformes().get(1).getId()).isEqualTo(51L);
+    }
+
+    @Test
+    void buscarConFiltrosRetornaPaginacionCorrecta() {
+        Usuario c1 = contratista(1L, "Ana García", "ana@sed.gov.co");
+        Contrato contrato = contrato(10L, "OPS-2026-001", c1);
+
+        // Usar mock explícito de Page para controlar getTotalElements()
+        @SuppressWarnings("unchecked")
+        Page<Contrato> pagina = org.mockito.Mockito.mock(Page.class);
+        when(pagina.getContent()).thenReturn(Collections.singletonList(contrato));
+        when(pagina.getTotalElements()).thenReturn(5L);
+        when(pagina.getTotalPages()).thenReturn(1);
+
+        when(contratoRepository.buscarContratosConFiltros(any(), nullable(EstadoContrato.class), nullable(Long.class), nullable(Long.class), any(Pageable.class)))
+            .thenReturn(pagina);
+        when(informeRepository.buscarInformesPorContrato(any(), any(), nullable(LocalDate.class), nullable(LocalDate.class), nullable(EstadoInforme.class), nullable(Long.class)))
+            .thenReturn(Collections.emptyList());
+
+        BusquedaAdminFiltros filtros = new BusquedaAdminFiltros();
+        filtros.setPagina(0);
+        filtros.setTamano(20);
+
+        BusquedaAdminPageResponse resp = service.buscarConFiltros(filtros);
+
+        assertThat(resp.getTotalElementos()).isEqualTo(5L);
+        assertThat(resp.getPaginaActual()).isEqualTo(0);
+        assertThat(resp.getTamano()).isEqualTo(20);
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────

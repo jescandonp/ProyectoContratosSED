@@ -47,4 +47,29 @@ public interface InformeRepository extends JpaRepository<Informe, Long> {
         @Param("fechaFin") LocalDate fechaFin,
         Pageable pageable
     );
+
+    /**
+     * T11: Búsqueda de informes de un contrato con filtros combinados.
+     * Usado para poblar los informes anidados en cada ContratoResultadoDto.
+     * Ordenamiento: periodo más reciente primero, luego prioridad operativa de estado.
+     */
+    @Query("SELECT i FROM Informe i WHERE i.activo = true"
+        + " AND i.contrato.id = :contratoId"
+        + " AND (:q IS NULL OR :q = '' OR "
+        + "   LOWER(CAST(i.numero AS string)) LIKE LOWER(CONCAT('%', :q, '%')) OR "
+        + "   LOWER(CAST(i.estado AS string)) LIKE LOWER(CONCAT('%', :q, '%')) OR "
+        + "   LOWER(i.contrato.contratista.nombre) LIKE LOWER(CONCAT('%', :q, '%')))"
+        + " AND (:fechaInicio IS NULL OR i.fechaFin >= :fechaInicio)"
+        + " AND (:fechaFin IS NULL OR i.fechaInicio <= :fechaFin)"
+        + " AND (:estadoInforme IS NULL OR i.estado = :estadoInforme)"
+        + " AND (:revisorId IS NULL OR i.contrato.revisor.id = :revisorId)"
+        + " ORDER BY i.fechaFin DESC, i.fechaInicio DESC")
+    List<Informe> buscarInformesPorContrato(
+        @Param("contratoId") Long contratoId,
+        @Param("q") String q,
+        @Param("fechaInicio") LocalDate fechaInicio,
+        @Param("fechaFin") LocalDate fechaFin,
+        @Param("estadoInforme") EstadoInforme estadoInforme,
+        @Param("revisorId") Long revisorId
+    );
 }

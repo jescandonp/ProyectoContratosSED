@@ -281,34 +281,42 @@ describe('InformeDetalleComponent', () => {
   });
 
   it('muestra mensaje vacio si no hay aportes en BORRADOR', () => {
+    // T11: con precarga de datos predeterminados, siempre hay 3 filas (SALUD, PENSION, ARL)
+    // cuando el contratista no tiene entidades configuradas, las filas tienen entidad vacía
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.querySelector('[data-testid="sgssi-vacio"]')).not.toBeNull();
+    // Las 3 filas precargadas deben estar presentes
+    expect(component.aportesEdicion().length).toBe(3);
   });
 
   it('puede agregar una fila de aporte en modo edicion', () => {
+    // T11: hay 3 filas precargadas (SALUD, PENSION, ARL)
+    const initialCount = component.aportesEdicion().length;
     component.agregarAporteEdicion();
 
-    expect(component.aportesEdicion().length).toBe(1);
-    expect(component.aportesEdicion()[0].item).toBe('SALUD');
+    expect(component.aportesEdicion().length).toBe(initialCount + 1);
+    expect(component.aportesEdicion()[initialCount].item).toBe('SALUD');
   });
 
   it('puede eliminar una fila de aporte en modo edicion', () => {
+    // T11: hay 3 filas precargadas; agregar 2 más da 5, eliminar 1 da 4
+    const initialCount = component.aportesEdicion().length;
     component.agregarAporteEdicion();
     component.agregarAporteEdicion();
-    expect(component.aportesEdicion().length).toBe(2);
+    expect(component.aportesEdicion().length).toBe(initialCount + 2);
 
     component.eliminarAporteEdicion(0);
 
-    expect(component.aportesEdicion().length).toBe(1);
+    expect(component.aportesEdicion().length).toBe(initialCount + 1);
   });
 
   it('puede actualizar campos de una fila de aporte', () => {
     component.agregarAporteEdicion();
-    component.actualizarAporteEdicion(0, { item: 'ARL', entidad: 'Sura' });
+    const lastIdx = component.aportesEdicion().length - 1;
+    component.actualizarAporteEdicion(lastIdx, { item: 'ARL', entidad: 'Sura' });
 
-    expect(component.aportesEdicion()[0].item).toBe('ARL');
-    expect(component.aportesEdicion()[0].entidad).toBe('Sura');
+    expect(component.aportesEdicion()[lastIdx].item).toBe('ARL');
+    expect(component.aportesEdicion()[lastIdx].entidad).toBe('Sura');
   });
 
   it('guarda aportes SGSSI validos y recarga el informe', () => {

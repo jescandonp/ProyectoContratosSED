@@ -37,7 +37,7 @@ describe('InformePreviewComponent', () => {
     expect(text).toContain('Vista Previa');
     expect(text).toContain('Informe No. 7');
     expect(text).toContain('Actividad ejecutada');
-    expect(text).toContain('DOC-301');
+    // T10: documentos adicionales ya no se muestran en la vista previa
   });
 
   it('returns to report detail', () => {
