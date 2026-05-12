@@ -13,6 +13,7 @@ import co.gov.bogota.sed.sigcon.domain.repository.UsuarioRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
 
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
@@ -20,6 +21,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Optional;
 
@@ -68,6 +70,23 @@ class DomainModelMappingTest {
             .isEqualTo(List.class);
         assertThat(DocumentoCatalogoRepository.class.getMethod("findByActivoTrue", Pageable.class).getReturnType())
             .isEqualTo(Page.class);
+    }
+
+    @Test
+    void advancedContractSearchQueryDoesNotUseDistinctOverClobColumns() throws Exception {
+        Method method = ContratoRepository.class.getMethod(
+            "buscarContratosConFiltros",
+            String.class,
+            co.gov.bogota.sed.sigcon.domain.enums.EstadoContrato.class,
+            Long.class,
+            Long.class,
+            Pageable.class
+        );
+
+        Query query = method.getAnnotation(Query.class);
+
+        assertThat(query).isNotNull();
+        assertThat(query.value().toLowerCase()).doesNotContain("select distinct c");
     }
 
     private static void assertEntityMapping(Class<?> type, String tableName, String sequenceName) throws Exception {

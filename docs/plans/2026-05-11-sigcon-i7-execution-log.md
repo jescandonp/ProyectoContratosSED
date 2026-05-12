@@ -515,3 +515,50 @@ sqlplus SED_SIGCON/<password>@localhost:1521/XEPDB1 @db/04_apply_i7_schema.sql
 - HEAD: `dae3809`.
 - T11 implementado y validado.
 - Siguiente actividad: pruebas funcionales de busqueda avanzada y flujo de informe DEVUELTO, o publicar rama y abrir PR.
+
+---
+
+## Fix Post-T11 2026-05-12
+
+### 2026-05-12 — ORA-00932 en busqueda avanzada
+
+**Hallazgo en prueba funcional:**
+- Al ejecutar la nueva busqueda avanzada, backend respondio con error 500.
+- Stacktrace principal:
+  - `oracle.jdbc.OracleDatabaseException: ORA-00932: tipos de dato inconsistentes: se esperaba - se ha obtenido CLOB`
+  - `ContratoRepository.buscarContratosConFiltros`
+  - `BusquedaAdminService.buscarConFiltros(BusquedaAdminService.java:102)`
+  - `AdminBusquedaController.buscarAvanzado(AdminBusquedaController.java:91)`
+
+**Causa raiz identificada:**
+- La consulta T11 `buscarContratosConFiltros()` usaba `SELECT DISTINCT c`.
+- En Oracle, `DISTINCT` sobre una entidad completa puede proyectar todas las columnas de `SGCN_CONTRATOS`.
+- `SGCN_CONTRATOS.FORMA_PAGO` esta definido como `CLOB`; Oracle no permite aplicar `DISTINCT` sobre CLOB, generando `ORA-00932`.
+- La consulta no hace `JOIN` que duplique contratos, por lo que `DISTINCT` no era necesario.
+
+**Correccion aplicada:**
+- `ContratoRepository.buscarContratosConFiltros()` cambia de `SELECT DISTINCT c` a `SELECT c`.
+- Se agrega prueba de guardia en `DomainModelMappingTest` para evitar reintroducir `SELECT DISTINCT c` en la busqueda avanzada paginada sobre contratos.
+
+**Validacion ejecutada:**
+
+```powershell
+Set-Location sigcon-backend
+mvn test "-Dtest=DomainModelMappingTest,BusquedaAdminServiceTest"
+```
+
+Resultado:
+- 17 tests ejecutados.
+- 0 fallos.
+- 0 errores.
+- BUILD SUCCESS.
+
+**Siguiente validacion funcional recomendada:**
+- Reintentar desde UI la busqueda avanzada con:
+  - texto libre vacio;
+  - texto libre con numero/nombre;
+  - filtro por estado de contrato;
+  - filtro por periodo de informe;
+  - filtro por revisor;
+  - filtro por estado de informe.
+- Si aparece un nuevo error Oracle, capturar el stacktrace completo para diferenciar si proviene de la busqueda legacy `buscarContratos()` o de `InformeRepository.buscarInformesPorContrato()`.

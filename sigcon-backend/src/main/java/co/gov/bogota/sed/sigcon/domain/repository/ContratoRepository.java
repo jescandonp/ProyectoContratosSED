@@ -43,7 +43,7 @@ public interface ContratoRepository extends JpaRepository<Contrato, Long> {
      * Todos los filtros son opcionales (null = no aplica).
      * Ordenamiento: número de contrato ascendente (el ordenamiento por periodo/estado se aplica en el servicio).
      */
-    @Query("SELECT DISTINCT c FROM Contrato c WHERE c.activo = true"
+    @Query("SELECT c FROM Contrato c WHERE c.activo = true"
         + " AND (:q IS NULL OR :q = '' OR "
         + "   LOWER(c.numero) LIKE LOWER(CONCAT('%', :q, '%')) OR "
         + "   LOWER(c.objeto) LIKE LOWER(CONCAT('%', :q, '%')) OR "
