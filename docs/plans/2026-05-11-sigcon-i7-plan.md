@@ -2,7 +2,7 @@
 ## Usuario IVA, Documentos Requeridos, Email de Aprobacion y Busqueda Administrativa
 
 > **Metodologia:** Spec-Driven Development (SDD) — Spec-Anchored
-> **Version:** 1.2 — **Fecha:** 2026-05-12
+> **Version:** 1.3 — **Fecha:** 2026-05-12
 > **Spec de referencia:** `docs/specs/2026-05-11-sigcon-i7-spec.md`
 > **Rama:** `feat/sigcon-i7` (base: `feat/sigcon-i6`)
 > **Estado:** Listo para ejecucion
@@ -11,7 +11,7 @@
 
 ## Resumen Ejecutivo
 
-Incremento de **11 tareas**. El orden prioriza estabilizacion, modelo de usuario, documentos requeridos/factura, email, busqueda administrativa y ajustes post-pruebas con validacion.
+Incremento de **12 tareas**. El orden prioriza estabilizacion, modelo de usuario, documentos requeridos/factura, email, busqueda administrativa y ajustes post-pruebas con validacion.
 
 | Tarea | Scope | Descripcion |
 |-------|-------|-------------|
@@ -27,6 +27,7 @@ Incremento de **11 tareas**. El orden prioriza estabilizacion, modelo de usuario
 | T9 | Validacion y cierre | Tests, guia funcional, execution log, commits y punto de retoma |
 | T10 | Correccion funcional post-revision | Hallazgos 12/05/2026: borrador preserva relaciones, una sola seccion Documentos Requeridos, permisos por rol, soportes como Abrir y acciones supervisor |
 | T11 | Mejora funcional post-pruebas | Busqueda global con filtros combinados/paginacion y correccion integral de informes `DEVUELTO` |
+| T12 | Usabilidad busqueda global | Boton `Limpiar` para restablecer filtros, pagina, errores y resultados sin ejecutar nueva busqueda |
 
 ---
 
@@ -426,6 +427,40 @@ node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=f
 
 ---
 
+## T12 — Usabilidad busqueda global 2026-05-12
+
+**Origen:** ajuste funcional solicitado despues de pruebas de busqueda avanzada T11.
+
+**Alcance:**
+
+- Agregar boton `Limpiar` junto a `Buscar` en `/admin/busqueda`.
+- Restablecer:
+  - texto libre;
+  - estado del contrato;
+  - estado del informe;
+  - periodo desde;
+  - periodo hasta;
+  - pagina actual;
+  - error visible;
+  - resultados avanzados y legacy.
+- No ejecutar busqueda automaticamente al limpiar.
+
+**Archivos candidatos:**
+
+- `sigcon-angular/src/app/features/admin/busqueda/admin-busqueda.component.ts`
+- `sigcon-angular/src/app/features/admin/busqueda/admin-busqueda.component.spec.ts`
+
+**Validacion esperada:**
+
+```powershell
+Set-Location sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false --include src/app/features/admin/busqueda/admin-busqueda.component.spec.ts
+```
+
+**Commit sugerido:** `fix: add clear filters action to admin search`
+
+---
+
 ## Orden de Ejecucion
 
 ```text
@@ -437,6 +472,7 @@ T8
 T9
 T10
 T11
+T12
 ```
 
 T7 y T8 pueden ejecutarse despues de T2 sin depender de T4, pero se recomienda cerrar documentos/factura antes de busqueda para evitar mezclar validaciones funcionales.

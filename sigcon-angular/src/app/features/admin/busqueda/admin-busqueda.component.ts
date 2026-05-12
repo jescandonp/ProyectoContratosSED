@@ -117,10 +117,19 @@ const ESTADOS_INFORME = [
             />
           </label>
 
-          <!-- Botón buscar -->
-          <div class="flex items-end sm:col-span-2 lg:col-span-1">
+          <!-- Acciones -->
+          <div class="flex items-end gap-sm sm:col-span-2 lg:col-span-1">
             <button
-              class="h-9 w-full rounded bg-[var(--color-primary)] px-lg text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+              class="h-9 flex-1 rounded border border-[var(--color-outline-variant)] bg-white px-md text-sm font-semibold text-[var(--color-on-surface)] hover:bg-[var(--color-surface-container-low)]"
+              type="button"
+              data-testid="btn-limpiar"
+              [disabled]="buscando()"
+              (click)="limpiar()"
+            >
+              Limpiar
+            </button>
+            <button
+              class="h-9 flex-1 rounded bg-[var(--color-primary)] px-md text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
               type="button"
               data-testid="btn-buscar"
               [disabled]="buscando()"
@@ -382,6 +391,18 @@ export class AdminBusquedaComponent {
     this.resultados.set(null);
     this.resultadosAvanzados.set(null);
     this._ejecutarBusquedaAvanzada(0);
+  }
+
+  limpiar(): void {
+    this.termino = '';
+    this.fechaInicio = '';
+    this.fechaFin = '';
+    this.estadoContrato = '';
+    this.estadoInforme = '';
+    this.paginaActual.set(0);
+    this.error.set('');
+    this.resultados.set(null);
+    this.resultadosAvanzados.set(null);
   }
 
   irAPagina(pagina: number): void {

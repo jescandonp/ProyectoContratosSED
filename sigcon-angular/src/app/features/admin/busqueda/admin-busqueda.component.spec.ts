@@ -43,6 +43,7 @@ describe('AdminBusquedaComponent', () => {
     expect(fixture.nativeElement.querySelector('[data-testid="input-busqueda"]')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('[data-testid="input-fecha-inicio"]')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('[data-testid="input-fecha-fin"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="btn-limpiar"]')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('[data-testid="btn-buscar"]')).not.toBeNull();
   });
 
@@ -168,6 +169,48 @@ describe('AdminBusquedaComponent', () => {
     expect(fixture.nativeElement.querySelector('[data-testid="error-busqueda"]')).not.toBeNull();
     expect(component.error()).toContain('No se pudo ejecutar');
     expect(component.buscando()).toBeFalse();
+  });
+
+  it('limpia filtros, resultados, error y pagina sin ejecutar una nueva búsqueda', () => {
+    component.termino = 'Ana';
+    component.fechaInicio = '2026-05-01';
+    component.fechaFin = '2026-05-31';
+    component.estadoContrato = 'EN_EJECUCION';
+    component.estadoInforme = 'EN_REVISION';
+    component.paginaActual.set(2);
+    component.error.set('Error visible');
+    component.resultados.set(respuestaVacia());
+    component.resultadosAvanzados.set({
+      contratos: [{
+        id: 10,
+        numero: 'OPS-2026-001',
+        objeto: 'Objeto',
+        estado: 'EN_EJECUCION',
+        contratistaNombre: 'Ana García',
+        informes: []
+      }],
+      totalElementos: 1,
+      paginaActual: 2,
+      totalPaginas: 3,
+      tamano: 20
+    });
+
+    busquedaService.buscarAvanzado.calls.reset();
+
+    component.limpiar();
+    fixture.detectChanges();
+
+    expect(component.termino).toBe('');
+    expect(component.fechaInicio).toBe('');
+    expect(component.fechaFin).toBe('');
+    expect(component.estadoContrato).toBe('');
+    expect(component.estadoInforme).toBe('');
+    expect(component.paginaActual()).toBe(0);
+    expect(component.error()).toBe('');
+    expect(component.resultados()).toBeNull();
+    expect(component.resultadosAvanzados()).toBeNull();
+    expect(busquedaService.buscarAvanzado).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('[data-testid="seccion-contratos-avanzada"]')).toBeNull();
   });
 
   // ── Tests de navegación ───────────────────────────────────────────────────

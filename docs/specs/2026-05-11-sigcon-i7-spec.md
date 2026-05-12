@@ -2,7 +2,7 @@
 ## Usuario IVA, Documentos Requeridos, Email de Aprobacion y Busqueda Administrativa
 
 > **Metodologia:** Spec-Driven Development (SDD) — Spec-Anchored
-> **Version:** 1.2 — **Fecha:** 2026-05-12
+> **Version:** 1.3 — **Fecha:** 2026-05-12
 > **Constitucion:** `docs/CONSTITUTION.md`
 > **Arquitectura:** `docs/ARCHITECTURE.md`
 > **PRD de referencia:** `docs/specs/2026-04-30-sigcon-prd.md`
@@ -91,6 +91,27 @@ Reglas para aportes de seguridad social:
 
 ---
 
+## 0.3 Mejora de Usabilidad Busqueda Global — 2026-05-12
+
+La busqueda global administrativa debe incluir una accion **Limpiar** para restablecer el formulario de filtros.
+
+Reglas funcionales:
+
+- El boton `Limpiar` debe estar visible junto a la accion `Buscar`.
+- Al presionar `Limpiar`, la pantalla debe restablecer:
+  - texto libre;
+  - estado del contrato;
+  - estado del informe;
+  - periodo desde;
+  - periodo hasta;
+  - pagina actual;
+  - mensaje de error;
+  - resultados visibles.
+- La accion no debe ejecutar una nueva busqueda automaticamente.
+- Despues de limpiar, el usuario puede iniciar una nueva busqueda desde filtros vacios.
+
+---
+
 ## 1. Alcance del Incremento
 
 ### 1.1 Problema que resuelve
@@ -135,6 +156,7 @@ I7 queda cerrado cuando:
 - El preview `.eml` muestra asunto, remitente, fecha y cuerpo texto basico cuando sea posible; el archivo original siempre se puede descargar.
 - Al aprobar un informe se dispara notificacion email al contratista y al correo administrador configurable.
 - El administrador cuenta con busqueda global por texto opcional y filtros combinados: estado del contrato, periodo del informe, contratista, revisor y estado del informe, con paginacion inicial de 20 registros.
+- La busqueda global administrativa permite limpiar filtros y resultados desde una accion visible.
 - Un informe `DEVUELTO` puede ser corregido integralmente por el contratista y reenviado a estado `ENVIADO`.
 
 ---

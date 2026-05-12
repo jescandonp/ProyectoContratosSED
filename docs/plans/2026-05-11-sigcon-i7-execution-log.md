@@ -562,3 +562,59 @@ Resultado:
   - filtro por revisor;
   - filtro por estado de informe.
 - Si aparece un nuevo error Oracle, capturar el stacktrace completo para diferenciar si proviene de la busqueda legacy `buscarContratos()` o de `InformeRepository.buscarInformesPorContrato()`.
+
+---
+
+## Punto de Partida SDD T12 2026-05-12
+
+### 2026-05-12 — Boton Limpiar en busqueda global
+
+**Estado de la actividad:**
+- Fase documental SDD registrada antes de modificar codigo.
+
+**Solicitud funcional:**
+- Agregar un boton `Limpiar` en la busqueda global para restablecer los filtros.
+
+**Decision funcional:**
+- El boton se ubica junto a `Buscar`.
+- Debe limpiar texto, estados, fechas, pagina actual, errores y resultados visibles.
+- No debe ejecutar una nueva busqueda automaticamente.
+
+**Documentos actualizados antes de implementar:**
+- `docs/specs/2026-05-11-sigcon-i7-spec.md` — version 1.3, seccion `0.3 Mejora de Usabilidad Busqueda Global`.
+- `docs/plans/2026-05-11-sigcon-i7-plan.md` — version 1.3, tarea `T12`.
+
+**Siguiente paso:**
+- Implementar T12 en frontend y ejecutar spec focalizado de busqueda admin.
+
+### 2026-05-12 — Implementacion T12
+
+**Cambios aplicados:**
+- `AdminBusquedaComponent` agrega boton `Limpiar` junto a `Buscar`.
+- La accion `limpiar()` restablece:
+  - texto libre;
+  - fechas de periodo;
+  - estado de contrato;
+  - estado de informe;
+  - pagina actual;
+  - error visible;
+  - resultados avanzados;
+  - resultados legacy.
+- La accion no invoca `buscarAvanzado()` ni ejecuta consulta automatica.
+
+**Tests actualizados:**
+- `admin-busqueda.component.spec.ts` valida render del boton `Limpiar`.
+- Agrega cobertura para limpiar filtros, resultados, error y pagina sin ejecutar una nueva busqueda.
+
+**Validacion ejecutada:**
+
+```powershell
+Set-Location sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false --browsers=ChromeHeadless --progress=false --include src/app/features/admin/busqueda/admin-busqueda.component.spec.ts
+```
+
+Resultado:
+- 16 specs ejecutadas.
+- 0 fallos.
+- TOTAL: 16 SUCCESS.
+- Karma reporto advertencia de cierre de ChromeHeadless al finalizar, sin afectar el resultado.
