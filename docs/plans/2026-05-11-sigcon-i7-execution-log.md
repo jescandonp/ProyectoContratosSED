@@ -54,7 +54,7 @@ I7 se abre como incremento formal posterior a I6 a partir de hallazgos de prueba
 | T4 | Backend documentos requeridos PDF/EML + FACTURA dinamica | COMPLETO | `c97c0de` |
 | T5 | Validacion envio por documentos requeridos | COMPLETO | `613bb6e` |
 | T6 | Frontend Documentos Requeridos | COMPLETO | `e7315bf` |
-| T7 | Email aprobacion contratista + admin configurable | PENDIENTE | pendiente |
+| T7 | Email aprobacion contratista + admin configurable | COMPLETO | `5be4064` |
 | T8 | Busqueda administrativa global | PENDIENTE | pendiente |
 | T9 | Validacion, docs y cierre | PENDIENTE | pendiente |
 
@@ -156,7 +156,29 @@ I7 se abre como incremento formal posterior a I6 a partir de hallazgos de prueba
 - `mvn test -Dtest=InformeEstadoServiceTest,InformeEstadoServiceI3Test,InformeEstadoServiceSinRevisorTest` — 28 tests, 0 fallos.
 - `mvn test` (suite completa) — 155 tests, 0 fallos, 0 errores, BUILD SUCCESS.
 
-### 2026-05-11 — T6 Frontend Documentos Requeridos
+### 2026-05-11 — T7 Backend Email aprobacion contratista + admin configurable
+
+**Análisis del estado previo:**
+- `EmailNotificacionService` ya existía con `enviar()` vía Microsoft Graph.
+- `MailProperties` ya tenía `sigcon.mail.enabled`, `from`, `tenantId`, etc.
+- Faltaba: campo `adminEmail`, método `notificarAprobacion(Informe)`, disparo en `aprobar()`, y tests de T7.
+
+**Cambios:**
+- `MailProperties`: nuevo campo `adminEmail` (mapeado desde `sigcon.mail.admin-email`).
+- `EmailNotificacionService`: nuevo método `notificarAprobacion(Informe)` que envía al contratista y al admin configurable. Si `adminEmail` está vacío, registra log y omite la copia. Errores de email no propagan excepción.
+- `InformeEstadoService.aprobar()`: llama `emailNotificacionService.notificarAprobacion(informe)` en bloque try-catch después del evento — efecto secundario no crítico.
+- `application.yml`: agregado `admin-email: ${SIGCON_ADMIN_EMAIL:}` en perfiles `local-dev` y `weblogic`.
+- `EmailNotificacionServiceTest`: 3 tests nuevos de T7 (simulado sin admin, simulado con admin, fallo no propaga).
+- `InformeEstadoServiceTest`: 2 tests nuevos (invocación verificada, fallo no revierte aprobación).
+- `InformeEstadoServiceI3Test` y `InformeEstadoServiceSinRevisorTest`: constructores actualizados con el nuevo parámetro.
+
+**Validaciones ejecutadas:**
+- `mvn test -Dtest=EmailNotificacionServiceTest,InformeEstadoServiceTest,...` — 34 tests, 0 fallos.
+- `mvn test` (suite completa) — 160 tests, 0 fallos, BUILD SUCCESS.
+
+**Commit:** `5be4064 feat(i7): notify contractor and admin on informe approval (T7)`
+
+---
 
 **Archivos creados/modificados:**
 - `core/models/documento-requerido.model.ts`: interfaces `DocumentoRequerido`, `EmlPreview` y constante `EXTENSIONES_PERMITIDAS_REQUERIDOS`.
@@ -193,7 +215,34 @@ I7 se abre como incremento formal posterior a I6 a partir de hallazgos de prueba
 
 ## Proximo Punto de Retoma
 
-Continuar con **T7 Backend Email aprobacion**:
+Continuar con **T8 Búsqueda administrativa global**:
+
+**Backend:**
+- Endpoint `GET /api/admin/busqueda?q=&fechaInicio=&fechaFin=`
+- Solo ADMIN.
+- `q` busca en contratistas (nombre, email), contratos (numero, objeto) e informes (numero, estado).
+- `fechaInicio`/`fechaFin` filtran por periodo del informe: `informe.fechaInicio <= fechaFin AND informe.fechaFin >= fechaInicio`.
+- Respuesta agrupada: `{ contratistas: [...], contratos: [...], informes: [...] }`.
+
+**Frontend:**
+- Ruta `/admin/busqueda`.
+- Input texto libre + rango de fechas.
+- Resultados agrupados en tres secciones con navegación al detalle.
+
+---
+
+## Handoff Para Siguiente Herramienta
+
+Estado listo para retomar:
+
+- Rama activa esperada: `feat/sigcon-i7`.
+- HEAD documentado antes del handoff: `5be4064`.
+- Tareas cerradas: T0, T1, T2, T3, T4, T5, T6, T7.
+- Siguiente tarea: T8.
+
+Archivos no versionados presentes y no relacionados:
+- `.agents/`, `.claude/`, `.kiro/`, `Notas_ProyectoContratos/`, `skills-lock.json`
+- No limpiar ni revertir salvo instrucción explícita.
 
 1. Verificar si ya existe `EmailNotificacionService` (hay un archivo con ese nombre en el proyecto).
 2. Agregar propiedades `sigcon.notifications.admin-email` y `sigcon.notifications.email-enabled` en `application.yml`.
