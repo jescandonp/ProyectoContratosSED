@@ -1,6 +1,7 @@
 package co.gov.bogota.sed.sigcon.application.service;
 
 import co.gov.bogota.sed.sigcon.application.config.MailProperties;
+import co.gov.bogota.sed.sigcon.domain.entity.Informe;
 import co.gov.bogota.sed.sigcon.domain.entity.Usuario;
 import co.gov.bogota.sed.sigcon.domain.enums.TipoEvento;
 import org.slf4j.Logger;
@@ -33,6 +34,41 @@ public class EmailNotificacionService {
     public EmailNotificacionService(MailProperties mailProperties) {
         this.mailProperties = mailProperties;
         this.restTemplate = new RestTemplate();
+    }
+
+    /**
+     * I7: Notifica al contratista y al correo administrador configurable cuando un informe es aprobado.
+     * Si el email falla, se registra el error sin propagar excepcion.
+     *
+     * @param informe informe recien aprobado
+     */
+    public void notificarAprobacion(Informe informe) {
+        Usuario contratista = informe.getContrato().getContratista();
+        String descripcion = construirDescripcionAprobacion(informe);
+
+        // Notificar al contratista
+        enviar(contratista, TipoEvento.INFORME_APROBADO, informe.getId(), descripcion);
+
+        // Notificar al correo administrador configurable si esta configurado
+        String adminEmail = mailProperties.getAdminEmail();
+        if (adminEmail != null && !adminEmail.trim().isEmpty()) {
+            Usuario adminVirtual = new Usuario();
+            adminVirtual.setEmail(adminEmail.trim());
+            adminVirtual.setNombre("Administrador SIGCON");
+            enviar(adminVirtual, TipoEvento.INFORME_APROBADO, informe.getId(), descripcion);
+        } else {
+            log.info("EMAIL ADMIN no configurado — omitiendo copia admin para informe id={}", informe.getId());
+        }
+    }
+
+    private static String construirDescripcionAprobacion(Informe informe) {
+        return "El informe No. " + informe.getNumero()
+            + " del contrato " + informe.getContrato().getNumero()
+            + " ha sido aprobado."
+            + " Contratista: " + informe.getContrato().getContratista().getNombre()
+            + ". Periodo: " + informe.getFechaInicio() + " a " + informe.getFechaFin()
+            + ". Fecha de aprobacion: " + (informe.getFechaAprobacion() != null ? informe.getFechaAprobacion() : "N/A")
+            + ". Estado: APROBADO.";
     }
 
     /**

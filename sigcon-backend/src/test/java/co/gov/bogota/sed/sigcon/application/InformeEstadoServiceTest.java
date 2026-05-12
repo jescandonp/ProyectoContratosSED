@@ -2,6 +2,7 @@ package co.gov.bogota.sed.sigcon.application;
 
 import co.gov.bogota.sed.sigcon.application.dto.informe.InformeDetalleDto;
 import co.gov.bogota.sed.sigcon.application.service.DocumentoRequeridoInformeService;
+import co.gov.bogota.sed.sigcon.application.service.EmailNotificacionService;
 import co.gov.bogota.sed.sigcon.application.service.EventoInformeService;
 import co.gov.bogota.sed.sigcon.application.service.InformeEstadoService;
 import co.gov.bogota.sed.sigcon.application.service.InformeService;
@@ -57,6 +58,7 @@ class InformeEstadoServiceTest {
     @Mock private PdfInformeService pdfInformeService;
     @Mock private EventoInformeService eventoInformeService;
     @Mock private DocumentoRequeridoInformeService documentoRequeridoInformeService;
+    @Mock private EmailNotificacionService emailNotificacionService;
 
     private InformeEstadoService service;
 
@@ -65,7 +67,7 @@ class InformeEstadoServiceTest {
         service = new InformeEstadoService(
             informeRepository, actividadRepository, soporteRepository,
             documentoCatalogoRepository, documentoAdicionalRepository, informeService, observacionService,
-            pdfInformeService, eventoInformeService, documentoRequeridoInformeService
+            pdfInformeService, eventoInformeService, documentoRequeridoInformeService, emailNotificacionService
         );
     }
 
@@ -215,6 +217,39 @@ class InformeEstadoServiceTest {
         assertThat(informe.getEstado()).isEqualTo(EstadoInforme.APROBADO);
         assertThat(informe.getFechaAprobacion()).isNotNull();
         verify(pdfInformeService).generarYPersistir(informe);
+    }
+
+    // -----------------------------------------------------------------------
+    // T7 — Email de aprobacion al contratista y admin configurable
+    // -----------------------------------------------------------------------
+
+    @Test
+    void aprobarInvocaNotificarAprobacionAlAprobar() {
+        Informe informe = informe(EstadoInforme.EN_REVISION);
+        when(informeService.findActiveInforme(50L)).thenReturn(informe);
+        when(informeRepository.save(any(Informe.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(informeService.buildDetalle(informe)).thenReturn(new InformeDetalleDto());
+
+        service.aprobar(50L, SUPERVISOR_EMAIL);
+
+        verify(emailNotificacionService).notificarAprobacion(informe);
+    }
+
+    @Test
+    void aprobarNoRevierteAprobacionSiEmailFalla() {
+        Informe informe = informe(EstadoInforme.EN_REVISION);
+        when(informeService.findActiveInforme(50L)).thenReturn(informe);
+        when(informeRepository.save(any(Informe.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(informeService.buildDetalle(informe)).thenReturn(new InformeDetalleDto());
+        // Simular fallo de email — no debe propagar excepcion
+        org.mockito.Mockito.doThrow(new RuntimeException("SMTP error"))
+            .when(emailNotificacionService).notificarAprobacion(informe);
+
+        // No debe lanzar excepcion — el email es efecto secundario no critico
+        service.aprobar(50L, SUPERVISOR_EMAIL);
+
+        assertThat(informe.getEstado()).isEqualTo(EstadoInforme.APROBADO);
+        verify(informeRepository).save(informe);
     }
 
     @Test

@@ -29,6 +29,12 @@ public class MailProperties {
     /** Client secret de la aplicacion registrada en Azure AD. */
     private String clientSecret;
 
+    /**
+     * I7: Correo administrador que recibe copia al aprobar informes.
+     * Si esta vacio o null, no se envia copia al admin.
+     */
+    private String adminEmail;
+
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
 
@@ -46,4 +52,7 @@ public class MailProperties {
 
     public String getClientSecret() { return clientSecret; }
     public void setClientSecret(String clientSecret) { this.clientSecret = clientSecret; }
+
+    public String getAdminEmail() { return adminEmail; }
+    public void setAdminEmail(String adminEmail) { this.adminEmail = adminEmail; }
 }

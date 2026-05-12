@@ -1,6 +1,8 @@
 package co.gov.bogota.sed.sigcon.application.service;
 
 import co.gov.bogota.sed.sigcon.application.config.MailProperties;
+import co.gov.bogota.sed.sigcon.domain.entity.Contrato;
+import co.gov.bogota.sed.sigcon.domain.entity.Informe;
 import co.gov.bogota.sed.sigcon.domain.entity.Usuario;
 import co.gov.bogota.sed.sigcon.domain.enums.TipoEvento;
 import org.junit.jupiter.api.Test;
@@ -42,6 +44,55 @@ class EmailNotificacionServiceTest {
         server.verify();
     }
 
+    // -----------------------------------------------------------------------
+    // T7 — notificarAprobacion: contratista + admin configurable
+    // -----------------------------------------------------------------------
+
+    @Test
+    void notificarAprobacionSimulaEnvioEnLocalDevSinAdmin() {
+        MailProperties props = new MailProperties();
+        props.setEnabled(false);
+        // adminEmail no configurado
+        EmailNotificacionService service = new EmailNotificacionService(props);
+
+        Informe informe = sampleInforme();
+
+        // No debe lanzar excepcion — solo log
+        service.notificarAprobacion(informe);
+    }
+
+    @Test
+    void notificarAprobacionSimulaEnvioEnLocalDevConAdmin() {
+        MailProperties props = new MailProperties();
+        props.setEnabled(false);
+        props.setAdminEmail("admin@educacionbogota.edu.co");
+        EmailNotificacionService service = new EmailNotificacionService(props);
+
+        Informe informe = sampleInforme();
+
+        // No debe lanzar excepcion — solo log x2 (contratista + admin)
+        service.notificarAprobacion(informe);
+    }
+
+    @Test
+    void notificarAprobacionNoLanzaExcepcionSiEmailFalla() {
+        // Simula fallo de red: enabled=true pero sin servidor real
+        MailProperties props = mailProperties();
+        EmailNotificacionService service = new EmailNotificacionService(props);
+        RestTemplate restTemplate = new RestTemplate();
+        ReflectionTestUtils.setField(service, "restTemplate", restTemplate);
+
+        MockRestServiceServer server = MockRestServiceServer.bindTo(restTemplate).build();
+        // El token falla — simula error de red
+        server.expect(requestTo(containsString("/oauth2/v2.0/token")))
+            .andRespond(withSuccess("{}", MediaType.APPLICATION_JSON)); // sin access_token
+
+        Informe informe = sampleInforme();
+
+        // No debe propagar excepcion — el fallo de email es no critico
+        service.notificarAprobacion(informe);
+    }
+
     private static MailProperties mailProperties() {
         MailProperties props = new MailProperties();
         props.setEnabled(true);
@@ -59,5 +110,26 @@ class EmailNotificacionServiceTest {
         usuario.setEmail("contratista@educacionbogota.edu.co");
         usuario.setNombre("Contratista SIGCON");
         return usuario;
+    }
+
+    private static Informe sampleInforme() {
+        Usuario contratista = new Usuario();
+        contratista.setId(1L);
+        contratista.setEmail("contratista@educacionbogota.edu.co");
+        contratista.setNombre("Contratista SIGCON");
+
+        Contrato contrato = new Contrato();
+        contrato.setId(10L);
+        contrato.setNumero("OPS-2026-001");
+        contrato.setContratista(contratista);
+
+        Informe informe = new Informe();
+        informe.setId(50L);
+        informe.setNumero(3);
+        informe.setContrato(contrato);
+        informe.setFechaInicio(java.time.LocalDate.of(2026, 5, 1));
+        informe.setFechaFin(java.time.LocalDate.of(2026, 5, 31));
+        informe.setFechaAprobacion(java.time.LocalDateTime.of(2026, 5, 11, 10, 0));
+        return informe;
     }
 }

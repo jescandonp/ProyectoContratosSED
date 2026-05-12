@@ -21,9 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
-
-/**
+import java.util.List;/**
  * Maquina de estados del informe.
  * I3: genera PDF y publica eventos de notificacion en cada transicion.
  * I7: valida documentos requeridos (incluida FACTURA por IVA) antes de enviar.
@@ -42,6 +40,7 @@ public class InformeEstadoService {
     private final PdfInformeService pdfInformeService;
     private final EventoInformeService eventoInformeService;
     private final DocumentoRequeridoInformeService documentoRequeridoInformeService;
+    private final EmailNotificacionService emailNotificacionService;
 
     public InformeEstadoService(
         InformeRepository informeRepository,
@@ -53,7 +52,8 @@ public class InformeEstadoService {
         ObservacionService observacionService,
         PdfInformeService pdfInformeService,
         EventoInformeService eventoInformeService,
-        DocumentoRequeridoInformeService documentoRequeridoInformeService
+        DocumentoRequeridoInformeService documentoRequeridoInformeService,
+        EmailNotificacionService emailNotificacionService
     ) {
         this.informeRepository = informeRepository;
         this.actividadRepository = actividadRepository;
@@ -65,6 +65,7 @@ public class InformeEstadoService {
         this.pdfInformeService = pdfInformeService;
         this.eventoInformeService = eventoInformeService;
         this.documentoRequeridoInformeService = documentoRequeridoInformeService;
+        this.emailNotificacionService = emailNotificacionService;
     }
 
     /**
@@ -170,6 +171,13 @@ public class InformeEstadoService {
 
         // Paso 4: efectos secundarios no criticos
         eventoInformeService.publicar(TipoEvento.INFORME_APROBADO, informe, null);
+        try {
+            emailNotificacionService.notificarAprobacion(informe);
+        } catch (Exception e) {
+            // El fallo de email no revierte la aprobacion — se registra para soporte
+            org.slf4j.LoggerFactory.getLogger(InformeEstadoService.class)
+                .error("Error al notificar aprobacion de informe id={}: {}", informe.getId(), e.getMessage(), e);
+        }
         return detalle;
     }
 

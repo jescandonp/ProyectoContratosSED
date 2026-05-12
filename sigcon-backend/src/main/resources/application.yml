@@ -51,6 +51,7 @@ sigcon:
     tenant-id: ${AZURE_TENANT_ID:placeholder}
     client-id: ${MAIL_CLIENT_ID:placeholder}
     client-secret: ${MAIL_CLIENT_SECRET:placeholder}
+    admin-email: ${SIGCON_ADMIN_EMAIL:}
 
 ---
 spring:
@@ -82,3 +83,4 @@ sigcon:
     tenant-id: ${AZURE_TENANT_ID}
     client-id: ${MAIL_CLIENT_ID}
     client-secret: ${MAIL_CLIENT_SECRET}
+    admin-email: ${SIGCON_ADMIN_EMAIL:}
