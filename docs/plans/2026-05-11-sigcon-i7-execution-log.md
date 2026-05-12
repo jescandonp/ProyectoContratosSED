@@ -56,7 +56,7 @@ I7 se abre como incremento formal posterior a I6 a partir de hallazgos de prueba
 | T6 | Frontend Documentos Requeridos | COMPLETO | `e7315bf` |
 | T7 | Email aprobacion contratista + admin configurable | COMPLETO | `5be4064` |
 | T8 | Busqueda administrativa global | COMPLETO | `fb2a0d3` |
-| T9 | Validacion, docs y cierre | COMPLETO | pendiente de commit de cierre |
+| T9 | Validacion, docs y cierre | COMPLETO | `8b80ea4` |
 
 ---
 
@@ -252,7 +252,7 @@ I7 se abre como incremento formal posterior a I6 a partir de hallazgos de prueba
 - `node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false --include=src/app/app.routes.spec.ts --include=src/app/features/informes/nuevo/informe-form.component.spec.ts` — 6 specs, 0 fallos.
 - `node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false` desde `sigcon-angular` — 145 specs, 0 fallos.
 
-**Commit:** pendiente de generar.
+**Commit:** `8b80ea4 docs(i7): close increment validation and handoff`
 
 ---
 

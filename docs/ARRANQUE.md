@@ -33,7 +33,7 @@ Repositorio remoto: `https://github.com/jescandonp/ProyectoContratosSED.git`
 | `feat/sigcon-i4` | `7b61d09` | Sincronizada |
 | `feat/sigcon-i5` | `0cc76a9` | Sincronizada |
 | `feat/sigcon-i6` | `df9762c` | Sincronizada |
-| `feat/sigcon-i7` | `ver git log` | Local — pendiente push + PR a main |
+| `feat/sigcon-i7` | `8b80ea4` | Local — pendiente push + PR a main |
 
 Para retomar o continuar desde I7:
 
