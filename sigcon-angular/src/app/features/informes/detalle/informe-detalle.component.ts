@@ -560,16 +560,16 @@ export class InformeDetalleComponent implements OnInit {
     void this.router.navigate(['/contratos']);
   }
 
-  esBorrador(estado: EstadoInforme): boolean {
-    return estado === 'BORRADOR';
+  esEditable(estado: EstadoInforme): boolean {
+    return estado === 'BORRADOR' || estado === 'DEVUELTO';
   }
 
   periodoEditable(estado: EstadoInforme): boolean {
-    return estado === 'BORRADOR' || estado === 'DEVUELTO';
+    return this.esEditable(estado);
   }
 
   puedeEnviar(estado: EstadoInforme) {
-    return estado === 'BORRADOR' || estado === 'DEVUELTO';
+    return this.esEditable(estado);
   }
 
   toNumber(value: string | number): number {

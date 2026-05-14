@@ -696,3 +696,60 @@ Resultado:
 
 **Nota funcional:**
 - La opcion de menu asume que el usuario existe activo en `SGCN_USUARIOS` y tiene `RESPONSABLE_IVA = 1`, segun dato confirmado para pruebas.
+
+---
+
+## Punto de Partida SDD T14 2026-05-14
+
+### 2026-05-14 — Informe DEVUELTO no editable
+
+**Estado de la actividad:**
+- Fase documental SDD registrada antes de modificar codigo.
+
+**Hallazgo funcional:**
+- Al finalizar la revision funcional del dia, se encuentra que cuando el informe esta en estado `DEVUELTO`, no permite modificar ningun dato.
+- La premisa de T11 era que el contratista pudiera corregir integralmente el informe devuelto.
+
+**Decision funcional vigente:**
+- `DEVUELTO` debe ser editable por el contratista propietario.
+- Debe permitir corregir actividades, soportes, aportes SGSSI, documentos requeridos y demas informacion editable.
+- Debe permitir guardar y volver a enviar.
+- Al reenviar debe pasar a `ENVIADO`.
+
+**Documentos actualizados antes de implementar:**
+- `docs/specs/2026-05-11-sigcon-i7-spec.md` — version 1.5, seccion `0.5 Correccion Funcional DEVUELTO Editable`.
+- `docs/plans/2026-05-11-sigcon-i7-plan.md` — version 1.5, tarea `T14`.
+
+**Siguiente paso:**
+- Diagnosticar si el bloqueo esta en acciones del detalle, ruta de correccion, permisos frontend o API backend.
+
+### 2026-05-14 — Implementacion T14
+
+**Diagnostico:**
+- El backend ya permite editar informes en `BORRADOR` o `DEVUELTO` mediante `InformeService.assertCanEditInforme`.
+- La ruta de correccion ya considera `DEVUELTO` editable.
+- El bloqueo funcional estaba en la vista de detalle Angular: actividades y SGSSI seguian condicionadas por `esBorrador(i.estado)`, aunque periodo, documentos requeridos y envio ya aceptaban `DEVUELTO`.
+
+**Cambios aplicados:**
+- Se reemplazo la compuerta visual `esBorrador` por `esEditable`.
+- `esEditable` permite `BORRADOR` y `DEVUELTO`.
+- Actividades reportadas en `DEVUELTO` vuelven a mostrar descripcion editable, soporte URL y boton de guardar.
+- Aportes SGSSI en `DEVUELTO` vuelven a mostrar acciones de agregar y guardar.
+- `periodoEditable` y `puedeEnviar` reutilizan la misma regla editable para evitar divergencias.
+
+**Tests actualizados:**
+- `informe-detalle.component.spec.ts` cubre actividades editables en `DEVUELTO`.
+- `informe-detalle.component.spec.ts` cubre botones de agregar/guardar aportes SGSSI en `DEVUELTO`.
+- `informe-detalle.component.spec.ts` cubre la regla `esEditable` para estados permitidos y no permitidos.
+
+**Validacion ejecutada:**
+
+```powershell
+Set-Location sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false --browsers=ChromeHeadless --progress=false --include src/app/features/informes/detalle/informe-detalle.component.spec.ts --include src/app/features/informes/corregir/corregir-informe.component.spec.ts
+```
+
+Resultado:
+- 72 specs ejecutadas.
+- 0 fallos.
+- TOTAL: 72 SUCCESS.

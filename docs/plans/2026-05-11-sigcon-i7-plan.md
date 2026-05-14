@@ -2,7 +2,7 @@
 ## Usuario IVA, Documentos Requeridos, Email de Aprobacion y Busqueda Administrativa
 
 > **Metodologia:** Spec-Driven Development (SDD) — Spec-Anchored
-> **Version:** 1.4 — **Fecha:** 2026-05-14
+> **Version:** 1.5 — **Fecha:** 2026-05-14
 > **Spec de referencia:** `docs/specs/2026-05-11-sigcon-i7-spec.md`
 > **Rama:** `feat/sigcon-i7` (base: `feat/sigcon-i6`)
 > **Estado:** Listo para ejecucion
@@ -11,7 +11,7 @@
 
 ## Resumen Ejecutivo
 
-Incremento de **13 tareas**. El orden prioriza estabilizacion, modelo de usuario, documentos requeridos/factura, email, busqueda administrativa y ajustes post-pruebas con validacion.
+Incremento de **14 tareas**. El orden prioriza estabilizacion, modelo de usuario, documentos requeridos/factura, email, busqueda administrativa y ajustes post-pruebas con validacion.
 
 | Tarea | Scope | Descripcion |
 |-------|-------|-------------|
@@ -29,6 +29,7 @@ Incremento de **13 tareas**. El orden prioriza estabilizacion, modelo de usuario
 | T11 | Mejora funcional post-pruebas | Busqueda global con filtros combinados/paginacion y correccion integral de informes `DEVUELTO` |
 | T12 | Usabilidad busqueda global | Boton `Limpiar` para restablecer filtros, pagina, errores y resultados sin ejecutar nueva busqueda |
 | T13 | Acceso local-dev IVA | Agregar `aecheverry@educacionbogota.gov.co` como opcion de contratista responsable IVA en ingreso local-dev |
+| T14 | Correccion DEVUELTO editable | Asegurar que Contratista pueda entrar a correccion, modificar datos y reenviar informe `DEVUELTO` |
 
 ---
 
@@ -501,6 +502,52 @@ mvn test "-Dtest=SigconBackendSecurityTest"
 
 ---
 
+## T14 — Correccion funcional informe DEVUELTO editable 2026-05-14
+
+**Origen:** cierre de revision funcional del 2026-05-14.
+
+**Hallazgo:**
+
+- El informe en estado `DEVUELTO` no permite modificar ningun dato.
+- Esto incumple la premisa de T11: permitir correccion integral del informe devuelto.
+
+**Alcance:**
+
+- Revisar detalle de informe y accion disponible para contratista en `DEVUELTO`.
+- Revisar ruta/componente de correccion para confirmar que cargue y habilite campos en `DEVUELTO`.
+- Asegurar que actividades, soportes, aportes SGSSI y documentos requeridos queden editables.
+- Asegurar que guardar y reenviar funcionen desde `DEVUELTO`.
+
+**Archivos candidatos:**
+
+- `sigcon-angular/src/app/features/informes/detalle/informe-detalle.component.ts`
+- `sigcon-angular/src/app/features/informes/detalle/informe-detalle.component.html`
+- `sigcon-angular/src/app/features/informes/detalle/informe-detalle.component.spec.ts`
+- `sigcon-angular/src/app/features/informes/corregir/corregir-informe.component.ts`
+- `sigcon-angular/src/app/features/informes/corregir/corregir-informe.component.html`
+- `sigcon-angular/src/app/features/informes/corregir/corregir-informe.component.spec.ts`
+- `sigcon-backend/src/main/java/.../InformeService.java`
+- `sigcon-backend/src/main/java/.../InformeEstadoService.java`
+- tests backend de informes/estado si el bloqueo esta en API.
+
+**Validacion esperada:**
+
+```powershell
+Set-Location sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false --browsers=ChromeHeadless --progress=false --include src/app/features/informes/detalle/informe-detalle.component.spec.ts --include src/app/features/informes/corregir/corregir-informe.component.spec.ts
+```
+
+Si se modifica backend:
+
+```powershell
+Set-Location sigcon-backend
+mvn test "-Dtest=InformeServiceTest,InformeEstadoServiceTest"
+```
+
+**Commit sugerido:** `fix: enable editing returned informes`
+
+---
+
 ## Orden de Ejecucion
 
 ```text
@@ -514,6 +561,7 @@ T10
 T11
 T12
 T13
+T14
 ```
 
 T7 y T8 pueden ejecutarse despues de T2 sin depender de T4, pero se recomienda cerrar documentos/factura antes de busqueda para evitar mezclar validaciones funcionales.

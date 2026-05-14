@@ -174,6 +174,16 @@ describe('InformeDetalleComponent', () => {
     expect(fixture.nativeElement.querySelector('[data-testid="btn-guardar-actividad-1001"]')).not.toBeNull();
   });
 
+  it('muestra actividades en modo edicion cuando estado es DEVUELTO', () => {
+    component.informe.set({ ...sampleInformeDetalle(), estado: 'DEVUELTO' });
+    fixture.detectChanges();
+
+    const tarjetas = fixture.nativeElement.querySelectorAll('[data-testid="actividad-editable"]');
+    expect(tarjetas.length).toBe(1);
+    expect(fixture.nativeElement.querySelector('[data-testid="btn-guardar-actividad-1001"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="input-soporte-url-1001"]')).not.toBeNull();
+  });
+
   it('no muestra controles de edicion en estado ENVIADO', () => {
     component.informe.set({ ...sampleInformeDetalle(), estado: 'ENVIADO' });
     fixture.detectChanges();
@@ -273,6 +283,13 @@ describe('InformeDetalleComponent', () => {
     expect(fixture.nativeElement.querySelector('[data-testid="btn-agregar-aporte"]')).not.toBeNull();
   });
 
+  it('muestra boton agregar aporte en estado DEVUELTO', () => {
+    component.informe.set({ ...sampleInformeDetalle(), estado: 'DEVUELTO' });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="btn-agregar-aporte"]')).not.toBeNull();
+  });
+
   it('no muestra boton agregar aporte en estado ENVIADO', () => {
     component.informe.set({ ...sampleInformeDetalle(), estado: 'ENVIADO' });
     fixture.detectChanges();
@@ -352,6 +369,13 @@ describe('InformeDetalleComponent', () => {
   });
 
   it('muestra boton guardar aportes en estado BORRADOR', () => {
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="btn-guardar-aportes"]')).not.toBeNull();
+  });
+
+  it('muestra boton guardar aportes en estado DEVUELTO', () => {
+    component.informe.set({ ...sampleInformeDetalle(), estado: 'DEVUELTO' });
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('[data-testid="btn-guardar-aportes"]')).not.toBeNull();
@@ -561,6 +585,17 @@ describe('InformeDetalleComponent', () => {
   it('puedeEditarRequeridos retorna true para BORRADOR y DEVUELTO', () => {
     expect(component.puedeEditarRequeridos('BORRADOR')).toBeTrue();
     expect(component.puedeEditarRequeridos('DEVUELTO')).toBeTrue();
+  });
+
+  it('esEditable retorna true para BORRADOR y DEVUELTO', () => {
+    expect(component.esEditable('BORRADOR')).toBeTrue();
+    expect(component.esEditable('DEVUELTO')).toBeTrue();
+  });
+
+  it('esEditable retorna false para ENVIADO, EN_REVISION y APROBADO', () => {
+    expect(component.esEditable('ENVIADO')).toBeFalse();
+    expect(component.esEditable('EN_REVISION')).toBeFalse();
+    expect(component.esEditable('APROBADO')).toBeFalse();
   });
 
   it('puedeEditarRequeridos retorna false para ENVIADO, EN_REVISION y APROBADO', () => {

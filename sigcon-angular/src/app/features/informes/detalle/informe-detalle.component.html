@@ -118,8 +118,8 @@
           </div>
           <div class="space-y-md">
             @for (actividad of i.actividades; track actividad.id) {
-              @if (esBorrador(i.estado)) {
-                <!-- Tarjeta editable (BORRADOR) -->
+              @if (esEditable(i.estado)) {
+                <!-- Tarjeta editable -->
                 <article class="rounded-lg border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] p-md" data-testid="actividad-editable">
                   <div class="mb-sm flex items-start gap-sm">
                     <span class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)] text-xs font-bold text-white">
@@ -236,7 +236,7 @@
               <span class="h-5 w-1 rounded-full bg-[var(--color-tertiary-container,#e8d5f0)]"></span>
               <h3 class="m-0 text-base font-semibold text-[var(--color-on-surface)]">Aportes al Sistema General de Seguridad Social</h3>
             </div>
-            @if (esBorrador(i.estado)) {
+            @if (esEditable(i.estado)) {
               <button
                 class="flex items-center gap-xs rounded border border-[var(--color-primary)] px-sm py-xs text-xs font-semibold text-[var(--color-primary)] hover:bg-[var(--color-surface-container-low)]"
                 type="button"
@@ -248,7 +248,7 @@
             }
           </div>
 
-          @if (esBorrador(i.estado)) {
+          @if (esEditable(i.estado)) {
             <!-- Modo edicion SGSSI -->
             @if (aportesEdicion().length === 0) {
               <p class="m-0 text-sm text-[var(--color-on-surface-variant)]" data-testid="sgssi-vacio">Sin aportes registrados.</p>

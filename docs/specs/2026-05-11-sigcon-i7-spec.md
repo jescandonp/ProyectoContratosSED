@@ -2,7 +2,7 @@
 ## Usuario IVA, Documentos Requeridos, Email de Aprobacion y Busqueda Administrativa
 
 > **Metodologia:** Spec-Driven Development (SDD) — Spec-Anchored
-> **Version:** 1.4 — **Fecha:** 2026-05-14
+> **Version:** 1.5 — **Fecha:** 2026-05-14
 > **Constitucion:** `docs/CONSTITUTION.md`
 > **Arquitectura:** `docs/ARCHITECTURE.md`
 > **PRD de referencia:** `docs/specs/2026-04-30-sigcon-prd.md`
@@ -131,6 +131,25 @@ Reglas:
 
 ---
 
+## 0.5 Correccion Funcional DEVUELTO Editable — 2026-05-14
+
+Hallazgo de cierre de revision funcional: cuando el informe esta en estado `DEVUELTO`, el contratista no puede modificar ningun dato, aunque la premisa de T11 era permitir correccion integral.
+
+Reglas obligatorias:
+
+- Un informe `DEVUELTO` debe presentar al contratista propietario una accion clara para corregir.
+- La correccion debe permitir modificar la informacion editable del informe, incluyendo:
+  - actividades reportadas;
+  - detalle/descripcion de actividades;
+  - soportes asociados a actividades;
+  - aportes a seguridad social;
+  - documentos requeridos.
+- El flujo debe permitir guardar cambios y volver a enviar el informe.
+- Al reenviar, el estado debe pasar de `DEVUELTO` a `ENVIADO`.
+- Las restricciones de solo lectura se mantienen para `ENVIADO`, `EN_REVISION` y `APROBADO`.
+
+---
+
 ## 1. Alcance del Incremento
 
 ### 1.1 Problema que resuelve
@@ -178,6 +197,7 @@ I7 queda cerrado cuando:
 - La busqueda global administrativa permite limpiar filtros y resultados desde una accion visible.
 - Un informe `DEVUELTO` puede ser corregido integralmente por el contratista y reenviado a estado `ENVIADO`.
 - El ingreso local-dev permite seleccionar al contratista responsable IVA `aecheverry@educacionbogota.gov.co` para pruebas funcionales.
+- La pantalla de detalle/correccion debe exponer y habilitar efectivamente la edicion cuando el informe este `DEVUELTO`.
 
 ---
 
