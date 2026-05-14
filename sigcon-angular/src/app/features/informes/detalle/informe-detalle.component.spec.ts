@@ -53,7 +53,7 @@ describe('InformeDetalleComponent', () => {
     observacionService.devolverRevision.and.returnValue(of({ ...sampleInformeDetalle(), estado: 'DEVUELTO' as const }));
     observacionService.aprobarInforme.and.returnValue(of({ ...sampleInformeDetalle(), estado: 'APROBADO' as const }));
     observacionService.devolverInforme.and.returnValue(of({ ...sampleInformeDetalle(), estado: 'DEVUELTO' as const }));
-    authService.hasRole.and.returnValue(false);
+    authService.hasRole.and.callFake((role: string) => role === 'CONTRATISTA');
     documentoRequeridoService.listar.and.returnValue(of([]));
     documentoRequeridoService.cargarArchivo.and.returnValue(of(sampleDocRequerido()));
     documentoRequeridoService.descargarArchivo.and.returnValue(of(new Blob(['pdf'], { type: 'application/pdf' })));
@@ -182,6 +182,30 @@ describe('InformeDetalleComponent', () => {
     expect(tarjetas.length).toBe(1);
     expect(fixture.nativeElement.querySelector('[data-testid="btn-guardar-actividad-1001"]')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('[data-testid="input-soporte-url-1001"]')).not.toBeNull();
+  });
+
+  it('no muestra controles de edicion para REVISOR cuando estado es DEVUELTO', () => {
+    authService.hasRole.and.callFake((role: string) => role === 'REVISOR');
+    component.informe.set({ ...sampleInformeDetalle(), estado: 'DEVUELTO' });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="periodo-editable"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="actividad-editable"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="btn-guardar-actividad-1001"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="input-soporte-url-1001"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="btn-agregar-aporte"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="btn-guardar-aportes"]')).toBeNull();
+  });
+
+  it('no muestra controles de edicion para SUPERVISOR cuando estado es DEVUELTO', () => {
+    authService.hasRole.and.callFake((role: string) => role === 'SUPERVISOR');
+    component.informe.set({ ...sampleInformeDetalle(), estado: 'DEVUELTO' });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="periodo-editable"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="actividad-editable"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="btn-agregar-aporte"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="btn-guardar-aportes"]')).toBeNull();
   });
 
   it('no muestra controles de edicion en estado ENVIADO', () => {
@@ -582,20 +606,34 @@ describe('InformeDetalleComponent', () => {
     expect(component.documentosRequeridos()[0].cargado).toBeFalse();
   });
 
-  it('puedeEditarRequeridos retorna true para BORRADOR y DEVUELTO', () => {
+  it('puedeEditarRequeridos retorna true para CONTRATISTA en BORRADOR y DEVUELTO', () => {
     expect(component.puedeEditarRequeridos('BORRADOR')).toBeTrue();
     expect(component.puedeEditarRequeridos('DEVUELTO')).toBeTrue();
   });
 
-  it('esEditable retorna true para BORRADOR y DEVUELTO', () => {
+  it('puedeEditarRequeridos retorna false para REVISOR en DEVUELTO', () => {
+    authService.hasRole.and.callFake((role: string) => role === 'REVISOR');
+
+    expect(component.puedeEditarRequeridos('DEVUELTO')).toBeFalse();
+  });
+
+  it('esEditable retorna true para CONTRATISTA en BORRADOR y DEVUELTO', () => {
     expect(component.esEditable('BORRADOR')).toBeTrue();
     expect(component.esEditable('DEVUELTO')).toBeTrue();
   });
 
-  it('esEditable retorna false para ENVIADO, EN_REVISION y APROBADO', () => {
+  it('esEditable retorna false para CONTRATISTA en ENVIADO, EN_REVISION y APROBADO', () => {
     expect(component.esEditable('ENVIADO')).toBeFalse();
     expect(component.esEditable('EN_REVISION')).toBeFalse();
     expect(component.esEditable('APROBADO')).toBeFalse();
+  });
+
+  it('esEditable retorna false para REVISOR y SUPERVISOR en DEVUELTO', () => {
+    authService.hasRole.and.callFake((role: string) => role === 'REVISOR');
+    expect(component.esEditable('DEVUELTO')).toBeFalse();
+
+    authService.hasRole.and.callFake((role: string) => role === 'SUPERVISOR');
+    expect(component.esEditable('DEVUELTO')).toBeFalse();
   });
 
   it('puedeEditarRequeridos retorna false para ENVIADO, EN_REVISION y APROBADO', () => {

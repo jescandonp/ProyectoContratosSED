@@ -530,7 +530,7 @@ export class InformeDetalleComponent implements OnInit {
   }
 
   puedeEditarRequeridos(estado: EstadoInforme): boolean {
-    return estado === 'BORRADOR' || estado === 'DEVUELTO';
+    return this.esEditable(estado);
   }
 
   // ── Navegacion y estado ───────────────────────────────────────────────────
@@ -561,7 +561,7 @@ export class InformeDetalleComponent implements OnInit {
   }
 
   esEditable(estado: EstadoInforme): boolean {
-    return estado === 'BORRADOR' || estado === 'DEVUELTO';
+    return this.authService.hasRole('CONTRATISTA') && (estado === 'BORRADOR' || estado === 'DEVUELTO');
   }
 
   periodoEditable(estado: EstadoInforme): boolean {

@@ -2,7 +2,7 @@
 ## Usuario IVA, Documentos Requeridos, Email de Aprobacion y Busqueda Administrativa
 
 > **Metodologia:** Spec-Driven Development (SDD) — Spec-Anchored
-> **Version:** 1.5 — **Fecha:** 2026-05-14
+> **Version:** 1.6 — **Fecha:** 2026-05-14
 > **Constitucion:** `docs/CONSTITUTION.md`
 > **Arquitectura:** `docs/ARCHITECTURE.md`
 > **PRD de referencia:** `docs/specs/2026-04-30-sigcon-prd.md`
@@ -147,6 +147,21 @@ Reglas obligatorias:
 - El flujo debe permitir guardar cambios y volver a enviar el informe.
 - Al reenviar, el estado debe pasar de `DEVUELTO` a `ENVIADO`.
 - Las restricciones de solo lectura se mantienen para `ENVIADO`, `EN_REVISION` y `APROBADO`.
+
+---
+
+## 0.6 Correccion Funcional DEVUELTO Solo Contratista — 2026-05-14
+
+Hallazgo de cierre de revision funcional: cuando el informe es devuelto por el revisor y queda en estado `DEVUELTO`, el revisor todavia puede modificar datos del informe.
+
+Reglas obligatorias:
+
+- Un informe `DEVUELTO` es editable exclusivamente por el contratista propietario.
+- Revisor y Supervisor pueden consultar el informe devuelto en modo solo lectura.
+- Revisor y Supervisor no deben ver controles para modificar actividades, soportes, aportes SGSSI, documentos requeridos, periodo ni reenviar el informe cuando el estado sea `DEVUELTO`.
+- La correccion funcional es responsabilidad del contratista.
+- El ciclo se reinicia cuando el contratista ajusta el informe y lo envia nuevamente, cambiando de `DEVUELTO` a `ENVIADO`.
+- La UI no debe habilitar edicion solo por estado; debe combinar estado editable con rol/propietario.
 
 ---
 

@@ -753,3 +753,59 @@ Resultado:
 - 72 specs ejecutadas.
 - 0 fallos.
 - TOTAL: 72 SUCCESS.
+
+---
+
+## Punto de Partida SDD T15 2026-05-14
+
+### 2026-05-14 — Informe DEVUELTO editable indebidamente por Revisor
+
+**Estado de la actividad:**
+- Fase documental SDD registrada antes de modificar codigo.
+
+**Hallazgo funcional:**
+- Una vez el revisor devuelve el informe y este queda en estado `DEVUELTO`, desde la vista del Revisor aun se pueden modificar datos del informe.
+
+**Decision funcional vigente:**
+- `DEVUELTO` debe ser editable solo por el contratista propietario.
+- Revisor y Supervisor pueden consultar el informe devuelto en modo solo lectura.
+- El contratista corrige y vuelve a enviar para reiniciar el ciclo, pasando de `DEVUELTO` a `ENVIADO`.
+
+**Documentos actualizados antes de implementar:**
+- `docs/specs/2026-05-11-sigcon-i7-spec.md` — version 1.6, seccion `0.6 Correccion Funcional DEVUELTO Solo Contratista`.
+- `docs/plans/2026-05-11-sigcon-i7-plan.md` — version 1.6, tarea `T15`.
+
+**Siguiente paso:**
+- Diagnosticar si la habilitacion indevida esta en la condicion de edicion frontend, permisos backend o ambos.
+
+### 2026-05-14 — Implementacion T15
+
+**Diagnostico:**
+- `InformeService.assertCanEditInforme` ya exige rol `CONTRATISTA`, ownership y estado `BORRADOR` o `DEVUELTO`; no se identifico brecha de edicion en API para Revisor/Supervisor.
+- La habilitacion indebida estaba en la vista Angular de detalle: `esEditable` solo validaba estado `BORRADOR` o `DEVUELTO`, sin validar rol.
+- La vista de documentos requeridos tambien delegaba en una regla basada solo en estado.
+
+**Cambios aplicados:**
+- `esEditable` ahora exige `authService.hasRole('CONTRATISTA')` y estado `BORRADOR` o `DEVUELTO`.
+- `periodoEditable`, `puedeEnviar` y `puedeEditarRequeridos` reutilizan esa misma regla.
+- En `DEVUELTO`, Revisor/Supervisor ven el informe en modo solo lectura y no se muestran controles de periodo, actividad, soporte URL ni aportes SGSSI.
+- Se mantiene la edicion en `DEVUELTO` para Contratista, segun T14.
+
+**Tests actualizados:**
+- `informe-detalle.component.spec.ts` cubre que Contratista si edita `DEVUELTO`.
+- `informe-detalle.component.spec.ts` cubre que Revisor no ve controles de edicion en `DEVUELTO`.
+- `informe-detalle.component.spec.ts` cubre que Supervisor no ve controles de edicion en `DEVUELTO`.
+- `informe-detalle.component.spec.ts` cubre que documentos requeridos no son editables para Revisor en `DEVUELTO`.
+
+**Validacion ejecutada:**
+
+```powershell
+Set-Location sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false --browsers=ChromeHeadless --progress=false --include src/app/features/informes/detalle/informe-detalle.component.spec.ts
+```
+
+Resultado:
+- 63 specs ejecutadas.
+- 0 fallos.
+- TOTAL: 63 SUCCESS.
+- Karma reporto advertencia de cierre de ChromeHeadless al finalizar, sin afectar el resultado.

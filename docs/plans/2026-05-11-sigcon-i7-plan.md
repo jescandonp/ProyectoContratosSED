@@ -2,7 +2,7 @@
 ## Usuario IVA, Documentos Requeridos, Email de Aprobacion y Busqueda Administrativa
 
 > **Metodologia:** Spec-Driven Development (SDD) — Spec-Anchored
-> **Version:** 1.5 — **Fecha:** 2026-05-14
+> **Version:** 1.6 — **Fecha:** 2026-05-14
 > **Spec de referencia:** `docs/specs/2026-05-11-sigcon-i7-spec.md`
 > **Rama:** `feat/sigcon-i7` (base: `feat/sigcon-i6`)
 > **Estado:** Listo para ejecucion
@@ -11,7 +11,7 @@
 
 ## Resumen Ejecutivo
 
-Incremento de **14 tareas**. El orden prioriza estabilizacion, modelo de usuario, documentos requeridos/factura, email, busqueda administrativa y ajustes post-pruebas con validacion.
+Incremento de **15 tareas**. El orden prioriza estabilizacion, modelo de usuario, documentos requeridos/factura, email, busqueda administrativa y ajustes post-pruebas con validacion.
 
 | Tarea | Scope | Descripcion |
 |-------|-------|-------------|
@@ -30,6 +30,7 @@ Incremento de **14 tareas**. El orden prioriza estabilizacion, modelo de usuario
 | T12 | Usabilidad busqueda global | Boton `Limpiar` para restablecer filtros, pagina, errores y resultados sin ejecutar nueva busqueda |
 | T13 | Acceso local-dev IVA | Agregar `aecheverry@educacionbogota.gov.co` como opcion de contratista responsable IVA en ingreso local-dev |
 | T14 | Correccion DEVUELTO editable | Asegurar que Contratista pueda entrar a correccion, modificar datos y reenviar informe `DEVUELTO` |
+| T15 | Correccion DEVUELTO solo contratista | Asegurar que Revisor/Supervisor no puedan editar un informe ya devuelto al contratista |
 
 ---
 
@@ -548,6 +549,48 @@ mvn test "-Dtest=InformeServiceTest,InformeEstadoServiceTest"
 
 ---
 
+## T15 — Correccion funcional DEVUELTO solo contratista 2026-05-14
+
+**Origen:** cierre de revision funcional del 2026-05-14.
+
+**Hallazgo:**
+
+- Una vez el revisor devuelve el informe y queda en estado `DEVUELTO`, desde la vista del Revisor aun se pueden modificar datos.
+- Esto incumple la regla funcional: la correccion del informe devuelto corresponde al contratista propietario.
+
+**Alcance:**
+
+- Revisar la compuerta de edicion en la vista detalle.
+- Asegurar que `DEVUELTO` habilite controles solo cuando el usuario tenga rol `CONTRATISTA`.
+- Asegurar que Revisor/Supervisor vean `DEVUELTO` en modo solo lectura.
+- Mantener `DEVUELTO` editable para contratista propietario, segun T14.
+- Mantener `ENVIADO`, `EN_REVISION` y `APROBADO` sin edicion para contratista.
+
+**Archivos candidatos:**
+
+- `sigcon-angular/src/app/features/informes/detalle/informe-detalle.component.ts`
+- `sigcon-angular/src/app/features/informes/detalle/informe-detalle.component.html`
+- `sigcon-angular/src/app/features/informes/detalle/informe-detalle.component.spec.ts`
+- `sigcon-backend/src/main/java/.../InformeService.java` si se identifica brecha de seguridad API.
+
+**Validacion esperada:**
+
+```powershell
+Set-Location sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false --browsers=ChromeHeadless --progress=false --include src/app/features/informes/detalle/informe-detalle.component.spec.ts
+```
+
+Si se modifica backend:
+
+```powershell
+Set-Location sigcon-backend
+mvn test "-Dtest=InformeServiceTest,InformeSecurityTest"
+```
+
+**Commit sugerido:** `fix: restrict returned informe editing to contractors`
+
+---
+
 ## Orden de Ejecucion
 
 ```text
@@ -562,6 +605,7 @@ T11
 T12
 T13
 T14
+T15
 ```
 
 T7 y T8 pueden ejecutarse despues de T2 sin depender de T4, pero se recomienda cerrar documentos/factura antes de busqueda para evitar mezclar validaciones funcionales.
