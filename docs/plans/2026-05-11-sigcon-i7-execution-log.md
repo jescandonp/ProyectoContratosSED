@@ -618,3 +618,81 @@ Resultado:
 - 0 fallos.
 - TOTAL: 16 SUCCESS.
 - Karma reporto advertencia de cierre de ChromeHeadless al finalizar, sin afectar el resultado.
+
+---
+
+## Punto de Partida SDD T13 2026-05-14
+
+### 2026-05-14 — Acceso local-dev para contratista responsable IVA
+
+**Estado de la actividad:**
+- Fase documental SDD registrada antes de modificar codigo.
+
+**Solicitud funcional:**
+- Incluir en el menu de ingreso de desarrollo al usuario:
+  - `Alvaro Echeverry Salcedo`
+  - `aecheverry@educacionbogota.gov.co`
+  - `Asesor`
+  - `CONTRATISTA`
+- El usuario se usara para probar comportamiento de responsable IVA.
+
+**Decision funcional:**
+- Agregarlo como opcion independiente, sin reemplazar el contratista local-dev existente.
+- Habilitar tambien su credencial HTTP Basic local-dev en backend.
+- Usar password local-dev de contratista: `contratista123`.
+
+**Documentos actualizados antes de implementar:**
+- `docs/specs/2026-05-11-sigcon-i7-spec.md` — version 1.4, seccion `0.4 Acceso Local Dev Para Contratista Responsable IVA`.
+- `docs/plans/2026-05-11-sigcon-i7-plan.md` — version 1.4, tarea `T13`.
+
+**Siguiente paso:**
+- Implementar acceso local-dev en frontend/backend y ejecutar pruebas focalizadas.
+
+### 2026-05-14 — Implementacion T13
+
+**Cambios aplicados:**
+- `DevSessionService` agrega usuario local-dev adicional:
+  - `Alvaro Echeverry Salcedo`
+  - `aecheverry@educacionbogota.gov.co`
+  - `Asesor`
+  - rol `CONTRATISTA`
+  - password local-dev `contratista123`
+- `LoginComponent` muestra una opcion independiente `Contratista IVA` sin reemplazar el contratista existente.
+- `AuthService` agrega login local-dev por email para soportar multiples usuarios con el mismo rol.
+- `DevSecurityConfig` agrega el usuario `aecheverry@educacionbogota.gov.co` al `InMemoryUserDetailsManager` local-dev con rol `CONTRATISTA`.
+- `DevSecurityConfigTest` cubre que el usuario IVA este disponible en seguridad local-dev.
+- `dev-session.service.spec.ts` cubre la sesion local-dev del contratista IVA y su header Basic.
+
+**Validaciones ejecutadas:**
+
+```powershell
+Set-Location sigcon-backend
+mvn test "-Dtest=DevSecurityConfigTest"
+```
+
+Resultado:
+- 1 test ejecutado.
+- 0 fallos.
+- BUILD SUCCESS.
+
+```powershell
+Set-Location sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false --browsers=ChromeHeadless --progress=false --include src/app/core/auth/dev-session.service.spec.ts
+```
+
+Resultado:
+- 3 specs ejecutadas.
+- 0 fallos.
+- TOTAL: 3 SUCCESS.
+- Karma reporto advertencia de cierre de ChromeHeadless al finalizar, sin afectar el resultado.
+
+```powershell
+Set-Location sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run build
+```
+
+Resultado:
+- Build Angular exitoso.
+
+**Nota funcional:**
+- La opcion de menu asume que el usuario existe activo en `SGCN_USUARIOS` y tiene `RESPONSABLE_IVA = 1`, segun dato confirmado para pruebas.

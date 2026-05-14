@@ -2,7 +2,7 @@
 ## Usuario IVA, Documentos Requeridos, Email de Aprobacion y Busqueda Administrativa
 
 > **Metodologia:** Spec-Driven Development (SDD) — Spec-Anchored
-> **Version:** 1.3 — **Fecha:** 2026-05-12
+> **Version:** 1.4 — **Fecha:** 2026-05-14
 > **Spec de referencia:** `docs/specs/2026-05-11-sigcon-i7-spec.md`
 > **Rama:** `feat/sigcon-i7` (base: `feat/sigcon-i6`)
 > **Estado:** Listo para ejecucion
@@ -11,7 +11,7 @@
 
 ## Resumen Ejecutivo
 
-Incremento de **12 tareas**. El orden prioriza estabilizacion, modelo de usuario, documentos requeridos/factura, email, busqueda administrativa y ajustes post-pruebas con validacion.
+Incremento de **13 tareas**. El orden prioriza estabilizacion, modelo de usuario, documentos requeridos/factura, email, busqueda administrativa y ajustes post-pruebas con validacion.
 
 | Tarea | Scope | Descripcion |
 |-------|-------|-------------|
@@ -28,6 +28,7 @@ Incremento de **12 tareas**. El orden prioriza estabilizacion, modelo de usuario
 | T10 | Correccion funcional post-revision | Hallazgos 12/05/2026: borrador preserva relaciones, una sola seccion Documentos Requeridos, permisos por rol, soportes como Abrir y acciones supervisor |
 | T11 | Mejora funcional post-pruebas | Busqueda global con filtros combinados/paginacion y correccion integral de informes `DEVUELTO` |
 | T12 | Usabilidad busqueda global | Boton `Limpiar` para restablecer filtros, pagina, errores y resultados sin ejecutar nueva busqueda |
+| T13 | Acceso local-dev IVA | Agregar `aecheverry@educacionbogota.gov.co` como opcion de contratista responsable IVA en ingreso local-dev |
 
 ---
 
@@ -461,6 +462,45 @@ node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=f
 
 ---
 
+## T13 — Acceso local-dev contratista responsable IVA 2026-05-14
+
+**Origen:** necesidad de pruebas funcionales con usuario contratista responsable de IVA.
+
+**Alcance:**
+
+- Agregar al menu de ingreso local-dev una opcion para:
+  - `Alvaro Echeverry Salcedo`
+  - `aecheverry@educacionbogota.gov.co`
+  - `Asesor`
+  - `CONTRATISTA`
+- Mantener disponible el contratista local-dev existente.
+- Agregar credencial local-dev HTTP Basic en backend para ese usuario con rol `CONTRATISTA`.
+- Usar esta opcion solo para pruebas locales de flujos IVA/FACTURA.
+
+**Archivos candidatos:**
+
+- `sigcon-angular/src/app/features/auth/login.component.ts`
+- `sigcon-angular/src/app/core/auth/dev-session.service.ts`
+- `sigcon-angular/src/app/core/auth/auth.service.ts`
+- `sigcon-angular/src/app/core/auth/dev-session.service.spec.ts`
+- `sigcon-backend/src/main/java/co/gov/bogota/sed/sigcon/config/DevSecurityConfig.java`
+
+**Validacion esperada:**
+
+```powershell
+Set-Location sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false --browsers=ChromeHeadless --progress=false --include src/app/core/auth/dev-session.service.spec.ts
+```
+
+```powershell
+Set-Location sigcon-backend
+mvn test "-Dtest=SigconBackendSecurityTest"
+```
+
+**Commit sugerido:** `fix: add IVA contractor to local dev login`
+
+---
+
 ## Orden de Ejecucion
 
 ```text
@@ -473,6 +513,7 @@ T9
 T10
 T11
 T12
+T13
 ```
 
 T7 y T8 pueden ejecutarse despues de T2 sin depender de T4, pero se recomienda cerrar documentos/factura antes de busqueda para evitar mezclar validaciones funcionales.

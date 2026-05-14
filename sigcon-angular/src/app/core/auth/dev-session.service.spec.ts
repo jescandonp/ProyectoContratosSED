@@ -21,6 +21,17 @@ describe('DevSessionService', () => {
     expect(service.currentSession()?.email).toBe('juan.escandon@educacionbogota.edu.co');
   });
 
+  it('stores the IVA contractor local-dev session by email', () => {
+    const session = service.loginAsEmail('aecheverry@educacionbogota.gov.co');
+
+    expect(session.email).toBe('aecheverry@educacionbogota.gov.co');
+    expect(session.nombre).toBe('Alvaro Echeverry Salcedo');
+    expect(session.cargo).toBe('Asesor');
+    expect(session.rol).toBe('CONTRATISTA');
+    expect(service.currentSession()?.email).toBe('aecheverry@educacionbogota.gov.co');
+    expect(service.authorizationHeader()).toBe(`Basic ${btoa('aecheverry@educacionbogota.gov.co:contratista123')}`);
+  });
+
   it('builds the HTTP Basic header for the active dev user', () => {
     service.loginAs('ADMIN');
 

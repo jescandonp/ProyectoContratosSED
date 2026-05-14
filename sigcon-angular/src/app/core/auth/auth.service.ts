@@ -29,6 +29,11 @@ export class AuthService {
     return this.devSession.toUsuario(session);
   }
 
+  loginDevEmail(email: string) {
+    const session = this.devSession.loginAsEmail(email);
+    return this.devSession.toUsuario(session);
+  }
+
   refreshProfile() {
     return this.usuarioService.obtenerPerfilActual().subscribe((usuario) => this.remoteUser.set(usuario));
   }

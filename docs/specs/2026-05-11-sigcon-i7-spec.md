@@ -2,7 +2,7 @@
 ## Usuario IVA, Documentos Requeridos, Email de Aprobacion y Busqueda Administrativa
 
 > **Metodologia:** Spec-Driven Development (SDD) — Spec-Anchored
-> **Version:** 1.3 — **Fecha:** 2026-05-12
+> **Version:** 1.4 — **Fecha:** 2026-05-14
 > **Constitucion:** `docs/CONSTITUTION.md`
 > **Arquitectura:** `docs/ARCHITECTURE.md`
 > **PRD de referencia:** `docs/specs/2026-04-30-sigcon-prd.md`
@@ -112,6 +112,25 @@ Reglas funcionales:
 
 ---
 
+## 0.4 Acceso Local Dev Para Contratista Responsable IVA — 2026-05-14
+
+Para facilitar pruebas funcionales de FACTURA/documentos requeridos, el acceso local de desarrollo debe exponer el usuario contratista:
+
+- Nombre: `Alvaro Echeverry Salcedo`
+- Email: `aecheverry@educacionbogota.gov.co`
+- Cargo: `Asesor`
+- Rol: `CONTRATISTA`
+- Caracteristica funcional esperada en datos: `responsableIva = true`
+
+Reglas:
+
+- El usuario debe aparecer como opcion independiente en el menu de ingreso local-dev.
+- No debe reemplazar al contratista local-dev existente.
+- La autenticacion HTTP Basic local-dev debe aceptar este usuario con rol `CONTRATISTA`.
+- La opcion se usa solo para desarrollo/pruebas locales.
+
+---
+
 ## 1. Alcance del Incremento
 
 ### 1.1 Problema que resuelve
@@ -158,6 +177,7 @@ I7 queda cerrado cuando:
 - El administrador cuenta con busqueda global por texto opcional y filtros combinados: estado del contrato, periodo del informe, contratista, revisor y estado del informe, con paginacion inicial de 20 registros.
 - La busqueda global administrativa permite limpiar filtros y resultados desde una accion visible.
 - Un informe `DEVUELTO` puede ser corregido integralmente por el contratista y reenviado a estado `ENVIADO`.
+- El ingreso local-dev permite seleccionar al contratista responsable IVA `aecheverry@educacionbogota.gov.co` para pruebas funcionales.
 
 ---
 
