@@ -20,7 +20,7 @@ class DocumentStorageServiceTest {
 
     @Test
     void storesPngSignatureUnderConfiguredLocalPath() throws Exception {
-        LocalDocumentStorageService service = new LocalDocumentStorageService(tempDir.toString());
+        LocalDocumentStorageService service = new LocalDocumentStorageService(tempDir.toString(), 10L * 1024L * 1024L);
         MockMultipartFile file = new MockMultipartFile("file", "firma.png", "image/png", new byte[] { 1, 2, 3 });
 
         String reference = service.storeSignature(7L, file);
@@ -31,7 +31,7 @@ class DocumentStorageServiceTest {
 
     @Test
     void rejectsNonImageSignatureFormats() {
-        LocalDocumentStorageService service = new LocalDocumentStorageService(tempDir.toString());
+        LocalDocumentStorageService service = new LocalDocumentStorageService(tempDir.toString(), 10L * 1024L * 1024L);
         MockMultipartFile file = new MockMultipartFile("file", "firma.pdf", "application/pdf", new byte[] { 1, 2, 3 });
 
         assertThatThrownBy(() -> service.storeSignature(7L, file))
@@ -41,7 +41,7 @@ class DocumentStorageServiceTest {
 
     @Test
     void storesSupportFileUnderRequestedSubdir() throws Exception {
-        LocalDocumentStorageService service = new LocalDocumentStorageService(tempDir.toString());
+        LocalDocumentStorageService service = new LocalDocumentStorageService(tempDir.toString(), 10L * 1024L * 1024L);
         MockMultipartFile file = new MockMultipartFile("file", "acta firmada.pdf", "application/pdf", new byte[] { 1 });
 
         String reference = service.storeFile("soportes/10/50/7", file);
@@ -53,7 +53,7 @@ class DocumentStorageServiceTest {
 
     @Test
     void rejectsSupportFilePathTraversal() {
-        LocalDocumentStorageService service = new LocalDocumentStorageService(tempDir.toString());
+        LocalDocumentStorageService service = new LocalDocumentStorageService(tempDir.toString(), 10L * 1024L * 1024L);
         MockMultipartFile file = new MockMultipartFile("file", "soporte.pdf", "application/pdf", new byte[] { 1 });
 
         assertThatThrownBy(() -> service.storeFile("../fuera", file))
