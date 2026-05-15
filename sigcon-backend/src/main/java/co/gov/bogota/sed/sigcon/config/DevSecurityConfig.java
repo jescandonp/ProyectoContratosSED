@@ -1,5 +1,6 @@
 package co.gov.bogota.sed.sigcon.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -11,6 +12,12 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.header.writers.StaticHeadersWriter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -18,10 +25,30 @@ import org.springframework.security.web.SecurityFilterChain;
 @Profile("local-dev")
 public class DevSecurityConfig {
 
+    @Value("${sigcon.security.cors-allowed-origins:http://localhost:4200}")
+    private String corsAllowedOrigins;
+
     @Bean
     public SecurityFilterChain devSecurityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf().disable()
+            .cors().and()
+            .headers()
+                // HSTS omitido: local-dev corre sobre HTTP. Solo activo en SecurityConfig (weblogic).
+                .frameOptions().deny()
+                .contentTypeOptions().and()
+                .cacheControl().and()
+                .contentSecurityPolicy(
+                    "default-src 'self'; " +
+                    "script-src 'self'; " +
+                    "style-src 'self' 'unsafe-inline'; " +
+                    "img-src 'self' data:; " +
+                    "frame-ancestors 'none'").and()
+                .addHeaderWriter(new StaticHeadersWriter(
+                    "Referrer-Policy", "strict-origin-when-cross-origin"))
+                .addHeaderWriter(new StaticHeadersWriter(
+                    "Permissions-Policy", "geolocation=(), camera=(), microphone=()"))
+                .and()
             .authorizeRequests()
                 .antMatchers("/actuator/health").permitAll()
                 .antMatchers("/swagger-ui.html", "/api-docs/**", "/swagger-ui/**", "/webjars/**").permitAll()
@@ -53,10 +80,26 @@ public class DevSecurityConfig {
     }
 
     @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        if (!corsAllowedOrigins.trim().isEmpty()) {
+            config.setAllowedOrigins(Arrays.asList(corsAllowedOrigins.split(",")));
+        }
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
+        config.setAllowCredentials(false);
+        config.setMaxAge(3600L);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/**", config);
+        return source;
+    }
+
+    @Bean
     public UserDetailsService devUserDetailsService() {
         return new InMemoryUserDetailsManager(
             User.withUsername("admin@educacionbogota.edu.co").password("{noop}admin123").roles("ADMIN").build(),
             User.withUsername("juan.escandon@educacionbogota.edu.co").password("{noop}contratista123").roles("CONTRATISTA").build(),
+            User.withUsername("aecheverry@educacionbogota.gov.co").password("{noop}contratista123").roles("CONTRATISTA").build(),
             User.withUsername("revisor1@educacionbogota.edu.co").password("{noop}revisor123").roles("REVISOR").build(),
             User.withUsername("supervisor1@educacionbogota.edu.co").password("{noop}supervisor123").roles("SUPERVISOR").build()
         );

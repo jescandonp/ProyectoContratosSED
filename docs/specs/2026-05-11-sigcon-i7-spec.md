@@ -2,7 +2,7 @@
 ## Usuario IVA, Documentos Requeridos, Email de Aprobacion y Busqueda Administrativa
 
 > **Metodologia:** Spec-Driven Development (SDD) — Spec-Anchored
-> **Version:** 1.0 — **Fecha:** 2026-05-11
+> **Version:** 1.6 — **Fecha:** 2026-05-14
 > **Constitucion:** `docs/CONSTITUTION.md`
 > **Arquitectura:** `docs/ARCHITECTURE.md`
 > **PRD de referencia:** `docs/specs/2026-04-30-sigcon-prd.md`
@@ -10,6 +10,158 @@
 > **Rama:** `feat/sigcon-i7`
 > **Feature name:** `usuario-iva-documentos-email-busqueda`
 > **Estado:** Listo para planificacion e implementacion
+
+---
+
+## 0.1 Ajuste Funcional Post-Pruebas — 2026-05-12
+
+La revision funcional del 2026-05-12 sobre la rama `feat/sigcon-i7` deja estas precisiones obligatorias para cerrar el flujo de informes:
+
+- `Guardar borrador` debe persistir el ultimo estado completo del informe. Al reabrir o corregir, la pantalla debe partir de esa base sin perder relaciones entre actividades reportadas, soportes URL/archivo y documentos requeridos.
+- La aplicacion debe mostrar una sola seccion documental del informe: **Documentos Requeridos**.
+- No existe cargue de "documentos adicionales" en el flujo funcional. Todo documento exigido proviene de la configuracion del Admin y se gestiona como documento requerido.
+- En `BORRADOR` y `DEVUELTO`, el contratista puede adjuntar, visualizar/descargar, reemplazar y eliminar documentos requeridos.
+- En `ENVIADO`, el contratista solo debe ver `Vista previa`; no debe ver acciones de editar, revisar, aprobar ni devolver.
+- En vista de revisor/supervisor, los soportes asociados a actividades deben mostrarse como nombre del soporte + enlace/boton `Abrir`; la relacion funcional actual es uno a uno.
+- En `EN_REVISION`, el supervisor debe poder `Aprobar` (`EN_REVISION -> APROBADO`) o `Devolver` (`EN_REVISION -> DEVUELTO`), exigiendo observacion obligatoria al devolver.
+
+Commit de correccion asociado: `3581409 fix: correct SIGCON informe workflow findings`.
+
+---
+
+## 0.2 Mejora Funcional Post-Pruebas — 2026-05-12
+
+La siguiente correccion debe documentarse y planearse antes de implementar, manteniendo el flujo SDD del incremento:
+
+### 0.2.1 Busqueda global con filtros combinados y paginacion
+
+La busqueda global administrativa debe evolucionar de busqueda simple a busqueda combinada, manteniendo el texto libre como criterio opcional.
+
+Filtros requeridos:
+
+- Texto libre opcional.
+- Estado del contrato.
+- Rango de periodo del informe (`fechaInicio` / `fechaFin` del informe).
+- Contratista.
+- Revisor.
+- Estado del informe.
+
+Resultado esperado:
+
+- La respuesta debe permitir visualizar ambos niveles: contrato e informes asociados que coincidan con los filtros.
+- Si un contrato coincide por texto o estado, pero el filtro de informe restringe por periodo/estado/revisor, deben mostrarse solo los informes que cumplen los criterios aplicables.
+- La UI debe dejar claro el contexto del contrato y el detalle de informes encontrados.
+
+Paginacion:
+
+- Tamano inicial: 20 registros por pagina.
+- El backend debe recibir pagina y tamano.
+- La UI debe permitir navegar entre paginas y mostrar total o rango visible cuando el backend lo exponga.
+
+Ordenamiento propuesto por defecto:
+
+1. Periodo de informe mas reciente primero.
+2. Estado del informe con prioridad operativa: `EN_REVISION`, `ENVIADO`, `DEVUELTO`, `BORRADOR`, `APROBADO`.
+3. Numero de contrato ascendente.
+4. Contratista ascendente.
+
+### 0.2.2 Informe devuelto editable y reenviable
+
+Cuando un informe queda en estado `DEVUELTO`, el contratista debe poder corregirlo integralmente y volverlo a enviar.
+
+Reglas funcionales:
+
+- El estado `DEVUELTO` es editable para el contratista propietario del informe.
+- El contratista puede modificar:
+  - actividades reportadas;
+  - descripcion o detalle de actividades;
+  - soportes asociados a cada actividad;
+  - aportes al Sistema General de Seguridad Social;
+  - documentos requeridos configurados;
+  - demas informacion editable del informe.
+- Al reenviar, el estado debe pasar de `DEVUELTO` a `ENVIADO` para que regrese al flujo de revision.
+- Debe conservarse el motivo/observacion de devolucion para orientar la correccion.
+- Los documentos requeridos ya cargados deben mantenerse y permitir visualizar, reemplazar o eliminar mientras el informe este `DEVUELTO`.
+
+Reglas para aportes de seguridad social:
+
+- Los datos actuales se editan en pantalla; no se reemplaza toda la seccion como bloque opaco.
+- Al crear o diligenciar un informe, deben precargarse los datos predeterminados del usuario contratista para `SALUD`, `PENSION` y `ARL` cuando existan.
+- La precarga no impide que el contratista ajuste entidad, fecha, valor o soporte segun corresponda al periodo reportado.
+
+---
+
+## 0.3 Mejora de Usabilidad Busqueda Global — 2026-05-12
+
+La busqueda global administrativa debe incluir una accion **Limpiar** para restablecer el formulario de filtros.
+
+Reglas funcionales:
+
+- El boton `Limpiar` debe estar visible junto a la accion `Buscar`.
+- Al presionar `Limpiar`, la pantalla debe restablecer:
+  - texto libre;
+  - estado del contrato;
+  - estado del informe;
+  - periodo desde;
+  - periodo hasta;
+  - pagina actual;
+  - mensaje de error;
+  - resultados visibles.
+- La accion no debe ejecutar una nueva busqueda automaticamente.
+- Despues de limpiar, el usuario puede iniciar una nueva busqueda desde filtros vacios.
+
+---
+
+## 0.4 Acceso Local Dev Para Contratista Responsable IVA — 2026-05-14
+
+Para facilitar pruebas funcionales de FACTURA/documentos requeridos, el acceso local de desarrollo debe exponer el usuario contratista:
+
+- Nombre: `Alvaro Echeverry Salcedo`
+- Email: `aecheverry@educacionbogota.gov.co`
+- Cargo: `Asesor`
+- Rol: `CONTRATISTA`
+- Caracteristica funcional esperada en datos: `responsableIva = true`
+
+Reglas:
+
+- El usuario debe aparecer como opcion independiente en el menu de ingreso local-dev.
+- No debe reemplazar al contratista local-dev existente.
+- La autenticacion HTTP Basic local-dev debe aceptar este usuario con rol `CONTRATISTA`.
+- La opcion se usa solo para desarrollo/pruebas locales.
+
+---
+
+## 0.5 Correccion Funcional DEVUELTO Editable — 2026-05-14
+
+Hallazgo de cierre de revision funcional: cuando el informe esta en estado `DEVUELTO`, el contratista no puede modificar ningun dato, aunque la premisa de T11 era permitir correccion integral.
+
+Reglas obligatorias:
+
+- Un informe `DEVUELTO` debe presentar al contratista propietario una accion clara para corregir.
+- La correccion debe permitir modificar la informacion editable del informe, incluyendo:
+  - actividades reportadas;
+  - detalle/descripcion de actividades;
+  - soportes asociados a actividades;
+  - aportes a seguridad social;
+  - documentos requeridos.
+- El flujo debe permitir guardar cambios y volver a enviar el informe.
+- Al reenviar, el estado debe pasar de `DEVUELTO` a `ENVIADO`.
+- Las restricciones de solo lectura se mantienen para `ENVIADO`, `EN_REVISION` y `APROBADO`.
+
+---
+
+## 0.6 Correccion Funcional DEVUELTO Solo Contratista — 2026-05-14
+
+Hallazgo de cierre de revision funcional: cuando el informe es devuelto por el revisor y queda en estado `DEVUELTO`, el revisor todavia puede modificar datos del informe.
+
+Reglas obligatorias:
+
+- Un informe `DEVUELTO` es editable exclusivamente por el contratista propietario.
+- Revisor y Supervisor pueden consultar el informe devuelto en modo solo lectura.
+- Revisor y Supervisor no deben ver controles para modificar actividades, soportes, aportes SGSSI, documentos requeridos, periodo ni reenviar el informe cuando el estado sea `DEVUELTO`.
+- La correccion funcional es responsabilidad del contratista.
+- El ciclo se reinicia cuando el contratista ajusta el informe y lo envia nuevamente, cambiando de `DEVUELTO` a `ENVIADO`.
+- La UI no debe habilitar edicion solo por estado; debe combinar estado editable con rol/propietario.
 
 ---
 
@@ -34,7 +186,7 @@ Las pruebas funcionales posteriores a I6 dejaron cinco necesidades:
 | Documentos Requeridos | Carga, preview y descarga de documentos requeridos del informe; solo PDF y `.eml` | CONTRATISTA / ADMIN / REVISION |
 | Factura IVA | Documento requerido dinamico `FACTURA` por cada informe cuando el contratista es responsable de IVA | CONTRATISTA |
 | Email aprobacion | Notificar al contratista y a correo administrador configurable cuando el informe pasa a `APROBADO` | Sistema |
-| Busqueda global admin | Busqueda por texto y rango de periodo de informe, con resultados agrupados por contratistas, contratos e informes | ADMIN |
+| Busqueda global admin | Busqueda por texto opcional, filtros combinados, paginacion y resultados por contratos e informes | ADMIN |
 
 ### 1.3 Fuera de este incremento
 
@@ -56,7 +208,11 @@ I7 queda cerrado cuando:
 - La seccion Documentos Requeridos permite adjuntar, visualizar y descargar solo PDF y `.eml`.
 - El preview `.eml` muestra asunto, remitente, fecha y cuerpo texto basico cuando sea posible; el archivo original siempre se puede descargar.
 - Al aprobar un informe se dispara notificacion email al contratista y al correo administrador configurable.
-- El administrador cuenta con busqueda global por contratista, contrato o informe, con rango de fechas aplicado al periodo del informe (`fechaInicio` / `fechaFin`).
+- El administrador cuenta con busqueda global por texto opcional y filtros combinados: estado del contrato, periodo del informe, contratista, revisor y estado del informe, con paginacion inicial de 20 registros.
+- La busqueda global administrativa permite limpiar filtros y resultados desde una accion visible.
+- Un informe `DEVUELTO` puede ser corregido integralmente por el contratista y reenviado a estado `ENVIADO`.
+- El ingreso local-dev permite seleccionar al contratista responsable IVA `aecheverry@educacionbogota.gov.co` para pruebas funcionales.
+- La pantalla de detalle/correccion debe exponer y habilitar efectivamente la edicion cuando el informe este `DEVUELTO`.
 
 ---
 
@@ -68,7 +224,7 @@ I7 queda cerrado cuando:
 - En estados `ENVIADO`, `EN_REVISION` y `APROBADO`, los documentos requeridos son solo lectura: visualizar y descargar.
 - La regla de seguridad vigente permanece: un contratista no puede consultar informes ni documentos de otro contratista.
 - La notificacion email de I7 complementa las notificaciones in-app existentes, no las reemplaza.
-- Los documentos requeridos son diferentes de soportes de actividades y documentos adicionales libres. I7 limita la nueva carga/preview/descarga a la seccion "Documentos Requeridos".
+- Los documentos requeridos son diferentes de soportes de actividades. I7 concentra todo documento exigido por configuracion del Admin en la seccion "Documentos Requeridos"; no hay cargue funcional de documentos adicionales.
 
 ---
 

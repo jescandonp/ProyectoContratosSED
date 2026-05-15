@@ -318,3 +318,494 @@ sqlplus SED_SIGCON/<password>@localhost:1521/XEPDB1 @db/04_apply_i7_schema.sql
 - Ejecutar la migracion en la BD objetivo.
 - Volver a levantar backend.
 - Validar `http://localhost:8080/actuator/health`.
+
+---
+
+## Fix Post-Revision Funcional 2026-05-12
+
+### 2026-05-12 — Correccion de flujo de informes y documentos requeridos
+
+**Origen:**
+- Revision funcional del 12/05/2026 sobre el flujo de informes I7 con perfiles Contratista, Revisor y Supervisor.
+
+**Hallazgos confirmados:**
+- Al guardar en `BORRADOR`, el informe no debia perder relaciones ya guardadas entre actividades reportadas, soportes, URLs y documentos requeridos.
+- La pantalla mostraba dos bloques documentales: `Documentos requeridos` y `Documentos adicionales`; el flujo esperado tiene una sola seccion funcional: `Documentos Requeridos`.
+- Los documentos como `Soporte_Correspondencia` y `Aportes Pago Planilla Seguridad Social` hacen parte de la configuracion administrada, no de un cargue adicional libre.
+- En estado `ENVIADO`, el perfil Contratista veia opciones que no correspondian al estado del flujo.
+- En vista Revisor/Supervisor, las URLs de soportes asociados a actividades se presentaban de forma incorrecta.
+- En el flujo Supervisor, al revisar un informe `EN_REVISION`, la vista podia quedar sin acciones efectivas para aprobar o devolver.
+- La gestion completa de documentos requeridos configurados debia permitir adjuntar, visualizar/descargar, reemplazar y eliminar mientras el informe estuviera en `BORRADOR` o `DEVUELTO`.
+
+**Decisiones funcionales aplicadas:**
+- Guardar borrador conserva el ultimo estado completo del informe; cualquier modificacion posterior parte de esa base.
+- Solo existe la seccion `Documentos Requeridos`.
+- No hay cargue funcional de documentos adicionales.
+- En `ENVIADO`, el Contratista solo ve `Vista previa`.
+- La URL o soporte de cada actividad se muestra como nombre del soporte mas accion `Abrir`.
+- La relacion actividad-soporte se mantiene uno a uno por ahora.
+- Supervisor:
+  - aprobar: `EN_REVISION` -> `APROBADO`
+  - devolver: `EN_REVISION` -> `DEVUELTO`
+  - la devolucion exige observacion.
+
+**Cambios backend:**
+- `DocumentoRequeridoInformeService` ahora expone como documentos requeridos los documentos configurados en el catalogo administrativo del contrato.
+- `InformeEstadoService.enviar()` deja de bloquear el envio por no existir registros de documentos adicionales libres.
+- Tests de documentos requeridos y estados cubren la nueva interpretacion funcional.
+
+**Cambios frontend:**
+- `informe-detalle.component` muestra una unica seccion `Documentos Requeridos`.
+- Las acciones de documentos requeridos quedan habilitadas para Contratista solo en estados editables.
+- Para Contratista en `ENVIADO`, se ocultan acciones de editar, revisar, aprobar o devolver; solo queda `Vista previa`.
+- Revisor y Supervisor visualizan soportes de actividades como nombre + boton/enlace `Abrir`.
+- Supervisor conserva acciones de aprobar/devolver en `EN_REVISION`, con observacion obligatoria al devolver.
+- `corregir-informe.component` precarga el soporte existente y reemplaza la URL solo cuando el contratista cambia el archivo.
+
+**Validaciones ejecutadas:**
+- `mvn test "-Dtest=DocumentoRequeridoInformeServiceTest,InformeEstadoServiceTest,InformeEstadoServiceI3Test,InformeEstadoServiceSinRevisorTest"` — 45 tests, 0 fallos, 0 errores, BUILD SUCCESS.
+- `node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false --include src/app/features/informes/detalle/informe-detalle.component.spec.ts --include src/app/features/informes/nuevo/informe-form.component.spec.ts --include src/app/features/informes/corregir/corregir-informe.component.spec.ts` — 65 specs, 0 fallos.
+
+**Commit de implementacion:** `3581409 fix: correct SIGCON informe workflow findings`
+
+**Publicacion:**
+- Rama publicada: `origin/feat/sigcon-i7`.
+- Deploy pendiente a cargo del usuario, segun instruccion recibida.
+
+**Siguiente punto de validacion funcional:**
+- Crear/editar informe como Contratista y guardar en borrador verificando persistencia de relaciones.
+- Confirmar que solo aparece `Documentos Requeridos`.
+- Enviar informe y validar que Contratista solo vea `Vista previa`.
+- Revisar soportes como Revisor/Supervisor y abrir enlaces asociados.
+- Aprobar y devolver como Supervisor desde `EN_REVISION`, validando cambio de estado y observacion obligatoria al devolver.
+
+---
+
+## Punto de Partida SDD Post-Pruebas 2026-05-12
+
+### 2026-05-12 — Busqueda global avanzada e informes devueltos editables
+
+**Estado de la actividad:**
+- Fase documental SDD iniciada antes de corregir codigo.
+- No se ejecutan cambios de implementacion en este punto.
+
+**Secuencia acordada:**
+1. Levantar hallazgos y decisiones funcionales.
+2. Actualizar spec correspondiente.
+3. Actualizar plan/tareas del incremento.
+4. Registrar punto de partida en execution log.
+5. Implementar correcciones.
+6. Ejecutar validaciones.
+7. Cerrar execution log con resultados, commits y publicacion.
+
+**Hallazgos/mejoras levantadas:**
+- Busqueda global requiere combinacion de filtros, no solo busqueda por texto.
+- La busqueda debe permitir filtrar por:
+  - estado del contrato;
+  - rango de periodo del informe;
+  - contratista;
+  - revisor;
+  - estado del informe.
+- El texto libre sigue disponible, pero debe ser opcional.
+- La busqueda debe retornar contratos e informes asociados.
+- Se requiere paginacion para escenarios con muchos registros.
+- En estado `DEVUELTO`, el contratista debe poder ajustar cualquier informacion del informe y reenviarlo.
+- Actualmente no se pueden modificar correctamente actividades, soportes ni aportes de seguridad social desde `DEVUELTO`.
+- Los datos predeterminados del usuario para `SALUD`, `PENSION` y `ARL` deben usarse para precargar aportes al diligenciar informe, permitiendo ajustes manuales.
+
+**Decisiones funcionales confirmadas:**
+- Paginacion inicial: 20 registros por pagina.
+- Ordenamiento default propuesto:
+  1. periodo de informe mas reciente primero;
+  2. prioridad operativa de estado: `EN_REVISION`, `ENVIADO`, `DEVUELTO`, `BORRADOR`, `APROBADO`;
+  3. numero de contrato ascendente;
+  4. contratista ascendente.
+- En `DEVUELTO`, el contratista puede editar:
+  - actividades reportadas;
+  - descripcion/detalle de actividades;
+  - soportes;
+  - aportes a seguridad social;
+  - documentos requeridos;
+  - demas informacion editable del informe.
+- Al reenviar informe devuelto, el estado cambia de `DEVUELTO` a `ENVIADO`.
+- Los aportes de seguridad social se editan campo a campo, no como reemplazo completo de seccion.
+
+**Documentos actualizados antes de implementar:**
+- `docs/specs/2026-05-11-sigcon-i7-spec.md` — version 1.2, seccion `0.2 Mejora Funcional Post-Pruebas`.
+- `docs/plans/2026-05-11-sigcon-i7-plan.md` — version 1.2, tarea `T11`.
+
+**Siguiente paso:**
+- Iniciar implementacion de T11 solo despues de este registro documental y commit de documentacion previa.
+
+---
+
+## T11 — Implementacion 2026-05-12
+
+### 2026-05-12 — Busqueda global avanzada e informes devueltos editables
+
+**Cambios backend:**
+
+**DTOs nuevos:**
+- `BusquedaAdminFiltros.java`: filtros combinados (q, estadoContrato, fechaInicio, fechaFin, contratistaId, revisorId, estadoInforme, pagina, tamano).
+- `BusquedaAdminPageResponse.java`: respuesta paginada con contratos, totalElementos, paginaActual, totalPaginas, tamano.
+- `ContratoResultadoDto.java`: extendido con `contratistaId` y lista `informes` anidados.
+- `InformeResultadoDto.java`: extendido con `contratoId` y `revisorNombre`.
+
+**Repositorios extendidos:**
+- `ContratoRepository.buscarContratosConFiltros()`: query JPQL con filtros opcionales de estadoContrato, contratistaId, revisorId; paginado.
+- `InformeRepository.buscarInformesPorContrato()`: query JPQL con filtros opcionales de q, rango de fechas, estadoInforme, revisorId; ordenado por fechaFin DESC.
+
+**Servicio refactorizado:**
+- `BusquedaAdminService.buscarConFiltros()`: filtros combinados, paginacion de 20, ordenamiento (periodo reciente, prioridad operativa de estado, numero contrato, contratista). Contratos con informes anidados. Omite contratos sin informes cuando hay filtros de informe activos.
+- `BusquedaAdminService.buscar()`: mantiene compatibilidad T8 legacy.
+
+**Controller extendido:**
+- `AdminBusquedaController`: nuevo endpoint `GET /api/admin/busqueda/avanzada` con todos los filtros como query params.
+
+**Tests backend:**
+- `BusquedaAdminServiceTest`: 6 tests nuevos T11 (filtros combinados, informes anidados, omision por filtros, inclusion sin filtros, ordenamiento, paginacion).
+- Suite completa: 176 tests, 0 fallos, BUILD SUCCESS.
+
+**Cambios frontend:**
+
+**Servicio extendido:**
+- `BusquedaAdminService.buscarAvanzado()`: llama a `/api/admin/busqueda/avanzada` con filtros combinados.
+- Nuevas interfaces: `BusquedaAdminFiltros`, `BusquedaAdminPageResponse`.
+- `ContratoResultado` extendido con `informes?: InformeResultado[]`.
+- `InformeResultado` extendido con `contratoId`, `revisorNombre`.
+
+**AdminBusquedaComponent actualizado:**
+- Formulario con selectores de estado contrato y estado informe.
+- Busqueda usa `buscarAvanzado()` con filtros combinados.
+- Resultados: contratos con informes anidados, paginacion con botones Anterior/Siguiente.
+- Mantiene secciones legacy (contratistas, contratos, informes) para compatibilidad.
+
+**CorregirInformeComponent actualizado:**
+- Aportes SGSSI editables en estado `DEVUELTO`: agregar, eliminar, actualizar campo a campo.
+- Precarga aportes desde datos existentes del informe; si no hay, precarga filas con entidades predeterminadas del contratista (SALUD/PENSION/ARL).
+- Documentos requeridos editables en `DEVUELTO`: cargar, descargar, eliminar.
+- Template separado en `corregir-informe.component.html`.
+- Guarda aportes SGSSI validos al guardar borrador.
+
+**InformeDetalleComponent actualizado:**
+- Inicializa aportes en `BORRADOR` y `DEVUELTO` (antes solo en `BORRADOR`).
+- `inicializarAportesEdicion()`: precarga entidades predeterminadas del contratista cuando no hay aportes existentes.
+
+**Tests Angular actualizados:**
+- `admin-busqueda.component.spec.ts`: 15 tests (filtros combinados, paginacion, contratos con informes anidados).
+- `corregir-informe.component.spec.ts`: 12 tests (precarga aportes, agregar/eliminar, guardar, documentos requeridos).
+- `informe-detalle.component.spec.ts`: ajustados para reflejar precarga de 3 filas SGSSI.
+- `informe-preview.component.spec.ts`: ajustado para reflejar ausencia de documentos adicionales (T10).
+- Suite completa: 152 specs, 0 fallos.
+
+**Validaciones ejecutadas:**
+- `mvn test "-Dtest=BusquedaAdminServiceTest"` — 13 tests, 0 fallos.
+- `mvn test` (suite completa) — 176 tests, 0 fallos, BUILD SUCCESS.
+- `npm run build` — exitoso.
+- `npm test -- --watch=false --include ...admin-busqueda.component.spec.ts --include ...corregir-informe.component.spec.ts` — 28 specs, 0 fallos.
+- `npm test -- --watch=false` (suite completa) — 152 specs, 0 fallos.
+
+**Commit:** `dae3809 fix: apply SIGCON I7 T11 post-test functional fixes`
+
+---
+
+## Punto de Retoma Post-T11
+
+- Rama activa: `feat/sigcon-i7`.
+- HEAD: `dae3809`.
+- T11 implementado y validado.
+- Siguiente actividad: pruebas funcionales de busqueda avanzada y flujo de informe DEVUELTO, o publicar rama y abrir PR.
+
+---
+
+## Fix Post-T11 2026-05-12
+
+### 2026-05-12 — ORA-00932 en busqueda avanzada
+
+**Hallazgo en prueba funcional:**
+- Al ejecutar la nueva busqueda avanzada, backend respondio con error 500.
+- Stacktrace principal:
+  - `oracle.jdbc.OracleDatabaseException: ORA-00932: tipos de dato inconsistentes: se esperaba - se ha obtenido CLOB`
+  - `ContratoRepository.buscarContratosConFiltros`
+  - `BusquedaAdminService.buscarConFiltros(BusquedaAdminService.java:102)`
+  - `AdminBusquedaController.buscarAvanzado(AdminBusquedaController.java:91)`
+
+**Causa raiz identificada:**
+- La consulta T11 `buscarContratosConFiltros()` usaba `SELECT DISTINCT c`.
+- En Oracle, `DISTINCT` sobre una entidad completa puede proyectar todas las columnas de `SGCN_CONTRATOS`.
+- `SGCN_CONTRATOS.FORMA_PAGO` esta definido como `CLOB`; Oracle no permite aplicar `DISTINCT` sobre CLOB, generando `ORA-00932`.
+- La consulta no hace `JOIN` que duplique contratos, por lo que `DISTINCT` no era necesario.
+
+**Correccion aplicada:**
+- `ContratoRepository.buscarContratosConFiltros()` cambia de `SELECT DISTINCT c` a `SELECT c`.
+- Se agrega prueba de guardia en `DomainModelMappingTest` para evitar reintroducir `SELECT DISTINCT c` en la busqueda avanzada paginada sobre contratos.
+
+**Validacion ejecutada:**
+
+```powershell
+Set-Location sigcon-backend
+mvn test "-Dtest=DomainModelMappingTest,BusquedaAdminServiceTest"
+```
+
+Resultado:
+- 17 tests ejecutados.
+- 0 fallos.
+- 0 errores.
+- BUILD SUCCESS.
+
+**Siguiente validacion funcional recomendada:**
+- Reintentar desde UI la busqueda avanzada con:
+  - texto libre vacio;
+  - texto libre con numero/nombre;
+  - filtro por estado de contrato;
+  - filtro por periodo de informe;
+  - filtro por revisor;
+  - filtro por estado de informe.
+- Si aparece un nuevo error Oracle, capturar el stacktrace completo para diferenciar si proviene de la busqueda legacy `buscarContratos()` o de `InformeRepository.buscarInformesPorContrato()`.
+
+---
+
+## Punto de Partida SDD T12 2026-05-12
+
+### 2026-05-12 — Boton Limpiar en busqueda global
+
+**Estado de la actividad:**
+- Fase documental SDD registrada antes de modificar codigo.
+
+**Solicitud funcional:**
+- Agregar un boton `Limpiar` en la busqueda global para restablecer los filtros.
+
+**Decision funcional:**
+- El boton se ubica junto a `Buscar`.
+- Debe limpiar texto, estados, fechas, pagina actual, errores y resultados visibles.
+- No debe ejecutar una nueva busqueda automaticamente.
+
+**Documentos actualizados antes de implementar:**
+- `docs/specs/2026-05-11-sigcon-i7-spec.md` — version 1.3, seccion `0.3 Mejora de Usabilidad Busqueda Global`.
+- `docs/plans/2026-05-11-sigcon-i7-plan.md` — version 1.3, tarea `T12`.
+
+**Siguiente paso:**
+- Implementar T12 en frontend y ejecutar spec focalizado de busqueda admin.
+
+### 2026-05-12 — Implementacion T12
+
+**Cambios aplicados:**
+- `AdminBusquedaComponent` agrega boton `Limpiar` junto a `Buscar`.
+- La accion `limpiar()` restablece:
+  - texto libre;
+  - fechas de periodo;
+  - estado de contrato;
+  - estado de informe;
+  - pagina actual;
+  - error visible;
+  - resultados avanzados;
+  - resultados legacy.
+- La accion no invoca `buscarAvanzado()` ni ejecuta consulta automatica.
+
+**Tests actualizados:**
+- `admin-busqueda.component.spec.ts` valida render del boton `Limpiar`.
+- Agrega cobertura para limpiar filtros, resultados, error y pagina sin ejecutar una nueva busqueda.
+
+**Validacion ejecutada:**
+
+```powershell
+Set-Location sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false --browsers=ChromeHeadless --progress=false --include src/app/features/admin/busqueda/admin-busqueda.component.spec.ts
+```
+
+Resultado:
+- 16 specs ejecutadas.
+- 0 fallos.
+- TOTAL: 16 SUCCESS.
+- Karma reporto advertencia de cierre de ChromeHeadless al finalizar, sin afectar el resultado.
+
+---
+
+## Punto de Partida SDD T13 2026-05-14
+
+### 2026-05-14 — Acceso local-dev para contratista responsable IVA
+
+**Estado de la actividad:**
+- Fase documental SDD registrada antes de modificar codigo.
+
+**Solicitud funcional:**
+- Incluir en el menu de ingreso de desarrollo al usuario:
+  - `Alvaro Echeverry Salcedo`
+  - `aecheverry@educacionbogota.gov.co`
+  - `Asesor`
+  - `CONTRATISTA`
+- El usuario se usara para probar comportamiento de responsable IVA.
+
+**Decision funcional:**
+- Agregarlo como opcion independiente, sin reemplazar el contratista local-dev existente.
+- Habilitar tambien su credencial HTTP Basic local-dev en backend.
+- Usar password local-dev de contratista: `contratista123`.
+
+**Documentos actualizados antes de implementar:**
+- `docs/specs/2026-05-11-sigcon-i7-spec.md` — version 1.4, seccion `0.4 Acceso Local Dev Para Contratista Responsable IVA`.
+- `docs/plans/2026-05-11-sigcon-i7-plan.md` — version 1.4, tarea `T13`.
+
+**Siguiente paso:**
+- Implementar acceso local-dev en frontend/backend y ejecutar pruebas focalizadas.
+
+### 2026-05-14 — Implementacion T13
+
+**Cambios aplicados:**
+- `DevSessionService` agrega usuario local-dev adicional:
+  - `Alvaro Echeverry Salcedo`
+  - `aecheverry@educacionbogota.gov.co`
+  - `Asesor`
+  - rol `CONTRATISTA`
+  - password local-dev `contratista123`
+- `LoginComponent` muestra una opcion independiente `Contratista IVA` sin reemplazar el contratista existente.
+- `AuthService` agrega login local-dev por email para soportar multiples usuarios con el mismo rol.
+- `DevSecurityConfig` agrega el usuario `aecheverry@educacionbogota.gov.co` al `InMemoryUserDetailsManager` local-dev con rol `CONTRATISTA`.
+- `DevSecurityConfigTest` cubre que el usuario IVA este disponible en seguridad local-dev.
+- `dev-session.service.spec.ts` cubre la sesion local-dev del contratista IVA y su header Basic.
+
+**Validaciones ejecutadas:**
+
+```powershell
+Set-Location sigcon-backend
+mvn test "-Dtest=DevSecurityConfigTest"
+```
+
+Resultado:
+- 1 test ejecutado.
+- 0 fallos.
+- BUILD SUCCESS.
+
+```powershell
+Set-Location sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false --browsers=ChromeHeadless --progress=false --include src/app/core/auth/dev-session.service.spec.ts
+```
+
+Resultado:
+- 3 specs ejecutadas.
+- 0 fallos.
+- TOTAL: 3 SUCCESS.
+- Karma reporto advertencia de cierre de ChromeHeadless al finalizar, sin afectar el resultado.
+
+```powershell
+Set-Location sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run build
+```
+
+Resultado:
+- Build Angular exitoso.
+
+**Nota funcional:**
+- La opcion de menu asume que el usuario existe activo en `SGCN_USUARIOS` y tiene `RESPONSABLE_IVA = 1`, segun dato confirmado para pruebas.
+
+---
+
+## Punto de Partida SDD T14 2026-05-14
+
+### 2026-05-14 — Informe DEVUELTO no editable
+
+**Estado de la actividad:**
+- Fase documental SDD registrada antes de modificar codigo.
+
+**Hallazgo funcional:**
+- Al finalizar la revision funcional del dia, se encuentra que cuando el informe esta en estado `DEVUELTO`, no permite modificar ningun dato.
+- La premisa de T11 era que el contratista pudiera corregir integralmente el informe devuelto.
+
+**Decision funcional vigente:**
+- `DEVUELTO` debe ser editable por el contratista propietario.
+- Debe permitir corregir actividades, soportes, aportes SGSSI, documentos requeridos y demas informacion editable.
+- Debe permitir guardar y volver a enviar.
+- Al reenviar debe pasar a `ENVIADO`.
+
+**Documentos actualizados antes de implementar:**
+- `docs/specs/2026-05-11-sigcon-i7-spec.md` — version 1.5, seccion `0.5 Correccion Funcional DEVUELTO Editable`.
+- `docs/plans/2026-05-11-sigcon-i7-plan.md` — version 1.5, tarea `T14`.
+
+**Siguiente paso:**
+- Diagnosticar si el bloqueo esta en acciones del detalle, ruta de correccion, permisos frontend o API backend.
+
+### 2026-05-14 — Implementacion T14
+
+**Diagnostico:**
+- El backend ya permite editar informes en `BORRADOR` o `DEVUELTO` mediante `InformeService.assertCanEditInforme`.
+- La ruta de correccion ya considera `DEVUELTO` editable.
+- El bloqueo funcional estaba en la vista de detalle Angular: actividades y SGSSI seguian condicionadas por `esBorrador(i.estado)`, aunque periodo, documentos requeridos y envio ya aceptaban `DEVUELTO`.
+
+**Cambios aplicados:**
+- Se reemplazo la compuerta visual `esBorrador` por `esEditable`.
+- `esEditable` permite `BORRADOR` y `DEVUELTO`.
+- Actividades reportadas en `DEVUELTO` vuelven a mostrar descripcion editable, soporte URL y boton de guardar.
+- Aportes SGSSI en `DEVUELTO` vuelven a mostrar acciones de agregar y guardar.
+- `periodoEditable` y `puedeEnviar` reutilizan la misma regla editable para evitar divergencias.
+
+**Tests actualizados:**
+- `informe-detalle.component.spec.ts` cubre actividades editables en `DEVUELTO`.
+- `informe-detalle.component.spec.ts` cubre botones de agregar/guardar aportes SGSSI en `DEVUELTO`.
+- `informe-detalle.component.spec.ts` cubre la regla `esEditable` para estados permitidos y no permitidos.
+
+**Validacion ejecutada:**
+
+```powershell
+Set-Location sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false --browsers=ChromeHeadless --progress=false --include src/app/features/informes/detalle/informe-detalle.component.spec.ts --include src/app/features/informes/corregir/corregir-informe.component.spec.ts
+```
+
+Resultado:
+- 72 specs ejecutadas.
+- 0 fallos.
+- TOTAL: 72 SUCCESS.
+
+---
+
+## Punto de Partida SDD T15 2026-05-14
+
+### 2026-05-14 — Informe DEVUELTO editable indebidamente por Revisor
+
+**Estado de la actividad:**
+- Fase documental SDD registrada antes de modificar codigo.
+
+**Hallazgo funcional:**
+- Una vez el revisor devuelve el informe y este queda en estado `DEVUELTO`, desde la vista del Revisor aun se pueden modificar datos del informe.
+
+**Decision funcional vigente:**
+- `DEVUELTO` debe ser editable solo por el contratista propietario.
+- Revisor y Supervisor pueden consultar el informe devuelto en modo solo lectura.
+- El contratista corrige y vuelve a enviar para reiniciar el ciclo, pasando de `DEVUELTO` a `ENVIADO`.
+
+**Documentos actualizados antes de implementar:**
+- `docs/specs/2026-05-11-sigcon-i7-spec.md` — version 1.6, seccion `0.6 Correccion Funcional DEVUELTO Solo Contratista`.
+- `docs/plans/2026-05-11-sigcon-i7-plan.md` — version 1.6, tarea `T15`.
+
+**Siguiente paso:**
+- Diagnosticar si la habilitacion indevida esta en la condicion de edicion frontend, permisos backend o ambos.
+
+### 2026-05-14 — Implementacion T15
+
+**Diagnostico:**
+- `InformeService.assertCanEditInforme` ya exige rol `CONTRATISTA`, ownership y estado `BORRADOR` o `DEVUELTO`; no se identifico brecha de edicion en API para Revisor/Supervisor.
+- La habilitacion indebida estaba en la vista Angular de detalle: `esEditable` solo validaba estado `BORRADOR` o `DEVUELTO`, sin validar rol.
+- La vista de documentos requeridos tambien delegaba en una regla basada solo en estado.
+
+**Cambios aplicados:**
+- `esEditable` ahora exige `authService.hasRole('CONTRATISTA')` y estado `BORRADOR` o `DEVUELTO`.
+- `periodoEditable`, `puedeEnviar` y `puedeEditarRequeridos` reutilizan esa misma regla.
+- En `DEVUELTO`, Revisor/Supervisor ven el informe en modo solo lectura y no se muestran controles de periodo, actividad, soporte URL ni aportes SGSSI.
+- Se mantiene la edicion en `DEVUELTO` para Contratista, segun T14.
+
+**Tests actualizados:**
+- `informe-detalle.component.spec.ts` cubre que Contratista si edita `DEVUELTO`.
+- `informe-detalle.component.spec.ts` cubre que Revisor no ve controles de edicion en `DEVUELTO`.
+- `informe-detalle.component.spec.ts` cubre que Supervisor no ve controles de edicion en `DEVUELTO`.
+- `informe-detalle.component.spec.ts` cubre que documentos requeridos no son editables para Revisor en `DEVUELTO`.
+
+**Validacion ejecutada:**
+
+```powershell
+Set-Location sigcon-angular
+node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" test -- --watch=false --browsers=ChromeHeadless --progress=false --include src/app/features/informes/detalle/informe-detalle.component.spec.ts
+```
+
+Resultado:
+- 63 specs ejecutadas.
+- 0 fallos.
+- TOTAL: 63 SUCCESS.
+- Karma reporto advertencia de cierre de ChromeHeadless al finalizar, sin afectar el resultado.

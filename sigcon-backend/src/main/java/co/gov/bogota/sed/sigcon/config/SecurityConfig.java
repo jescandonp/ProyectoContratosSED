@@ -1,5 +1,6 @@
 package co.gov.bogota.sed.sigcon.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -10,6 +11,12 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.header.writers.StaticHeadersWriter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -17,10 +24,33 @@ import org.springframework.security.web.SecurityFilterChain;
 @Profile("weblogic")
 public class SecurityConfig {
 
+    // JWT Bearer en Authorization header elimina superficie CSRF.
+    // Ref: OWASP ASVS 4.0.3 §3.5.3 — docs/superpowers/specs/2026-05-15-sigcon-i-sec-design.md
+    @Value("${sigcon.security.cors-allowed-origins:}")
+    private String corsAllowedOrigins;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf().disable()
+            .cors().and()
+            .headers()
+                .frameOptions().deny()
+                .contentTypeOptions().and()
+                .httpStrictTransportSecurity()
+                    .maxAgeInSeconds(31536000).includeSubDomains(true).and()
+                .cacheControl().and()
+                .contentSecurityPolicy(
+                    "default-src 'self'; " +
+                    "script-src 'self'; " +
+                    "style-src 'self' 'unsafe-inline'; " +
+                    "img-src 'self' data:; " +
+                    "frame-ancestors 'none'").and()
+                .addHeaderWriter(new StaticHeadersWriter(
+                    "Referrer-Policy", "strict-origin-when-cross-origin"))
+                .addHeaderWriter(new StaticHeadersWriter(
+                    "Permissions-Policy", "geolocation=(), camera=(), microphone=()"))
+                .and()
             .authorizeRequests()
                 .antMatchers("/actuator/health").permitAll()
                 .antMatchers("/swagger-ui.html", "/api-docs/**", "/swagger-ui/**", "/webjars/**").permitAll()
@@ -51,6 +81,21 @@ public class SecurityConfig {
                 .jwt()
                 .jwtAuthenticationConverter(azureRolesConverter());
         return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        if (!corsAllowedOrigins.trim().isEmpty()) {
+            config.setAllowedOrigins(Arrays.asList(corsAllowedOrigins.split(",")));
+        }
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
+        config.setAllowCredentials(false);
+        config.setMaxAge(3600L);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/**", config);
+        return source;
     }
 
     @Bean

@@ -6,12 +6,10 @@ import { Observable, forkJoin, of, switchMap } from 'rxjs';
 
 import { EstadoInforme, InformeDetalle } from '../../../core/models/informe.model';
 import { AporteSgssiRequest, ITEM_SGSSI_LABELS, ItemSgssi } from '../../../core/models/aporte-sgssi.model';
-import { DocumentoCatalogo } from '../../../core/models/documento-catalogo.model';
 import { DocumentoRequerido, EmlPreview, EXTENSIONES_PERMITIDAS_REQUERIDOS } from '../../../core/models/documento-requerido.model';
 import { ActividadInformeService } from '../../../core/services/actividad-informe.service';
 import { AporteSgssiService } from '../../../core/services/aporte-sgssi.service';
-import { DocumentoAdicionalService } from '../../../core/services/documento-adicional.service';
-import { DocumentoCatalogoService } from '../../../core/services/documento-catalogo.service';
+import { AuthService } from '../../../core/auth/auth.service';
 import { DocumentoRequeridoService } from '../../../core/services/documento-requerido.service';
 import { InformeService } from '../../../core/services/informe.service';
 import { ObservacionService } from '../../../core/services/observacion.service';
@@ -52,12 +50,6 @@ export class InformeDetalleComponent implements OnInit {
 
   // I5 — estado de edicion de actividades (solo BORRADOR)
   readonly actividadStates = signal<Map<number, ActividadEditState>>(new Map());
-  readonly catalogoDocumentos = signal<DocumentoCatalogo[]>([]);
-  readonly nuevoDocIdCatalogo = signal<number | null>(null);
-  readonly nuevoDocReferencia = signal('');
-  readonly guardandoDocumento = signal(false);
-  readonly errorDocumento = signal('');
-
   // I6 — aportes SGSSI editables (solo BORRADOR)
   readonly aportesEdicion = signal<AporteSgssiEditRow[]>([]);
   readonly guardandoAportes = signal(false);
@@ -76,15 +68,19 @@ export class InformeDetalleComponent implements OnInit {
   readonly procesandoRevision = signal(false);
   readonly errorRevision = signal('');
 
+  readonly dialogoDevolucionSupervisor = signal(false);
+  readonly observacionSupervisor = signal('');
+  readonly procesandoSupervisor = signal(false);
+  readonly errorSupervisor = signal('');
+
   periodoFechaInicio = '';
   periodoFechaFin = '';
 
   constructor(
     private readonly informeService: InformeService,
     private readonly actividadService: ActividadInformeService,
+    private readonly authService: AuthService,
     private readonly soporteService: SoporteAdjuntoService,
-    private readonly documentoAdicionalService: DocumentoAdicionalService,
-    private readonly documentoCatalogoService: DocumentoCatalogoService,
     private readonly aporteSgssiService: AporteSgssiService,
     private readonly observacionService: ObservacionService,
     private readonly documentoRequeridoService: DocumentoRequeridoService,
@@ -107,10 +103,9 @@ export class InformeDetalleComponent implements OnInit {
         this.informe.set(informe);
         this.periodoFechaInicio = informe.fechaInicio;
         this.periodoFechaFin = informe.fechaFin;
-        if (informe.estado === 'BORRADOR') {
+        if (informe.estado === 'BORRADOR' || informe.estado === 'DEVUELTO') {
           this.inicializarEstadoEdicion(informe);
           this.inicializarAportesEdicion(informe);
-          this.cargarCatalogo();
         }
         this.cargarDocumentosRequeridos(id);
       },
@@ -162,13 +157,6 @@ export class InformeDetalleComponent implements OnInit {
       });
     });
     this.actividadStates.set(states);
-  }
-
-  private cargarCatalogo(): void {
-    this.documentoCatalogoService.listar({ tipoContrato: 'OPS', size: 100 }).subscribe({
-      next: (page) => this.catalogoDocumentos.set(page.content),
-      error: () => { /* catalogo no critico */ }
-    });
   }
 
   actualizarEstadoActividad(actividadId: number, patch: Partial<ActividadEditState>): void {
@@ -253,13 +241,28 @@ export class InformeDetalleComponent implements OnInit {
   // ── Aportes SGSSI editables (I6) ─────────────────────────────────────────
 
   private inicializarAportesEdicion(informe: InformeDetalle): void {
-    const rows: AporteSgssiEditRow[] = (informe.aportesSgssi ?? []).map((a) => ({
-      item: a.item,
-      fechaPago: a.fechaPago,
-      valorAportado: a.valorAportado,
-      entidad: a.entidad,
-    }));
-    this.aportesEdicion.set(rows);
+    const aportesExistentes = informe.aportesSgssi ?? [];
+    if (aportesExistentes.length > 0) {
+      this.aportesEdicion.set(aportesExistentes.map((a) => ({
+        item: a.item,
+        fechaPago: a.fechaPago,
+        valorAportado: a.valorAportado,
+        entidad: a.entidad,
+      })));
+    } else {
+      // T11: precargar con datos predeterminados del contratista si existen
+      const contratista = informe.contratista;
+      const rows: AporteSgssiEditRow[] = (['SALUD', 'PENSION', 'ARL'] as const).map((item) => {
+        let entidad = '';
+        if (contratista) {
+          if (item === 'SALUD') entidad = contratista.sgssiSaludEntidad ?? '';
+          else if (item === 'PENSION') entidad = contratista.sgssiPensionEntidad ?? '';
+          else if (item === 'ARL') entidad = contratista.sgssiArlEntidad ?? '';
+        }
+        return { item, fechaPago: '', valorAportado: null, entidad };
+      });
+      this.aportesEdicion.set(rows);
+    }
   }
 
   agregarAporteEdicion(): void {
@@ -308,53 +311,10 @@ export class InformeDetalleComponent implements OnInit {
     return ITEM_SGSSI_LABELS[item];
   }
 
-  // ── Documentos adicionales editables (I5) ────────────────────────────────
-
-  agregarDocumentoAdicional(): void {
-    const informe = this.informe();
-    const idCatalogo = this.nuevoDocIdCatalogo();
-    const referencia = this.nuevoDocReferencia().trim();
-    if (!informe || !idCatalogo || !referencia) {
-      this.errorDocumento.set('Seleccione el tipo de documento e ingrese la referencia.');
-      return;
-    }
-    this.guardandoDocumento.set(true);
-    this.errorDocumento.set('');
-    this.documentoAdicionalService.agregar(informe.id, { idCatalogo: idCatalogo, referencia: referencia }).pipe(
-      switchMap(() => this.informeService.obtenerDetalle(informe.id))
-    ).subscribe({
-      next: (actualizado) => {
-        this.informe.set(actualizado);
-        this.inicializarEstadoEdicion(actualizado);
-        this.nuevoDocIdCatalogo.set(null);
-        this.nuevoDocReferencia.set('');
-        this.guardandoDocumento.set(false);
-      },
-      error: () => {
-        this.guardandoDocumento.set(false);
-        this.errorDocumento.set('No se pudo agregar el documento. Intente de nuevo.');
-      }
-    });
-  }
-
-  eliminarDocumentoAdicional(documentoId: number): void {
-    const informe = this.informe();
-    if (!informe) return;
-    this.documentoAdicionalService.eliminar(informe.id, documentoId).pipe(
-      switchMap(() => this.informeService.obtenerDetalle(informe.id))
-    ).subscribe({
-      next: (actualizado) => {
-        this.informe.set(actualizado);
-        this.inicializarEstadoEdicion(actualizado);
-      },
-      error: () => this.error.set('No se pudo eliminar el documento.')
-    });
-  }
-
   // ── Flujo REVISOR ────────────────────────────────────────────────────────
 
   puedeRevisar(informe: InformeDetalle): boolean {
-    return informe.estado === 'ENVIADO';
+    return this.authService.hasRole('REVISOR') && informe.estado === 'ENVIADO';
   }
 
   aprobarRevision(): void {
@@ -404,6 +364,61 @@ export class InformeDetalleComponent implements OnInit {
       error: () => {
         this.procesandoRevision.set(false);
         this.errorRevision.set('No se pudo devolver el informe. Intente de nuevo.');
+      }
+    });
+  }
+
+  puedeAprobarSupervisor(informe: InformeDetalle): boolean {
+    return this.authService.hasRole('SUPERVISOR') && informe.estado === 'EN_REVISION';
+  }
+
+  aprobarSupervisor(): void {
+    const informe = this.informe();
+    if (!informe) return;
+    this.procesandoSupervisor.set(true);
+    this.errorSupervisor.set('');
+    this.observacionService.aprobarInforme(informe.id).subscribe({
+      next: (actualizado) => {
+        this.informe.set(actualizado);
+        this.procesandoSupervisor.set(false);
+      },
+      error: () => {
+        this.procesandoSupervisor.set(false);
+        this.errorSupervisor.set('No se pudo aprobar el informe. Intente de nuevo.');
+      }
+    });
+  }
+
+  abrirDevolucionSupervisor(): void {
+    this.observacionSupervisor.set('');
+    this.errorSupervisor.set('');
+    this.dialogoDevolucionSupervisor.set(true);
+  }
+
+  cerrarDevolucionSupervisor(): void {
+    this.dialogoDevolucionSupervisor.set(false);
+    this.errorSupervisor.set('');
+  }
+
+  confirmarDevolucionSupervisor(): void {
+    const informe = this.informe();
+    const texto = this.observacionSupervisor().trim();
+    if (!informe) return;
+    if (!texto) {
+      this.errorSupervisor.set('La observación es obligatoria para devolver el informe.');
+      return;
+    }
+    this.procesandoSupervisor.set(true);
+    this.errorSupervisor.set('');
+    this.observacionService.devolverInforme(informe.id, { texto }).subscribe({
+      next: (actualizado) => {
+        this.informe.set(actualizado);
+        this.procesandoSupervisor.set(false);
+        this.dialogoDevolucionSupervisor.set(false);
+      },
+      error: () => {
+        this.procesandoSupervisor.set(false);
+        this.errorSupervisor.set('No se pudo devolver el informe. Intente de nuevo.');
       }
     });
   }
@@ -515,7 +530,7 @@ export class InformeDetalleComponent implements OnInit {
   }
 
   puedeEditarRequeridos(estado: EstadoInforme): boolean {
-    return estado === 'BORRADOR' || estado === 'DEVUELTO';
+    return this.esEditable(estado);
   }
 
   // ── Navegacion y estado ───────────────────────────────────────────────────
@@ -545,16 +560,16 @@ export class InformeDetalleComponent implements OnInit {
     void this.router.navigate(['/contratos']);
   }
 
-  esBorrador(estado: EstadoInforme): boolean {
-    return estado === 'BORRADOR';
+  esEditable(estado: EstadoInforme): boolean {
+    return this.authService.hasRole('CONTRATISTA') && (estado === 'BORRADOR' || estado === 'DEVUELTO');
   }
 
   periodoEditable(estado: EstadoInforme): boolean {
-    return estado === 'BORRADOR' || estado === 'DEVUELTO';
+    return this.esEditable(estado);
   }
 
   puedeEnviar(estado: EstadoInforme) {
-    return estado === 'BORRADOR' || estado === 'DEVUELTO';
+    return this.esEditable(estado);
   }
 
   toNumber(value: string | number): number {

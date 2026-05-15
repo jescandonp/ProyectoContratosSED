@@ -2,11 +2,13 @@ package co.gov.bogota.sed.sigcon.application.service;
 
 import co.gov.bogota.sed.sigcon.application.dto.informe.DocumentoRequeridoDto;
 import co.gov.bogota.sed.sigcon.application.dto.informe.EmlPreviewDto;
+import co.gov.bogota.sed.sigcon.domain.entity.DocumentoCatalogo;
 import co.gov.bogota.sed.sigcon.domain.entity.DocumentoRequeridoInforme;
 import co.gov.bogota.sed.sigcon.domain.entity.Informe;
 import co.gov.bogota.sed.sigcon.domain.entity.Usuario;
 import co.gov.bogota.sed.sigcon.domain.enums.EstadoInforme;
 import co.gov.bogota.sed.sigcon.domain.enums.RolUsuario;
+import co.gov.bogota.sed.sigcon.domain.repository.DocumentoCatalogoRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.DocumentoRequeridoInformeRepository;
 import co.gov.bogota.sed.sigcon.web.exception.ErrorCode;
 import co.gov.bogota.sed.sigcon.web.exception.SigconBusinessException;
@@ -36,7 +38,7 @@ import javax.mail.internet.MimeMessage;
 /**
  * I7: Gestiona los documentos requeridos por informe (PDF / EML).
  *
- * <p>Separado de DocumentoAdicionalInformeService (documentos adicionales libres).
+ * <p>Incluye los documentos configurados por el administrador para el tipo de contrato.
  * La FACTURA es un requerido dinamico: se exige cuando el contratista del contrato
  * tiene responsableIva=true. No depende de parametrizacion manual en catalogo.</p>
  */
@@ -56,17 +58,20 @@ public class DocumentoRequeridoInformeService {
     ));
 
     private final DocumentoRequeridoInformeRepository repository;
+    private final DocumentoCatalogoRepository documentoCatalogoRepository;
     private final InformeService informeService;
     private final CurrentUserService currentUserService;
     private final DocumentStorageService storageService;
 
     public DocumentoRequeridoInformeService(
         DocumentoRequeridoInformeRepository repository,
+        DocumentoCatalogoRepository documentoCatalogoRepository,
         InformeService informeService,
         CurrentUserService currentUserService,
         DocumentStorageService storageService
     ) {
         this.repository = repository;
+        this.documentoCatalogoRepository = documentoCatalogoRepository;
         this.informeService = informeService;
         this.currentUserService = currentUserService;
         this.storageService = storageService;
@@ -92,6 +97,18 @@ public class DocumentoRequeridoInformeService {
 
         List<DocumentoRequeridoDto> resultado = new ArrayList<>();
 
+        List<DocumentoCatalogo> configurados = documentoCatalogoRepository
+            .findByTipoContratoAndActivoTrue(informe.getContrato().getTipo());
+
+        for (DocumentoCatalogo catalogo : configurados) {
+            String clave = claveCatalogo(catalogo);
+            DocumentoRequeridoInforme registro = registros.stream()
+                .filter(r -> clave.equals(r.getClaveLogica()))
+                .findFirst()
+                .orElse(null);
+            resultado.add(registro == null ? buildCatalogoPendiente(catalogo) : toDto(registro, false));
+        }
+
         // Agregar FACTURA dinamica si aplica y no existe aun en BD
         if (requiereFactura) {
             boolean facturaEnBd = registros.stream()
@@ -102,7 +119,10 @@ public class DocumentoRequeridoInformeService {
         }
 
         for (DocumentoRequeridoInforme reg : registros) {
-            resultado.add(toDto(reg, CLAVE_FACTURA.equals(reg.getClaveLogica()) && requiereFactura));
+            boolean yaIncluido = resultado.stream().anyMatch(d -> reg.getClaveLogica().equals(d.getClaveLogica()));
+            if (!yaIncluido) {
+                resultado.add(toDto(reg, CLAVE_FACTURA.equals(reg.getClaveLogica()) && requiereFactura));
+            }
         }
 
         return resultado;
@@ -121,7 +141,6 @@ public class DocumentoRequeridoInformeService {
         Usuario usuario = currentUserService.getCurrentUser();
         assertPropietarioEditable(usuario, informe);
 
-        // Validar que la clave sea FACTURA solo si el contratista es responsable IVA
         if (CLAVE_FACTURA.equals(claveLogica) && !requiereFactura(informe)) {
             throw new SigconBusinessException(
                 ErrorCode.DOCUMENTO_REQUERIDO_NO_ENCONTRADO,
@@ -129,6 +148,11 @@ public class DocumentoRequeridoInformeService {
                 HttpStatus.BAD_REQUEST
             );
         }
+        DocumentoCatalogo catalogo = null;
+        if (!CLAVE_FACTURA.equals(claveLogica)) {
+            catalogo = resolverCatalogo(informe, claveLogica);
+        }
+        final DocumentoCatalogo catalogoValidado = catalogo;
 
         String extension = resolverExtension(file);
         String contentType = resolverContentType(file, extension);
@@ -153,7 +177,7 @@ public class DocumentoRequeridoInformeService {
                 DocumentoRequeridoInforme nuevo = new DocumentoRequeridoInforme();
                 nuevo.setInforme(informe);
                 nuevo.setClaveLogica(claveLogica);
-                nuevo.setNombreDisplay(resolverNombreDisplay(claveLogica));
+                nuevo.setNombreDisplay(catalogoValidado != null ? catalogoValidado.getNombre() : resolverNombreDisplay(claveLogica));
                 nuevo.setActivo(true);
                 return nuevo;
             });
@@ -274,6 +298,20 @@ public class DocumentoRequeridoInformeService {
      * Lanza SigconBusinessException si falta alguno.
      */
     public void assertDocumentosRequeridosCompletos(Informe informe) {
+        List<DocumentoCatalogo> configurados = documentoCatalogoRepository
+            .findByTipoContratoAndActivoTrue(informe.getContrato().getTipo());
+        for (DocumentoCatalogo catalogo : configurados) {
+            boolean cargado = repository.existsByInformeIdAndClaveLogicaAndStoragePathIsNotNullAndActivoTrue(
+                informe.getId(), claveCatalogo(catalogo)
+            );
+            if (!cargado) {
+                throw new SigconBusinessException(
+                    ErrorCode.DOCUMENTO_REQUERIDO_FALTANTE,
+                    "Debe cargar el documento requerido: " + catalogo.getNombre(),
+                    HttpStatus.BAD_REQUEST
+                );
+            }
+        }
         if (requiereFactura(informe)) {
             boolean facturaCargada = repository.existsByInformeIdAndClaveLogicaAndStoragePathIsNotNullAndActivoTrue(
                 informe.getId(), CLAVE_FACTURA
@@ -390,6 +428,30 @@ public class DocumentoRequeridoInformeService {
         dto.setCargado(false);
         dto.setPorIva(true);
         return dto;
+    }
+
+    private DocumentoRequeridoDto buildCatalogoPendiente(DocumentoCatalogo catalogo) {
+        DocumentoRequeridoDto dto = new DocumentoRequeridoDto();
+        dto.setClaveLogica(claveCatalogo(catalogo));
+        dto.setNombreDisplay(catalogo.getNombre());
+        dto.setCargado(false);
+        dto.setPorIva(false);
+        return dto;
+    }
+
+    private DocumentoCatalogo resolverCatalogo(Informe informe, String claveLogica) {
+        return documentoCatalogoRepository.findByTipoContratoAndActivoTrue(informe.getContrato().getTipo()).stream()
+            .filter(catalogo -> claveCatalogo(catalogo).equals(claveLogica))
+            .findFirst()
+            .orElseThrow(() -> new SigconBusinessException(
+                ErrorCode.DOCUMENTO_REQUERIDO_NO_ENCONTRADO,
+                "Documento requerido no configurado para este contrato",
+                HttpStatus.BAD_REQUEST
+            ));
+    }
+
+    private static String claveCatalogo(DocumentoCatalogo catalogo) {
+        return "CATALOGO_" + catalogo.getId();
     }
 
     private DocumentoRequeridoDto toDto(DocumentoRequeridoInforme reg, boolean porIva) {

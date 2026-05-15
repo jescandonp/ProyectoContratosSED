@@ -48,14 +48,37 @@ const DEV_USERS: Record<RolUsuario, DevSession> = {
   }
 };
 
+const EXTRA_DEV_USERS: DevSession[] = [
+  {
+    id: 5,
+    email: 'aecheverry@educacionbogota.gov.co',
+    nombre: 'Alvaro Echeverry Salcedo',
+    cargo: 'Asesor',
+    rol: 'CONTRATISTA',
+    password: 'contratista123'
+  }
+];
+
+const ALL_DEV_USERS = [...Object.values(DEV_USERS), ...EXTRA_DEV_USERS];
+
 @Injectable({ providedIn: 'root' })
 export class DevSessionService {
   private readonly session = signal<DevSession | null>(this.loadSession());
   readonly currentSession = this.session.asReadonly();
-  readonly users = Object.values(DEV_USERS);
+  readonly users = ALL_DEV_USERS;
 
   loginAs(rol: RolUsuario) {
     const session = DEV_USERS[rol];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+    this.session.set(session);
+    return session;
+  }
+
+  loginAsEmail(email: string) {
+    const session = ALL_DEV_USERS.find((user) => user.email === email);
+    if (!session) {
+      throw new Error(`Usuario local-dev no configurado: ${email}`);
+    }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
     this.session.set(session);
     return session;

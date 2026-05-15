@@ -44,6 +44,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -306,6 +307,17 @@ class SigconBackendSecurityTest {
         mockMvc.perform(get("/api/notificaciones")
                 .with(httpBasic(ADMIN_EMAIL, "admin123")))
             .andExpect(status().isOk());
+    }
+
+    @Test
+    void securityHeaders_deSeguridad_presentesEnRespuesta() throws Exception {
+        mockMvc.perform(get("/actuator/health"))
+            .andExpect(header().string("X-Frame-Options", "DENY"))
+            .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+            .andExpect(header().exists("Content-Security-Policy"))
+            .andExpect(header().exists("Cache-Control"))
+            .andExpect(header().string("Referrer-Policy", "strict-origin-when-cross-origin"))
+            .andExpect(header().string("Permissions-Policy", "geolocation=(), camera=(), microphone=()"));
     }
 
     private static Usuario usuario(Long id, String email, RolUsuario rol) {

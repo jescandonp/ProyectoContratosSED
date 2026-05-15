@@ -2,7 +2,6 @@ package co.gov.bogota.sed.sigcon.application.service;
 
 import co.gov.bogota.sed.sigcon.application.dto.informe.InformeDetalleDto;
 import co.gov.bogota.sed.sigcon.domain.entity.ActividadInforme;
-import co.gov.bogota.sed.sigcon.domain.entity.DocumentoCatalogo;
 import co.gov.bogota.sed.sigcon.domain.entity.Informe;
 import co.gov.bogota.sed.sigcon.domain.entity.Usuario;
 import co.gov.bogota.sed.sigcon.domain.enums.EstadoInforme;
@@ -10,8 +9,6 @@ import co.gov.bogota.sed.sigcon.domain.enums.RolObservacion;
 import co.gov.bogota.sed.sigcon.domain.enums.TipoSoporte;
 import co.gov.bogota.sed.sigcon.domain.enums.TipoEvento;
 import co.gov.bogota.sed.sigcon.domain.repository.ActividadInformeRepository;
-import co.gov.bogota.sed.sigcon.domain.repository.DocumentoAdicionalRepository;
-import co.gov.bogota.sed.sigcon.domain.repository.DocumentoCatalogoRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.InformeRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.SoporteAdjuntoRepository;
 import co.gov.bogota.sed.sigcon.web.exception.ErrorCode;
@@ -33,8 +30,6 @@ public class InformeEstadoService {
     private final InformeRepository informeRepository;
     private final ActividadInformeRepository actividadRepository;
     private final SoporteAdjuntoRepository soporteRepository;
-    private final DocumentoCatalogoRepository documentoCatalogoRepository;
-    private final DocumentoAdicionalRepository documentoAdicionalRepository;
     private final InformeService informeService;
     private final ObservacionService observacionService;
     private final PdfInformeService pdfInformeService;
@@ -46,8 +41,6 @@ public class InformeEstadoService {
         InformeRepository informeRepository,
         ActividadInformeRepository actividadRepository,
         SoporteAdjuntoRepository soporteRepository,
-        DocumentoCatalogoRepository documentoCatalogoRepository,
-        DocumentoAdicionalRepository documentoAdicionalRepository,
         InformeService informeService,
         ObservacionService observacionService,
         PdfInformeService pdfInformeService,
@@ -58,8 +51,6 @@ public class InformeEstadoService {
         this.informeRepository = informeRepository;
         this.actividadRepository = actividadRepository;
         this.soporteRepository = soporteRepository;
-        this.documentoCatalogoRepository = documentoCatalogoRepository;
-        this.documentoAdicionalRepository = documentoAdicionalRepository;
         this.informeService = informeService;
         this.observacionService = observacionService;
         this.pdfInformeService = pdfInformeService;
@@ -86,7 +77,6 @@ public class InformeEstadoService {
             );
         }
         assertSoporteUrlPorActividad(actividades);
-        assertDocumentosAdicionalesCompletos(informe);
         documentoRequeridoInformeService.assertDocumentosRequeridosCompletos(informe);
         informe.setEstado(EstadoInforme.ENVIADO);
         informe.setFechaUltimoEnvio(LocalDateTime.now());
@@ -222,24 +212,6 @@ public class InformeEstadoService {
                 throw new SigconBusinessException(
                     ErrorCode.SOPORTE_INVALIDO,
                     "Cada actividad reportada debe tener un soporte URL",
-                    HttpStatus.BAD_REQUEST
-                );
-            }
-        }
-    }
-
-    private void assertDocumentosAdicionalesCompletos(Informe informe) {
-        List<DocumentoCatalogo> documentosAplicables = documentoCatalogoRepository
-            .findByTipoContratoAndActivoTrue(informe.getContrato().getTipo());
-        for (DocumentoCatalogo catalogo : documentosAplicables) {
-            boolean registrado = documentoAdicionalRepository.existsByInformeIdAndCatalogoIdAndActivoTrue(
-                informe.getId(),
-                catalogo.getId()
-            );
-            if (!registrado) {
-                throw new SigconBusinessException(
-                    ErrorCode.DOCUMENTO_ADICIONAL_REQUERIDO,
-                    "Debe registrar todos los documentos adicionales aplicables",
                     HttpStatus.BAD_REQUEST
                 );
             }

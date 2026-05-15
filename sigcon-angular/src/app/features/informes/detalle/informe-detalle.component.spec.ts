@@ -5,10 +5,9 @@ import { Subject, of, throwError } from 'rxjs';
 import { AporteSgssiDto } from '../../../core/models/aporte-sgssi.model';
 import { InformeDetalle } from '../../../core/models/informe.model';
 import { DocumentoRequerido, EmlPreview } from '../../../core/models/documento-requerido.model';
+import { AuthService } from '../../../core/auth/auth.service';
 import { ActividadInformeService } from '../../../core/services/actividad-informe.service';
 import { AporteSgssiService } from '../../../core/services/aporte-sgssi.service';
-import { DocumentoAdicionalService } from '../../../core/services/documento-adicional.service';
-import { DocumentoCatalogoService } from '../../../core/services/documento-catalogo.service';
 import { DocumentoRequeridoService } from '../../../core/services/documento-requerido.service';
 import { InformeService } from '../../../core/services/informe.service';
 import { ObservacionService } from '../../../core/services/observacion.service';
@@ -21,11 +20,10 @@ describe('InformeDetalleComponent', () => {
   let informeService: jasmine.SpyObj<InformeService>;
   let actividadService: jasmine.SpyObj<ActividadInformeService>;
   let soporteService: jasmine.SpyObj<SoporteAdjuntoService>;
-  let documentoAdicionalService: jasmine.SpyObj<DocumentoAdicionalService>;
-  let documentoCatalogoService: jasmine.SpyObj<DocumentoCatalogoService>;
   let aporteSgssiService: jasmine.SpyObj<AporteSgssiService>;
   let observacionService: jasmine.SpyObj<ObservacionService>;
   let documentoRequeridoService: jasmine.SpyObj<DocumentoRequeridoService>;
+  let authService: jasmine.SpyObj<AuthService>;
   let router: jasmine.SpyObj<Router>;
 
   beforeEach(async () => {
@@ -36,10 +34,9 @@ describe('InformeDetalleComponent', () => {
     ]);
     actividadService = jasmine.createSpyObj<ActividadInformeService>('ActividadInformeService', ['actualizar']);
     soporteService = jasmine.createSpyObj<SoporteAdjuntoService>('SoporteAdjuntoService', ['agregarUrl', 'agregarArchivo', 'eliminar']);
-    documentoAdicionalService = jasmine.createSpyObj<DocumentoAdicionalService>('DocumentoAdicionalService', ['agregar', 'eliminar']);
-    documentoCatalogoService = jasmine.createSpyObj<DocumentoCatalogoService>('DocumentoCatalogoService', ['listar']);
     aporteSgssiService = jasmine.createSpyObj<AporteSgssiService>('AporteSgssiService', ['guardarTodos']);
-    observacionService = jasmine.createSpyObj<ObservacionService>('ObservacionService', ['aprobarRevision', 'devolverRevision']);
+    observacionService = jasmine.createSpyObj<ObservacionService>('ObservacionService', ['aprobarRevision', 'devolverRevision', 'aprobarInforme', 'devolverInforme']);
+    authService = jasmine.createSpyObj<AuthService>('AuthService', ['hasRole']);
     documentoRequeridoService = jasmine.createSpyObj<DocumentoRequeridoService>('DocumentoRequeridoService', [
       'listar', 'cargarArchivo', 'descargarArchivo', 'previewEml', 'eliminarArchivo'
     ]);
@@ -51,12 +48,12 @@ describe('InformeDetalleComponent', () => {
     actividadService.actualizar.and.returnValue(of(sampleInformeDetalle().actividades[0]));
     soporteService.agregarUrl.and.returnValue(of({ id: 99, tipo: 'URL' as const, nombre: 'Nuevo soporte', referencia: 'https://example.com' }));
     soporteService.eliminar.and.returnValue(of(void 0));
-    documentoAdicionalService.agregar.and.returnValue(of({ id: 99, idCatalogo: 301, nombreCatalogo: 'Planilla', obligatorio: true, referencia: 'REF-NEW' }));
-    documentoAdicionalService.eliminar.and.returnValue(of(void 0));
-    documentoCatalogoService.listar.and.returnValue(of({ content: [], totalElements: 0, totalPages: 0, size: 100, number: 0, first: true, last: true }));
     aporteSgssiService.guardarTodos.and.returnValue(of([]));
     observacionService.aprobarRevision.and.returnValue(of({ ...sampleInformeDetalle(), estado: 'EN_REVISION' as const }));
     observacionService.devolverRevision.and.returnValue(of({ ...sampleInformeDetalle(), estado: 'DEVUELTO' as const }));
+    observacionService.aprobarInforme.and.returnValue(of({ ...sampleInformeDetalle(), estado: 'APROBADO' as const }));
+    observacionService.devolverInforme.and.returnValue(of({ ...sampleInformeDetalle(), estado: 'DEVUELTO' as const }));
+    authService.hasRole.and.callFake((role: string) => role === 'CONTRATISTA');
     documentoRequeridoService.listar.and.returnValue(of([]));
     documentoRequeridoService.cargarArchivo.and.returnValue(of(sampleDocRequerido()));
     documentoRequeridoService.descargarArchivo.and.returnValue(of(new Blob(['pdf'], { type: 'application/pdf' })));
@@ -70,9 +67,8 @@ describe('InformeDetalleComponent', () => {
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: '501' }) } } },
         { provide: InformeService, useValue: informeService },
         { provide: ActividadInformeService, useValue: actividadService },
+        { provide: AuthService, useValue: authService },
         { provide: SoporteAdjuntoService, useValue: soporteService },
-        { provide: DocumentoAdicionalService, useValue: documentoAdicionalService },
-        { provide: DocumentoCatalogoService, useValue: documentoCatalogoService },
         { provide: AporteSgssiService, useValue: aporteSgssiService },
         { provide: ObservacionService, useValue: observacionService },
         { provide: DocumentoRequeridoService, useValue: documentoRequeridoService },
@@ -178,6 +174,40 @@ describe('InformeDetalleComponent', () => {
     expect(fixture.nativeElement.querySelector('[data-testid="btn-guardar-actividad-1001"]')).not.toBeNull();
   });
 
+  it('muestra actividades en modo edicion cuando estado es DEVUELTO', () => {
+    component.informe.set({ ...sampleInformeDetalle(), estado: 'DEVUELTO' });
+    fixture.detectChanges();
+
+    const tarjetas = fixture.nativeElement.querySelectorAll('[data-testid="actividad-editable"]');
+    expect(tarjetas.length).toBe(1);
+    expect(fixture.nativeElement.querySelector('[data-testid="btn-guardar-actividad-1001"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="input-soporte-url-1001"]')).not.toBeNull();
+  });
+
+  it('no muestra controles de edicion para REVISOR cuando estado es DEVUELTO', () => {
+    authService.hasRole.and.callFake((role: string) => role === 'REVISOR');
+    component.informe.set({ ...sampleInformeDetalle(), estado: 'DEVUELTO' });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="periodo-editable"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="actividad-editable"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="btn-guardar-actividad-1001"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="input-soporte-url-1001"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="btn-agregar-aporte"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="btn-guardar-aportes"]')).toBeNull();
+  });
+
+  it('no muestra controles de edicion para SUPERVISOR cuando estado es DEVUELTO', () => {
+    authService.hasRole.and.callFake((role: string) => role === 'SUPERVISOR');
+    component.informe.set({ ...sampleInformeDetalle(), estado: 'DEVUELTO' });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="periodo-editable"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="actividad-editable"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="btn-agregar-aporte"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="btn-guardar-aportes"]')).toBeNull();
+  });
+
   it('no muestra controles de edicion en estado ENVIADO', () => {
     component.informe.set({ ...sampleInformeDetalle(), estado: 'ENVIADO' });
     fixture.detectChanges();
@@ -263,26 +293,6 @@ describe('InformeDetalleComponent', () => {
     );
   });
 
-  it('agrega documento adicional y recarga el informe', () => {
-    informeService.obtenerDetalle.and.returnValue(of(sampleInformeDetalle()));
-    component.nuevoDocIdCatalogo.set(301);
-    component.nuevoDocReferencia.set('REF-TEST');
-
-    component.agregarDocumentoAdicional();
-
-    expect(documentoAdicionalService.agregar).toHaveBeenCalledWith(501, { idCatalogo: 301, referencia: 'REF-TEST' });
-    expect(informeService.obtenerDetalle).toHaveBeenCalledWith(501);
-  });
-
-  it('elimina documento adicional y recarga el informe', () => {
-    informeService.obtenerDetalle.and.returnValue(of(sampleInformeDetalle()));
-
-    component.eliminarDocumentoAdicional(1);
-
-    expect(documentoAdicionalService.eliminar).toHaveBeenCalledWith(501, 1);
-    expect(informeService.obtenerDetalle).toHaveBeenCalledWith(501);
-  });
-
   // ── I6: Aportes SGSSI ────────────────────────────────────────────────────
 
   it('muestra la seccion SGSSI siempre visible', () => {
@@ -297,6 +307,13 @@ describe('InformeDetalleComponent', () => {
     expect(fixture.nativeElement.querySelector('[data-testid="btn-agregar-aporte"]')).not.toBeNull();
   });
 
+  it('muestra boton agregar aporte en estado DEVUELTO', () => {
+    component.informe.set({ ...sampleInformeDetalle(), estado: 'DEVUELTO' });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="btn-agregar-aporte"]')).not.toBeNull();
+  });
+
   it('no muestra boton agregar aporte en estado ENVIADO', () => {
     component.informe.set({ ...sampleInformeDetalle(), estado: 'ENVIADO' });
     fixture.detectChanges();
@@ -305,34 +322,42 @@ describe('InformeDetalleComponent', () => {
   });
 
   it('muestra mensaje vacio si no hay aportes en BORRADOR', () => {
+    // T11: con precarga de datos predeterminados, siempre hay 3 filas (SALUD, PENSION, ARL)
+    // cuando el contratista no tiene entidades configuradas, las filas tienen entidad vacía
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.querySelector('[data-testid="sgssi-vacio"]')).not.toBeNull();
+    // Las 3 filas precargadas deben estar presentes
+    expect(component.aportesEdicion().length).toBe(3);
   });
 
   it('puede agregar una fila de aporte en modo edicion', () => {
+    // T11: hay 3 filas precargadas (SALUD, PENSION, ARL)
+    const initialCount = component.aportesEdicion().length;
     component.agregarAporteEdicion();
 
-    expect(component.aportesEdicion().length).toBe(1);
-    expect(component.aportesEdicion()[0].item).toBe('SALUD');
+    expect(component.aportesEdicion().length).toBe(initialCount + 1);
+    expect(component.aportesEdicion()[initialCount].item).toBe('SALUD');
   });
 
   it('puede eliminar una fila de aporte en modo edicion', () => {
+    // T11: hay 3 filas precargadas; agregar 2 más da 5, eliminar 1 da 4
+    const initialCount = component.aportesEdicion().length;
     component.agregarAporteEdicion();
     component.agregarAporteEdicion();
-    expect(component.aportesEdicion().length).toBe(2);
+    expect(component.aportesEdicion().length).toBe(initialCount + 2);
 
     component.eliminarAporteEdicion(0);
 
-    expect(component.aportesEdicion().length).toBe(1);
+    expect(component.aportesEdicion().length).toBe(initialCount + 1);
   });
 
   it('puede actualizar campos de una fila de aporte', () => {
     component.agregarAporteEdicion();
-    component.actualizarAporteEdicion(0, { item: 'ARL', entidad: 'Sura' });
+    const lastIdx = component.aportesEdicion().length - 1;
+    component.actualizarAporteEdicion(lastIdx, { item: 'ARL', entidad: 'Sura' });
 
-    expect(component.aportesEdicion()[0].item).toBe('ARL');
-    expect(component.aportesEdicion()[0].entidad).toBe('Sura');
+    expect(component.aportesEdicion()[lastIdx].item).toBe('ARL');
+    expect(component.aportesEdicion()[lastIdx].entidad).toBe('Sura');
   });
 
   it('guarda aportes SGSSI validos y recarga el informe', () => {
@@ -368,6 +393,13 @@ describe('InformeDetalleComponent', () => {
   });
 
   it('muestra boton guardar aportes en estado BORRADOR', () => {
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="btn-guardar-aportes"]')).not.toBeNull();
+  });
+
+  it('muestra boton guardar aportes en estado DEVUELTO', () => {
+    component.informe.set({ ...sampleInformeDetalle(), estado: 'DEVUELTO' });
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('[data-testid="btn-guardar-aportes"]')).not.toBeNull();
@@ -574,9 +606,34 @@ describe('InformeDetalleComponent', () => {
     expect(component.documentosRequeridos()[0].cargado).toBeFalse();
   });
 
-  it('puedeEditarRequeridos retorna true para BORRADOR y DEVUELTO', () => {
+  it('puedeEditarRequeridos retorna true para CONTRATISTA en BORRADOR y DEVUELTO', () => {
     expect(component.puedeEditarRequeridos('BORRADOR')).toBeTrue();
     expect(component.puedeEditarRequeridos('DEVUELTO')).toBeTrue();
+  });
+
+  it('puedeEditarRequeridos retorna false para REVISOR en DEVUELTO', () => {
+    authService.hasRole.and.callFake((role: string) => role === 'REVISOR');
+
+    expect(component.puedeEditarRequeridos('DEVUELTO')).toBeFalse();
+  });
+
+  it('esEditable retorna true para CONTRATISTA en BORRADOR y DEVUELTO', () => {
+    expect(component.esEditable('BORRADOR')).toBeTrue();
+    expect(component.esEditable('DEVUELTO')).toBeTrue();
+  });
+
+  it('esEditable retorna false para CONTRATISTA en ENVIADO, EN_REVISION y APROBADO', () => {
+    expect(component.esEditable('ENVIADO')).toBeFalse();
+    expect(component.esEditable('EN_REVISION')).toBeFalse();
+    expect(component.esEditable('APROBADO')).toBeFalse();
+  });
+
+  it('esEditable retorna false para REVISOR y SUPERVISOR en DEVUELTO', () => {
+    authService.hasRole.and.callFake((role: string) => role === 'REVISOR');
+    expect(component.esEditable('DEVUELTO')).toBeFalse();
+
+    authService.hasRole.and.callFake((role: string) => role === 'SUPERVISOR');
+    expect(component.esEditable('DEVUELTO')).toBeFalse();
   });
 
   it('puedeEditarRequeridos retorna false para ENVIADO, EN_REVISION y APROBADO', () => {

@@ -37,6 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -66,7 +67,7 @@ class InformeEstadoServiceTest {
     void setUp() {
         service = new InformeEstadoService(
             informeRepository, actividadRepository, soporteRepository,
-            documentoCatalogoRepository, documentoAdicionalRepository, informeService, observacionService,
+            informeService, observacionService,
             pdfInformeService, eventoInformeService, documentoRequeridoInformeService, emailNotificacionService
         );
     }
@@ -78,8 +79,6 @@ class InformeEstadoServiceTest {
         ActividadInforme actividad = actividad(101L);
         when(actividadRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.singletonList(actividad));
         when(soporteRepository.existsByActividadIdAndTipoAndActivoTrue(101L, TipoSoporte.URL)).thenReturn(true);
-        when(documentoCatalogoRepository.findByTipoContratoAndActivoTrue(informe.getContrato().getTipo()))
-            .thenReturn(Collections.emptyList());
         when(informeRepository.save(any(Informe.class))).thenAnswer(inv -> inv.getArgument(0));
         when(informeService.buildDetalle(informe)).thenReturn(new InformeDetalleDto());
 
@@ -118,20 +117,21 @@ class InformeEstadoServiceTest {
     }
 
     @Test
-    void enviarRejectsMissingAdditionalDocument() {
+    void enviarRejectsMissingRequiredDocument() {
         Informe informe = informe(EstadoInforme.BORRADOR);
         ActividadInforme actividad = actividad(101L);
-        DocumentoCatalogo catalogo = documentoCatalogo(301L);
         when(informeService.findActiveInforme(50L)).thenReturn(informe);
         when(actividadRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.singletonList(actividad));
         when(soporteRepository.existsByActividadIdAndTipoAndActivoTrue(101L, TipoSoporte.URL)).thenReturn(true);
-        when(documentoCatalogoRepository.findByTipoContratoAndActivoTrue(informe.getContrato().getTipo()))
-            .thenReturn(Collections.singletonList(catalogo));
-        when(documentoAdicionalRepository.existsByInformeIdAndCatalogoIdAndActivoTrue(50L, 301L)).thenReturn(false);
+        doThrow(new SigconBusinessException(
+            ErrorCode.DOCUMENTO_REQUERIDO_FALTANTE,
+            "Debe cargar el documento requerido",
+            org.springframework.http.HttpStatus.BAD_REQUEST
+        )).when(documentoRequeridoInformeService).assertDocumentosRequeridosCompletos(informe);
 
         assertThatThrownBy(() -> service.enviar(50L, CONTRATISTA_EMAIL))
             .isInstanceOfSatisfying(SigconBusinessException.class, ex ->
-                assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.DOCUMENTO_ADICIONAL_REQUERIDO));
+                assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.DOCUMENTO_REQUERIDO_FALTANTE));
         verify(informeRepository, never()).save(any(Informe.class));
     }
 
@@ -142,8 +142,6 @@ class InformeEstadoServiceTest {
         ActividadInforme actividad = actividad(101L);
         when(actividadRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.singletonList(actividad));
         when(soporteRepository.existsByActividadIdAndTipoAndActivoTrue(101L, TipoSoporte.URL)).thenReturn(true);
-        when(documentoCatalogoRepository.findByTipoContratoAndActivoTrue(informe.getContrato().getTipo()))
-            .thenReturn(Collections.emptyList());
         when(informeRepository.save(any(Informe.class))).thenAnswer(inv -> inv.getArgument(0));
         when(informeService.buildDetalle(informe)).thenReturn(new InformeDetalleDto());
 
@@ -298,8 +296,6 @@ class InformeEstadoServiceTest {
         ActividadInforme actividad = actividad(101L);
         when(actividadRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.singletonList(actividad));
         when(soporteRepository.existsByActividadIdAndTipoAndActivoTrue(101L, TipoSoporte.URL)).thenReturn(true);
-        when(documentoCatalogoRepository.findByTipoContratoAndActivoTrue(informe.getContrato().getTipo()))
-            .thenReturn(Collections.emptyList());
         // assertDocumentosRequeridosCompletos no lanza (FACTURA cargada — mock no-op por defecto)
         when(informeRepository.save(any(Informe.class))).thenAnswer(inv -> inv.getArgument(0));
         when(informeService.buildDetalle(informe)).thenReturn(new InformeDetalleDto());
@@ -317,8 +313,6 @@ class InformeEstadoServiceTest {
         ActividadInforme actividad = actividad(101L);
         when(actividadRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.singletonList(actividad));
         when(soporteRepository.existsByActividadIdAndTipoAndActivoTrue(101L, TipoSoporte.URL)).thenReturn(true);
-        when(documentoCatalogoRepository.findByTipoContratoAndActivoTrue(informe.getContrato().getTipo()))
-            .thenReturn(Collections.emptyList());
         // Simular que la FACTURA falta
         org.mockito.Mockito.doThrow(new SigconBusinessException(
             ErrorCode.DOCUMENTO_REQUERIDO_FALTANTE,
@@ -340,8 +334,6 @@ class InformeEstadoServiceTest {
         ActividadInforme actividad = actividad(101L);
         when(actividadRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.singletonList(actividad));
         when(soporteRepository.existsByActividadIdAndTipoAndActivoTrue(101L, TipoSoporte.URL)).thenReturn(true);
-        when(documentoCatalogoRepository.findByTipoContratoAndActivoTrue(informe.getContrato().getTipo()))
-            .thenReturn(Collections.emptyList());
         // assertDocumentosRequeridosCompletos no lanza (no responsable IVA — mock no-op por defecto)
         when(informeRepository.save(any(Informe.class))).thenAnswer(inv -> inv.getArgument(0));
         when(informeService.buildDetalle(informe)).thenReturn(new InformeDetalleDto());

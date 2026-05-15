@@ -14,6 +14,11 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -22,10 +27,31 @@ public class LocalDocumentStorageService implements DocumentStorageService {
 
     private static final long MAX_SIGNATURE_BYTES = 2L * 1024L * 1024L;
 
-    private final Path rootPath;
+    private static final Map<String, List<String>> ALLOWED_TYPES;
+    static {
+        Map<String, List<String>> m = new LinkedHashMap<>();
+        m.put(".pdf",  Arrays.asList("application/pdf"));
+        m.put(".png",  Arrays.asList("image/png"));
+        m.put(".jpg",  Arrays.asList("image/jpeg"));
+        m.put(".jpeg", Arrays.asList("image/jpeg"));
+        m.put(".eml",  Arrays.asList("message/rfc822", "application/octet-stream"));
+        m.put(".doc",  Arrays.asList("application/msword"));
+        m.put(".docx", Arrays.asList(
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
+        m.put(".xls",  Arrays.asList("application/vnd.ms-excel"));
+        m.put(".xlsx", Arrays.asList(
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        ALLOWED_TYPES = Collections.unmodifiableMap(m);
+    }
 
-    public LocalDocumentStorageService(@Value("${sigcon.storage.signatures-path:${java.io.tmpdir}/sigcon}") String rootPath) {
+    private final Path rootPath;
+    private final long maxFileSizeBytes;
+
+    public LocalDocumentStorageService(
+            @Value("${sigcon.storage.signatures-path:${java.io.tmpdir}/sigcon}") String rootPath,
+            @Value("${sigcon.storage.max-file-size-bytes:10485760}") long maxFileSizeBytes) {
         this.rootPath = Paths.get(rootPath);
+        this.maxFileSizeBytes = maxFileSizeBytes;
     }
 
     @Override
@@ -55,6 +81,7 @@ public class LocalDocumentStorageService implements DocumentStorageService {
                 HttpStatus.BAD_REQUEST
             );
         }
+        validateSoporte(file);
         String safeName = sanitize(file.getOriginalFilename());
         String relativeReference = subdir + "/" + UUID.randomUUID() + "_" + safeName;
         Path target = rootPath.resolve(relativeReference).normalize();
@@ -101,6 +128,35 @@ public class LocalDocumentStorageService implements DocumentStorageService {
             throw new IOException("Archivo no encontrado: " + relativePath);
         }
         return new FileInputStream(target.toFile());
+    }
+
+    private void validateSoporte(MultipartFile file) {
+        if (file.getSize() > maxFileSizeBytes) {
+            throw new SigconBusinessException(
+                ErrorCode.SOPORTE_TAMANIO_EXCEDIDO,
+                "El archivo supera el tamaño máximo de " + (maxFileSizeBytes / 1024 / 1024) + " MB",
+                HttpStatus.BAD_REQUEST
+            );
+        }
+        String name = file.getOriginalFilename() != null
+            ? file.getOriginalFilename().toLowerCase() : "";
+        String ext = name.contains(".") ? name.substring(name.lastIndexOf('.')) : "";
+        List<String> allowedContentTypes = ALLOWED_TYPES.get(ext);
+        if (allowedContentTypes == null) {
+            throw new SigconBusinessException(
+                ErrorCode.SOPORTE_FORMATO_INVALIDO,
+                "Extensión de archivo no permitida: " + (ext.isEmpty() ? "(sin extensión)" : ext),
+                HttpStatus.BAD_REQUEST
+            );
+        }
+        String contentType = file.getContentType();
+        if (contentType != null && !allowedContentTypes.contains(contentType)) {
+            throw new SigconBusinessException(
+                ErrorCode.SOPORTE_FORMATO_INVALIDO,
+                "Tipo de contenido no permitido para la extensión indicada",
+                HttpStatus.BAD_REQUEST
+            );
+        }
     }
 
     private String sanitize(String name) {

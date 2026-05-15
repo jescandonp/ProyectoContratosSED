@@ -1068,6 +1068,89 @@ Usuario:    aprobador   / aprobador123   → ROLE_ADMIN_BASICO, ROLE_APROBADOR
 
 ---
 
+## 7-bis. Seguridad y Controles
+
+> Referencia normativa: **Criterios de Aceptación de Seguridad APP WEB v1.0** — SED Bogotá.
+> Nivel de cumplimiento objetivo: **N2** (datos confidenciales, transacciones de negocio).
+> Implementado en: `feat/sigcon-i-sec` — `docs/specs/2026-05-15-sigcon-i-sec-spec.md`.
+
+---
+
+### Headers HTTP de Seguridad
+
+Configurados en `SecurityConfig.java` (perfil `weblogic`) y `DevSecurityConfig.java` (perfil `local-dev`) mediante `http.headers()` de Spring Security 5.7.x.
+
+| Header | Valor | Propósito |
+|--------|-------|-----------|
+| `X-Frame-Options` | `DENY` | Previene clickjacking |
+| `X-Content-Type-Options` | `nosniff` | Previene MIME sniffing |
+| `Content-Security-Policy` | `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; frame-ancestors 'none'` | Restringe recursos externos |
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains` | Fuerza HTTPS (solo perfil `weblogic`) |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | Limita información en Referer |
+| `Permissions-Policy` | `geolocation=(), camera=(), microphone=()` | Deshabilita APIs browser no usadas |
+| `Cache-Control` | `no-cache, no-store, max-age=0, must-revalidate` | Previene caché de respuestas sensibles |
+
+`unsafe-inline` en `style-src` es requerido porque Angular y PrimeNG inyectan estilos inline en runtime.
+HSTS se omite en `DevSecurityConfig` porque el perfil local-dev corre sobre HTTP.
+
+---
+
+### CORS
+
+Configurado con `CorsConfigurationSource` bean en ambos perfiles. Los orígenes permitidos se definen por ambiente:
+
+```yaml
+# local-dev
+sigcon.security.cors-allowed-origins: http://localhost:4200
+
+# weblogic — configurar en infraestructura antes de desplegar
+SIGCON_CORS_ALLOWED_ORIGINS=https://sigcon.educacionbogota.edu.co
+```
+
+Reglas: métodos GET/POST/PUT/PATCH/DELETE/OPTIONS; headers `Authorization`, `Content-Type`, `X-Requested-With`; `allowCredentials: false`; preflight cache 1 hora.
+
+---
+
+### CSRF — Decisión de Arquitectura
+
+**CSRF está deshabilitado intencionalmente** en SIGCON.
+
+Justificación: SIGCON usa **JWT Bearer tokens** transmitidos en el header `Authorization`. Los navegadores **no envían automáticamente** headers de autorización en solicitudes cross-site. Por lo tanto, un atacante no puede forjar una solicitud autenticada sin acceso al token. Este es el modelo stateless REST descrito en OWASP ASVS 4.0.3 §3.5.3.
+
+Si en algún momento se adoptan cookies de sesión en lugar de JWT Bearer, esta decisión debe revisarse e implementarse protección CSRF.
+
+---
+
+### Rate Limiting — Decisión de Infraestructura
+
+El control de rate limiting y protección anti-fuerza-bruta está **delegado a la infraestructura SED** (WebLogic + WAF de red).
+
+Si el despliegue cambia a un entorno sin WAF, implementar rate limiting a nivel de aplicación con Bucket4j o un `HandlerInterceptor` de Spring.
+
+---
+
+### Validación de Archivos en Upload
+
+Punto de control: `LocalDocumentStorageService.storeFile()` — único punto de entrada al storage para soportes de actividades.
+
+| Extensión | Content-types aceptados |
+|-----------|------------------------|
+| `.pdf` | `application/pdf` |
+| `.png` | `image/png` |
+| `.jpg`, `.jpeg` | `image/jpeg` |
+| `.eml` | `message/rfc822`, `application/octet-stream` |
+| `.doc` | `application/msword` |
+| `.docx` | `application/vnd.openxmlformats-officedocument.wordprocessingml.document` |
+| `.xls` | `application/vnd.ms-excel` |
+| `.xlsx` | `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` |
+
+Tamaño máximo configurable: `sigcon.storage.max-file-size-bytes` (default 10 MB).
+Errores de validación: `SOPORTE_FORMATO_INVALIDO`, `SOPORTE_TAMANIO_EXCEDIDO`.
+
+Los `DocumentoRequeridoInformeService` (facturas, documentos requeridos) tienen validación más restrictiva (solo PDF/EML) implementada desde I7.
+
+---
+
 ## 8. Infraestructura — WebLogic 12
 
 > **Docker, nginx y Keycloak están omitidos de esta arquitectura.**  

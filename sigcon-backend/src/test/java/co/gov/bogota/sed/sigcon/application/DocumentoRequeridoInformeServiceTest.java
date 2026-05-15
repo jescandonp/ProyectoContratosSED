@@ -6,11 +6,14 @@ import co.gov.bogota.sed.sigcon.application.service.DocumentStorageService;
 import co.gov.bogota.sed.sigcon.application.service.DocumentoRequeridoInformeService;
 import co.gov.bogota.sed.sigcon.application.service.InformeService;
 import co.gov.bogota.sed.sigcon.domain.entity.Contrato;
+import co.gov.bogota.sed.sigcon.domain.entity.DocumentoCatalogo;
 import co.gov.bogota.sed.sigcon.domain.entity.DocumentoRequeridoInforme;
 import co.gov.bogota.sed.sigcon.domain.entity.Informe;
 import co.gov.bogota.sed.sigcon.domain.entity.Usuario;
 import co.gov.bogota.sed.sigcon.domain.enums.EstadoInforme;
 import co.gov.bogota.sed.sigcon.domain.enums.RolUsuario;
+import co.gov.bogota.sed.sigcon.domain.enums.TipoContrato;
+import co.gov.bogota.sed.sigcon.domain.repository.DocumentoCatalogoRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.DocumentoRequeridoInformeRepository;
 import co.gov.bogota.sed.sigcon.web.exception.ErrorCode;
 import co.gov.bogota.sed.sigcon.web.exception.SigconBusinessException;
@@ -43,6 +46,7 @@ class DocumentoRequeridoInformeServiceTest {
     private static final String CONTRATISTA_EMAIL = "contratista@sed.gov.co";
 
     @Mock private DocumentoRequeridoInformeRepository repository;
+    @Mock private DocumentoCatalogoRepository documentoCatalogoRepository;
     @Mock private InformeService informeService;
     @Mock private CurrentUserService currentUserService;
     @Mock private DocumentStorageService storageService;
@@ -52,7 +56,7 @@ class DocumentoRequeridoInformeServiceTest {
     @BeforeEach
     void setUp() {
         service = new DocumentoRequeridoInformeService(
-            repository, informeService, currentUserService, storageService
+            repository, documentoCatalogoRepository, informeService, currentUserService, storageService
         );
     }
 
@@ -111,7 +115,9 @@ class DocumentoRequeridoInformeServiceTest {
         Informe informe = informeConIva(50L, false, EstadoInforme.BORRADOR);
         when(informeService.findActiveInforme(50L)).thenReturn(informe);
         when(currentUserService.getCurrentUser()).thenReturn(contratista(1L));
-        when(repository.findByInformeIdAndClaveLogicaAndActivoTrue(50L, "POLIZA")).thenReturn(Optional.empty());
+        when(documentoCatalogoRepository.findByTipoContratoAndActivoTrue(informe.getContrato().getTipo()))
+            .thenReturn(Collections.singletonList(documentoCatalogo(301L, "Poliza")));
+        when(repository.findByInformeIdAndClaveLogicaAndActivoTrue(50L, "CATALOGO_301")).thenReturn(Optional.empty());
         when(storageService.storeFile(anyString(), any())).thenReturn("docs-requeridos/50/uuid_poliza.pdf");
         when(repository.save(any(DocumentoRequeridoInforme.class))).thenAnswer(inv -> {
             DocumentoRequeridoInforme r = inv.getArgument(0);
@@ -123,7 +129,7 @@ class DocumentoRequeridoInformeServiceTest {
             "archivo", "poliza.pdf", "application/pdf", new byte[]{1, 2, 3}
         );
 
-        DocumentoRequeridoDto dto = service.cargarArchivo(50L, "POLIZA", archivo);
+        DocumentoRequeridoDto dto = service.cargarArchivo(50L, "CATALOGO_301", archivo);
 
         assertThat(dto.getId()).isEqualTo(20L);
         assertThat(dto.isCargado()).isTrue();
@@ -135,7 +141,9 @@ class DocumentoRequeridoInformeServiceTest {
         Informe informe = informeConIva(50L, false, EstadoInforme.BORRADOR);
         when(informeService.findActiveInforme(50L)).thenReturn(informe);
         when(currentUserService.getCurrentUser()).thenReturn(contratista(1L));
-        when(repository.findByInformeIdAndClaveLogicaAndActivoTrue(50L, "CORREO")).thenReturn(Optional.empty());
+        when(documentoCatalogoRepository.findByTipoContratoAndActivoTrue(informe.getContrato().getTipo()))
+            .thenReturn(Collections.singletonList(documentoCatalogo(302L, "Correo")));
+        when(repository.findByInformeIdAndClaveLogicaAndActivoTrue(50L, "CATALOGO_302")).thenReturn(Optional.empty());
         when(storageService.storeFile(anyString(), any())).thenReturn("docs-requeridos/50/uuid_correo.eml");
         when(repository.save(any(DocumentoRequeridoInforme.class))).thenAnswer(inv -> {
             DocumentoRequeridoInforme r = inv.getArgument(0);
@@ -147,7 +155,7 @@ class DocumentoRequeridoInformeServiceTest {
             "archivo", "correo.eml", "message/rfc822", new byte[]{1, 2, 3}
         );
 
-        DocumentoRequeridoDto dto = service.cargarArchivo(50L, "CORREO", archivo);
+        DocumentoRequeridoDto dto = service.cargarArchivo(50L, "CATALOGO_302", archivo);
 
         assertThat(dto.getId()).isEqualTo(21L);
         assertThat(dto.getExtension()).isEqualTo(".eml");
@@ -158,13 +166,15 @@ class DocumentoRequeridoInformeServiceTest {
         Informe informe = informeConIva(50L, false, EstadoInforme.BORRADOR);
         when(informeService.findActiveInforme(50L)).thenReturn(informe);
         when(currentUserService.getCurrentUser()).thenReturn(contratista(1L));
+        when(documentoCatalogoRepository.findByTipoContratoAndActivoTrue(informe.getContrato().getTipo()))
+            .thenReturn(Collections.singletonList(documentoCatalogo(301L, "Poliza")));
 
         MockMultipartFile archivo = new MockMultipartFile(
             "archivo", "documento.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             new byte[]{1, 2, 3}
         );
 
-        assertThatThrownBy(() -> service.cargarArchivo(50L, "POLIZA", archivo))
+        assertThatThrownBy(() -> service.cargarArchivo(50L, "CATALOGO_301", archivo))
             .isInstanceOfSatisfying(SigconBusinessException.class, ex ->
                 assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.DOCUMENTO_REQUERIDO_FORMATO_INVALIDO));
     }
@@ -320,6 +330,7 @@ class DocumentoRequeridoInformeServiceTest {
         Contrato contrato = new Contrato();
         contrato.setId(10L);
         contrato.setContratista(contratista);
+        contrato.setTipo(TipoContrato.OPS);
         contrato.setActivo(true);
 
         Informe informe = new Informe();
@@ -355,5 +366,14 @@ class DocumentoRequeridoInformeServiceTest {
         informe.setId(50L);
         r.setInforme(informe);
         return r;
+    }
+
+    private static DocumentoCatalogo documentoCatalogo(Long id, String nombre) {
+        DocumentoCatalogo catalogo = new DocumentoCatalogo();
+        catalogo.setId(id);
+        catalogo.setNombre(nombre);
+        catalogo.setTipoContrato(TipoContrato.OPS);
+        catalogo.setActivo(true);
+        return catalogo;
     }
 }

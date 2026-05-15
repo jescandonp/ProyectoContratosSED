@@ -63,11 +63,11 @@ import { RolUsuario } from '../../core/models/usuario.model';
 
             <!-- Dev login buttons -->
             <div class="grid grid-cols-2 gap-sm">
-              @for (user of devUsers; track user.rol) {
+              @for (user of devUsers; track user.email) {
                 <button
                   class="flex flex-col items-center gap-xs rounded-lg border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] px-md py-sm text-left transition-all hover:border-[var(--color-primary)] hover:bg-[var(--color-surface-container)]"
                   type="button"
-                  (click)="loginDev(user.rol)"
+                  (click)="loginDev(user)"
                 >
                   <span class="text-body-sm font-semibold text-[var(--color-primary)]">{{ user.label }}</span>
                   <span class="text-[11px] text-[var(--color-outline)]">{{ user.email }}</span>
@@ -102,9 +102,10 @@ import { RolUsuario } from '../../core/models/usuario.model';
   `
 })
 export class LoginComponent {
-  readonly devUsers: { rol: RolUsuario; label: string; email: string }[] = [
+  readonly devUsers: { rol: RolUsuario; label: string; email: string; useEmail?: boolean }[] = [
     { rol: 'ADMIN', label: 'Admin', email: 'admin@educacionbogota.edu.co' },
     { rol: 'CONTRATISTA', label: 'Contratista', email: 'juan.escandon@...' },
+    { rol: 'CONTRATISTA', label: 'Contratista IVA', email: 'aecheverry@educacionbogota.gov.co', useEmail: true },
     { rol: 'REVISOR', label: 'Revisor', email: 'revisor1@...' },
     { rol: 'SUPERVISOR', label: 'Supervisor', email: 'supervisor1@...' }
   ];
@@ -114,9 +115,13 @@ export class LoginComponent {
     private readonly router: Router
   ) {}
 
-  loginDev(rol: RolUsuario) {
-    this.authService.loginDev(rol);
-    if (rol === 'ADMIN') {
+  loginDev(user: { rol: RolUsuario; email: string; useEmail?: boolean }) {
+    if (user.useEmail) {
+      this.authService.loginDevEmail(user.email);
+    } else {
+      this.authService.loginDev(user.rol);
+    }
+    if (user.rol === 'ADMIN') {
       void this.router.navigate(['/admin']);
     } else {
       void this.router.navigate(['/contratos']);
