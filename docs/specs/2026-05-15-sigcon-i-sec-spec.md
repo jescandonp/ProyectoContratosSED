@@ -61,6 +61,7 @@
 
 `unsafe-inline` en `style-src` es necesario porque Angular y PrimeNG inyectan estilos inline.
 HSTS se omite en `DevSecurityConfig` (local-dev corre sobre HTTP).
+`Cache-Control` se aplica globalmente a través del filtro Spring Security — esto cumple el requisito OWASP V8.1 ya que todas las respuestas del API (incluyendo las autenticadas) llevan el header.
 
 ---
 
