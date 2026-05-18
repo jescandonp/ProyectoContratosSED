@@ -49,6 +49,8 @@ public class InformePdfTemplateService {
 
     private static final DateTimeFormatter DATE_FMT  = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final Locale            LOCALE_CO = new Locale("es", "CO");
+    private static final String LOGO_WIDTH_PT = "62.08pt";  // 2.19 cm
+    private static final String LOGO_HEIGHT_PT = "50.17pt"; // 1.77 cm
 
     private final ActividadInformeRepository   actividadRepository;
     private final SoporteAdjuntoRepository     soporteRepository;
@@ -180,7 +182,8 @@ public class InformePdfTemplateService {
         sb.append("body{font-family:Arial,sans-serif;font-size:9pt;color:#1a1a1a;margin:0;}");
         sb.append(".ph-wrap{border:0.8pt solid #000;width:100%;border-collapse:collapse;font-size:8pt;}");
         sb.append(".ph-logo{width:14%;text-align:center;padding:2pt;border-right:0.8pt solid #000;vertical-align:middle;}");
-        sb.append(".ph-logo img{max-height:42pt;max-width:50pt;}");
+        sb.append(".ph-logo img{width:").append(LOGO_WIDTH_PT).append(";height:")
+          .append(LOGO_HEIGHT_PT).append(";}");
         sb.append(".ph-center{width:60%;text-align:center;vertical-align:top;padding:2pt 4pt;}");
         sb.append(".ph-center-title{font-weight:bold;font-size:9.5pt;}");
         sb.append(".ph-center-sub{font-size:7.5pt;margin-top:1pt;}");
@@ -224,7 +227,9 @@ public class InformePdfTemplateService {
         sb.append("<td class=\"ph-logo\">");
         if (logoBase64 != null) {
             sb.append("<img src=\"data:image/png;base64,").append(logoBase64)
-              .append("\" style=\"max-height:42pt;max-width:50pt;\" alt=\"Logo SED\"/>");
+              .append("\" style=\"width:").append(LOGO_WIDTH_PT)
+              .append(";height:").append(LOGO_HEIGHT_PT)
+              .append(";\" alt=\"Logo SED\"/>");
         }
         sb.append("</td>");
 

@@ -55,6 +55,8 @@
 - [x] Cierre handoff y logo PDF versionados en `main`: `f7e8ea1`
 - [x] `main` publicado a `origin/main`: `f7e8ea1`
 - [x] Handoff post-build: documentada migracion requerida `db/05_add_fecha_elaboracion.sql` cuando Oracle reporta `Schema-validation: missing column [fecha_elaboracion] in table [sgcn_informes]`
+- [x] Ajuste funcional PDF: logo de Secretaria en header fijado a 2,19 cm ancho x 1,77 cm alto (`62.08pt` x `50.17pt`) segun formato validado.
+- [x] Gate ajuste logo: `mvn test "-Dtest=PdfInformeServiceTest"` GREEN (5 tests, 0 fallas).
 - [x] Execution log cerrado
 
 ## Pendiente post-merge
