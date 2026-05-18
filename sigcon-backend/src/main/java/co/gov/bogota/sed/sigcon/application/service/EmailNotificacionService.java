@@ -37,14 +37,14 @@ public class EmailNotificacionService {
     }
 
     /**
-     * I7: Notifica al contratista y al correo administrador configurable cuando un informe es aprobado.
+     * I7/Fix-I3: Envía copia al correo administrador cuando un informe es aprobado.
+     * El email al contratista ya fue enviado por EventoInformeService.publicar().
      * Si el email falla, se registra el error sin propagar excepcion.
      *
      * @param informe informe recien aprobado
      */
-    public void notificarAprobacion(Informe informe) {
-        // El email al contratista ya fue enviado por EventoInformeService.publicar()
-        // Este método solo gestiona la copia adicional al correo administrador
+    public void notificarAprobacionAdmin(Informe informe) {
+        // I7/Fix-I3: Envía copia al correo administrador cuando un informe es aprobado.
         String adminEmail = mailProperties.getAdminEmail();
         if (adminEmail != null && !adminEmail.trim().isEmpty()) {
             Usuario adminVirtual = new Usuario();
@@ -61,7 +61,8 @@ public class EmailNotificacionService {
         return "El informe No. " + informe.getNumero()
             + " del contrato " + informe.getContrato().getNumero()
             + " ha sido aprobado."
-            + " Contratista: " + informe.getContrato().getContratista().getNombre()
+            + " Contratista: " + (informe.getContrato().getContratista() != null
+                ? informe.getContrato().getContratista().getNombre() : "N/A")
             + ". Periodo: " + informe.getFechaInicio() + " a " + informe.getFechaFin()
             + ". Fecha de aprobacion: " + (informe.getFechaAprobacion() != null ? informe.getFechaAprobacion() : "N/A")
             + ". Estado: APROBADO.";

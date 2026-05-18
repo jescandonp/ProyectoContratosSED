@@ -114,15 +114,14 @@ class EventoInformeServiceTest {
     }
 
     @Test
-    void informeEnviado_conRevisor_notificaAlRevisor() {
-        Usuario revisor = usuario(3L, RolUsuario.REVISOR);
-        Informe informe = informe(50L, usuario(2L, RolUsuario.CONTRATISTA), revisor, usuario(4L, RolUsuario.SUPERVISOR));
-        when(notificacionService.crear(any(), any(), any(), any())).thenReturn(new Notificacion());
+    void informeEnviado_sinRevisorNiSupervisor_descartaEventoSilenciosamente() {
+        Informe informe = informeSinRevisor(50L, usuario(2L, RolUsuario.CONTRATISTA), null);
 
+        // No debe lanzar excepcion — el evento se descarta con warn log
         eventoService.publicar(TipoEvento.INFORME_ENVIADO, informe, null);
 
-        verify(notificacionService).crear(eq(revisor), eq(TipoEvento.INFORME_ENVIADO), eq(informe), any());
-        verify(emailService).enviar(eq(revisor), eq(TipoEvento.INFORME_ENVIADO), eq(50L), any());
+        verify(notificacionService, org.mockito.Mockito.never()).crear(any(), any(), any(), any());
+        verify(emailService, org.mockito.Mockito.never()).enviar(any(), any(), any(), any());
     }
 
     private static Informe informe(Long id, Usuario contratista, Usuario revisor, Usuario supervisor) {

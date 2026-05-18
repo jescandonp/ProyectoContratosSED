@@ -230,7 +230,7 @@ class InformeEstadoServiceTest {
 
         service.aprobar(50L, SUPERVISOR_EMAIL);
 
-        verify(emailNotificacionService).notificarAprobacion(informe);
+        verify(emailNotificacionService).notificarAprobacionAdmin(informe);
     }
 
     @Test
@@ -241,7 +241,7 @@ class InformeEstadoServiceTest {
         when(informeService.buildDetalle(informe)).thenReturn(new InformeDetalleDto());
         // Simular fallo de email — no debe propagar excepcion
         org.mockito.Mockito.doThrow(new RuntimeException("SMTP error"))
-            .when(emailNotificacionService).notificarAprobacion(informe);
+            .when(emailNotificacionService).notificarAprobacionAdmin(informe);
 
         // No debe lanzar excepcion — el email es efecto secundario no critico
         service.aprobar(50L, SUPERVISOR_EMAIL);

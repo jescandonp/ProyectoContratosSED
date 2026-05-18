@@ -162,7 +162,7 @@ public class InformeEstadoService {
         // Paso 4: efectos secundarios no criticos
         eventoInformeService.publicar(TipoEvento.INFORME_APROBADO, informe, null);
         try {
-            emailNotificacionService.notificarAprobacion(informe);
+            emailNotificacionService.notificarAprobacionAdmin(informe);
         } catch (Exception e) {
             // El fallo de email no revierte la aprobacion — se registra para soporte
             org.slf4j.LoggerFactory.getLogger(InformeEstadoService.class)

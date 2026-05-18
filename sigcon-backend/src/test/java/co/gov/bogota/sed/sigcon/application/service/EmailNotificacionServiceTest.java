@@ -45,7 +45,7 @@ class EmailNotificacionServiceTest {
     }
 
     // -----------------------------------------------------------------------
-    // T7 — notificarAprobacion: contratista + admin configurable
+    // T7 — notificarAprobacionAdmin: solo admin configurable (el email al contratista lo maneja publicar())
     // -----------------------------------------------------------------------
 
     @Test
@@ -58,7 +58,7 @@ class EmailNotificacionServiceTest {
         Informe informe = sampleInforme();
 
         // No debe lanzar excepcion — solo log
-        service.notificarAprobacion(informe);
+        service.notificarAprobacionAdmin(informe);
     }
 
     @Test
@@ -71,7 +71,7 @@ class EmailNotificacionServiceTest {
         Informe informe = sampleInforme();
 
         // No debe lanzar excepcion — solo log x1 (solo admin — el email al contratista lo maneja publicar())
-        service.notificarAprobacion(informe);
+        service.notificarAprobacionAdmin(informe);
     }
 
     @Test
@@ -90,7 +90,7 @@ class EmailNotificacionServiceTest {
         Informe informe = sampleInforme();
 
         // No debe propagar excepcion — el fallo de email es no critico
-        service.notificarAprobacion(informe);
+        service.notificarAprobacionAdmin(informe);
     }
 
     private static MailProperties mailProperties() {
