@@ -40,6 +40,20 @@
             <p class="m-0 mt-xs text-xl font-bold text-[var(--color-on-surface)]">{{ actividadesForm().length }}</p>
           </div>
         </div>
+        <!-- Fecha de elaboración -->
+        <div class="mt-lg grid grid-cols-1 gap-md md:grid-cols-2 lg:grid-cols-4">
+          <div class="space-y-xs">
+            <label class="block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">
+              Fecha de elaboración
+            </label>
+            <input
+              class="w-full rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface-bright)] px-sm py-xs text-sm"
+              type="date"
+              [ngModel]="fechaElaboracion()"
+              (ngModelChange)="fechaElaboracion.set($event)"
+            />
+          </div>
+        </div>
       </section>
 
       <div class="grid grid-cols-1 gap-lg lg:grid-cols-3">

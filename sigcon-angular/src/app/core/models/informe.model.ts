@@ -19,6 +19,7 @@ export interface InformeResumen {
   pdfRuta?: string | null;
   pdfGeneradoAt?: string | null;
   pdfHash?: string | null;
+  fechaElaboracion?: string | null;
 }
 
 export interface InformeDetalle extends InformeResumen {
@@ -43,6 +44,7 @@ export interface InformeRequest {
   valorDesembolso?: number | null;
   porcentajeEjecucion?: number | null;
   correspondenciaPendiente?: boolean | null;
+  fechaElaboracion?: string | null;
 }
 
 export interface InformeUpdateDto {
@@ -52,4 +54,5 @@ export interface InformeUpdateDto {
   valorDesembolso?: number | null;
   porcentajeEjecucion?: number | null;
   correspondenciaPendiente?: boolean | null;
+  fechaElaboracion?: string | null;
 }

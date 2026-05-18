@@ -52,6 +52,9 @@ export class CorregirInformeComponent implements OnInit {
   readonly guardando = signal(false);
   readonly estadoInvalido = signal(false);
 
+  // I8 T3: fecha de elaboración
+  readonly fechaElaboracion = signal<string>('');
+
   // T11: aportes SGSSI editables en DEVUELTO
   readonly aportesEdicion = signal<AporteSgssiEditRow[]>([]);
   readonly guardandoAportes = signal(false);
@@ -106,7 +109,8 @@ export class CorregirInformeComponent implements OnInit {
     this.informeService.actualizarInforme(informe.id, {
       idContrato: informe.contratoId ?? 0,
       fechaInicio: informe.fechaInicio,
-      fechaFin: informe.fechaFin
+      fechaFin: informe.fechaFin,
+      fechaElaboracion: this.fechaElaboracion() || null,
     }).pipe(
       switchMap((actualizado) => this.guardarDetalle(actualizado)),
       switchMap((actualizado) => this.guardarAportesSgssi(actualizado)),
@@ -276,6 +280,7 @@ export class CorregirInformeComponent implements OnInit {
   // ── Privados ──────────────────────────────────────────────────────────────
 
   private poblarFormulario(informe: InformeDetalle) {
+    this.fechaElaboracion.set(informe.fechaElaboracion ?? new Date().toISOString().slice(0, 10));
     this.actividadesForm.set(
       informe.actividades.map((actividad) => {
         const soporteUrl = actividad.soportes.find((soporte) => soporte.tipo === 'URL');

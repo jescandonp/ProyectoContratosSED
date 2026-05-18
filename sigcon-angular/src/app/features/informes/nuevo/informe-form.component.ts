@@ -129,6 +129,18 @@ const ITEMS_SGSSI: ItemSgssi[] = ['SALUD', 'PENSION', 'ARL'];
                 <span class="text-sm text-[var(--color-on-surface)]">Sí, hay correspondencia pendiente</span>
               </label>
             </div>
+            <!-- Fecha de elaboración -->
+            <div class="space-y-xs">
+              <label class="block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">
+                Fecha de elaboración
+              </label>
+              <input
+                class="w-full rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface-bright)] px-sm py-xs text-sm"
+                type="date"
+                [ngModel]="fechaElaboracion()"
+                (ngModelChange)="fechaElaboracion.set($event)"
+              />
+            </div>
           </div>
 
           <div class="mt-lg grid grid-cols-1 gap-md md:grid-cols-3">
@@ -333,6 +345,8 @@ export class InformeFormComponent implements OnInit {
   readonly valorDesembolso    = signal<number | null>(null);
   readonly porcentajeEjecucion = signal<number | null>(null);
   readonly correspondenciaPendiente = signal<boolean>(false);
+  // I8 T3: fecha de elaboración
+  readonly fechaElaboracion = signal<string>(new Date().toISOString().slice(0, 10));
 
   constructor(
     private readonly contratoService: ContratoService,
@@ -389,6 +403,7 @@ export class InformeFormComponent implements OnInit {
       valorDesembolso: this.valorDesembolso(),
       porcentajeEjecucion: this.porcentajeEjecucion(),
       correspondenciaPendiente: this.correspondenciaPendiente(),
+      fechaElaboracion: this.fechaElaboracion() || null,
     }).pipe(
       switchMap((informe) => this.guardarDetalle(informe)),
       switchMap((informe) => enviarDespues ? this.informeService.enviarInforme(informe.id) : of(informe))
