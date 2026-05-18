@@ -20,10 +20,12 @@ import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 import javax.annotation.PostConstruct;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
@@ -92,7 +94,7 @@ public class InformePdfTemplateService {
                              byte[] firmaContratista,
                              byte[] firmaSupervisor,
                              byte[] firmaRevisor)
-            throws IOException, DocumentException, Exception {
+            throws IOException, DocumentException, ParserConfigurationException, SAXException {
 
         List<ActividadInforme>  actividades = actividadRepository.findByInformeIdAndActivoTrue(informe.getId());
         List<DocumentoAdicional> documentos = documentoAdicionalRepository.findByInformeIdAndActivoTrue(informe.getId());
@@ -272,11 +274,8 @@ public class InformePdfTemplateService {
 
         fila2(sb, "Modificaciones:", esc(notEmpty(c.getModificaciones()) ? c.getModificaciones() : "No se han presentado"), true);
 
-        sb.append("<tr><td class=\"lbl\">Fecha de Inicio:</td><td class=\"val\">")
-          .append(c.getFechaInicio().format(DATE_FMT))
-          .append("</td><td class=\"lbl\">Fecha de Terminaci&#243;n:</td><td class=\"val\">")
-          .append(c.getFechaFin().format(DATE_FMT))
-          .append("</td></tr>");
+        fila2(sb, "Fecha de Inicio:", c.getFechaInicio().format(DATE_FMT), false);
+        fila2(sb, "Fecha de Terminaci&#243;n:", c.getFechaFin().format(DATE_FMT), true);
 
         fila2(sb, "Dependencia:", esc(safe(c.getDependencia())), false);
 
@@ -435,15 +434,14 @@ public class InformePdfTemplateService {
                                Usuario contratista, Usuario supervisor, Usuario revisor,
                                byte[] firmaContratista, byte[] firmaSupervisor, byte[] firmaRevisor) {
 
-        LocalDate fe       = informe.getFechaElaboracion() != null ? informe.getFechaElaboracion() : LocalDate.now();
-        String    diaNro   = String.valueOf(fe.getDayOfMonth());
-        String    diaLetra = nombreDia(fe);
+        LocalDate fe        = informe.getFechaElaboracion() != null ? informe.getFechaElaboracion() : LocalDate.now();
+        String    diaNro    = nombreDia(fe);
         String    mesNombre = fe.getMonth().getDisplayName(TextStyle.FULL, LOCALE_CO).toUpperCase();
-        int       anio     = fe.getYear();
+        int       anio      = fe.getYear();
 
         sb.append("<div class=\"firma-section\">");
         sb.append("<p class=\"parr\">Para constancia se firma por quienes en ella intervinieron al")
-          .append(" <b>").append(diaNro).append("</b> d&#237;a (").append(diaLetra).append(")")
+          .append(" <b>").append(diaNro).append("</b> d&#237;as")
           .append(" del mes de <b>").append(mesNombre).append("</b> de <b>").append(anio).append("</b>")
           .append("</p>");
 
@@ -509,14 +507,7 @@ public class InformePdfTemplateService {
     }
 
     private static String nombreDia(LocalDate fecha) {
-        switch (fecha.getDayOfMonth()) {
-            case 1:  return "primero";
-            case 2:  return "segundo";
-            case 3:  return "tercero";
-            case 4:  return "cuarto";
-            case 5:  return "quinto";
-            default: return String.valueOf(fecha.getDayOfMonth());
-        }
+        return String.valueOf(fecha.getDayOfMonth());
     }
 
     private static String labelSgssi(ItemSgssi item) {

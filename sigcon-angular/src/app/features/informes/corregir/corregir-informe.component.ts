@@ -53,7 +53,7 @@ export class CorregirInformeComponent implements OnInit {
   readonly estadoInvalido = signal(false);
 
   // I8 T3: fecha de elaboración
-  readonly fechaElaboracion = signal<string>('');
+  readonly fechaElaboracion = signal<string>(new Date().toISOString().slice(0, 10));
 
   // T11: aportes SGSSI editables en DEVUELTO
   readonly aportesEdicion = signal<AporteSgssiEditRow[]>([]);
