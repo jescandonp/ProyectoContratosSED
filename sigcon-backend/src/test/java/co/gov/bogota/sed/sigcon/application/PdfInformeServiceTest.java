@@ -168,6 +168,7 @@ class PdfInformeServiceTest {
         i.setContrato(contrato);
         i.setFechaInicio(LocalDate.of(2026, 1, 1));
         i.setFechaFin(LocalDate.of(2026, 1, 31));
+        i.setFechaElaboracion(LocalDate.of(2026, 2, 4));
         i.setEstado(EstadoInforme.EN_REVISION);
         i.setActivo(true);
         return i;

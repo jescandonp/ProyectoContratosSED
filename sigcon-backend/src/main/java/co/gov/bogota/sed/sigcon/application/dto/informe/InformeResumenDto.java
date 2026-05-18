@@ -18,6 +18,7 @@ public class InformeResumenDto {
     private String pdfRuta;
     private LocalDateTime pdfGeneradoAt;
     private String pdfHash;
+    private LocalDate fechaElaboracion;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -43,4 +44,6 @@ public class InformeResumenDto {
     public void setPdfGeneradoAt(LocalDateTime pdfGeneradoAt) { this.pdfGeneradoAt = pdfGeneradoAt; }
     public String getPdfHash() { return pdfHash; }
     public void setPdfHash(String pdfHash) { this.pdfHash = pdfHash; }
+    public LocalDate getFechaElaboracion() { return fechaElaboracion; }
+    public void setFechaElaboracion(LocalDate fechaElaboracion) { this.fechaElaboracion = fechaElaboracion; }
 }

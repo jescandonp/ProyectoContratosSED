@@ -20,6 +20,7 @@ public class InformeUpdateDto {
     private BigDecimal valorDesembolso;
     private BigDecimal porcentajeEjecucion;
     private Boolean correspondenciaPendiente;
+    private LocalDate fechaElaboracion;
 
     @Valid
     private List<AporteSgssiRequest> aportesSgssi = new ArrayList<>();
@@ -36,6 +37,8 @@ public class InformeUpdateDto {
     public void setPorcentajeEjecucion(BigDecimal porcentajeEjecucion) { this.porcentajeEjecucion = porcentajeEjecucion; }
     public Boolean getCorrespondenciaPendiente() { return correspondenciaPendiente; }
     public void setCorrespondenciaPendiente(Boolean correspondenciaPendiente) { this.correspondenciaPendiente = correspondenciaPendiente; }
+    public LocalDate getFechaElaboracion() { return fechaElaboracion; }
+    public void setFechaElaboracion(LocalDate fechaElaboracion) { this.fechaElaboracion = fechaElaboracion; }
     public List<AporteSgssiRequest> getAportesSgssi() { return aportesSgssi; }
     public void setAportesSgssi(List<AporteSgssiRequest> aportesSgssi) { this.aportesSgssi = aportesSgssi; }
 }

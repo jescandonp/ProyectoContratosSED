@@ -85,6 +85,9 @@ public class Informe {
     @Column(name = "CORRESPONDENCIA_PENDIENTE", nullable = false)
     private Integer correspondenciaPendiente = 0;
 
+    @Column(name = "FECHA_ELABORACION")
+    private LocalDate fechaElaboracion;
+
     @Column(name = "ACTIVO", nullable = false)
     private Boolean activo = true;
 
@@ -226,6 +229,9 @@ public class Informe {
     public void setCorrespondenciaPendiente(Integer correspondenciaPendiente) {
         this.correspondenciaPendiente = correspondenciaPendiente;
     }
+
+    public LocalDate getFechaElaboracion() { return fechaElaboracion; }
+    public void setFechaElaboracion(LocalDate fechaElaboracion) { this.fechaElaboracion = fechaElaboracion; }
 
     public Boolean getActivo() {
         return activo;

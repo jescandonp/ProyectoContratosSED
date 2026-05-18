@@ -98,5 +98,6 @@ public class InformeMapper {
         dto.setPdfRuta(informe.getPdfRuta());
         dto.setPdfGeneradoAt(informe.getPdfGeneradoAt());
         dto.setPdfHash(informe.getPdfHash());
+        dto.setFechaElaboracion(informe.getFechaElaboracion());
     }
 }

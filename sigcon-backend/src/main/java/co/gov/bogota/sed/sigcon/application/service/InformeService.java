@@ -31,6 +31,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -157,6 +158,11 @@ public class InformeService {
         informe.setPorcentajeEjecucion(request.getPorcentajeEjecucion());
         informe.setCorrespondenciaPendiente(
             Boolean.TRUE.equals(request.getCorrespondenciaPendiente()) ? 1 : 0);
+        informe.setFechaElaboracion(
+            request.getFechaElaboracion() != null
+                ? request.getFechaElaboracion()
+                : LocalDate.now()
+        );
         informe.setActivo(true);
         Informe saved = informeRepository.save(informe);
         return buildDetalle(saved);
@@ -177,6 +183,9 @@ public class InformeService {
         informe.setFechaFin(request.getFechaFin());
         applyScalarFields(informe, request.getNumeroDesembolso(), request.getValorDesembolso(),
             request.getPorcentajeEjecucion(), request.getCorrespondenciaPendiente());
+        if (request.getFechaElaboracion() != null) {
+            informe.setFechaElaboracion(request.getFechaElaboracion());
+        }
         informeRepository.save(informe);
         return buildDetalle(informe);
     }
@@ -196,6 +205,9 @@ public class InformeService {
         informe.setFechaFin(dto.getFechaFin());
         applyScalarFields(informe, dto.getNumeroDesembolso(), dto.getValorDesembolso(),
             dto.getPorcentajeEjecucion(), dto.getCorrespondenciaPendiente());
+        if (dto.getFechaElaboracion() != null) {
+            informe.setFechaElaboracion(dto.getFechaElaboracion());
+        }
         informeRepository.save(informe);
         return buildDetalle(informe);
     }
