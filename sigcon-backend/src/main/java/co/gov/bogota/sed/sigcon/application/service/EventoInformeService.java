@@ -57,7 +57,9 @@ public class EventoInformeService {
 
     private static Usuario resolverDestinatario(TipoEvento evento, Contrato contrato) {
         switch (evento) {
-            case INFORME_ENVIADO:    return contrato.getRevisor();
+            case INFORME_ENVIADO:
+                Usuario rev = contrato.getRevisor();
+                return rev != null ? rev : contrato.getSupervisor();
             case REVISION_APROBADA:  return contrato.getSupervisor();
             case REVISION_DEVUELTA:  return contrato.getContratista();
             case INFORME_APROBADO:   return contrato.getContratista();

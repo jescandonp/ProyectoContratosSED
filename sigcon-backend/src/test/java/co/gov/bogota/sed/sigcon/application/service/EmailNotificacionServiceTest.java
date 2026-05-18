@@ -70,7 +70,7 @@ class EmailNotificacionServiceTest {
 
         Informe informe = sampleInforme();
 
-        // No debe lanzar excepcion — solo log x2 (contratista + admin)
+        // No debe lanzar excepcion — solo log x1 (solo admin — el email al contratista lo maneja publicar())
         service.notificarAprobacion(informe);
     }
 

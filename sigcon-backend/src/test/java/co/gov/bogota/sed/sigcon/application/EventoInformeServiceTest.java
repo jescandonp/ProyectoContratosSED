@@ -100,6 +100,31 @@ class EventoInformeServiceTest {
         return u;
     }
 
+    @Test
+    void informeEnviado_sinRevisor_notificaAlSupervisor() {
+        Usuario supervisor = usuario(4L, RolUsuario.SUPERVISOR);
+        // Crear informe con revisor=null
+        Informe informe = informeSinRevisor(50L, usuario(2L, RolUsuario.CONTRATISTA), supervisor);
+        when(notificacionService.crear(any(), any(), any(), any())).thenReturn(new Notificacion());
+
+        eventoService.publicar(TipoEvento.INFORME_ENVIADO, informe, null);
+
+        verify(notificacionService).crear(eq(supervisor), eq(TipoEvento.INFORME_ENVIADO), eq(informe), any());
+        verify(emailService).enviar(eq(supervisor), eq(TipoEvento.INFORME_ENVIADO), eq(50L), any());
+    }
+
+    @Test
+    void informeEnviado_conRevisor_notificaAlRevisor() {
+        Usuario revisor = usuario(3L, RolUsuario.REVISOR);
+        Informe informe = informe(50L, usuario(2L, RolUsuario.CONTRATISTA), revisor, usuario(4L, RolUsuario.SUPERVISOR));
+        when(notificacionService.crear(any(), any(), any(), any())).thenReturn(new Notificacion());
+
+        eventoService.publicar(TipoEvento.INFORME_ENVIADO, informe, null);
+
+        verify(notificacionService).crear(eq(revisor), eq(TipoEvento.INFORME_ENVIADO), eq(informe), any());
+        verify(emailService).enviar(eq(revisor), eq(TipoEvento.INFORME_ENVIADO), eq(50L), any());
+    }
+
     private static Informe informe(Long id, Usuario contratista, Usuario revisor, Usuario supervisor) {
         Contrato c = new Contrato();
         c.setId(1L);
@@ -112,6 +137,32 @@ class EventoInformeServiceTest {
         c.setEstado(EstadoContrato.EN_EJECUCION);
         c.setContratista(contratista);
         c.setRevisor(revisor);
+        c.setSupervisor(supervisor);
+        c.setActivo(true);
+
+        Informe i = new Informe();
+        i.setId(id);
+        i.setNumero(1);
+        i.setContrato(c);
+        i.setFechaInicio(LocalDate.of(2026, 1, 1));
+        i.setFechaFin(LocalDate.of(2026, 1, 31));
+        i.setEstado(EstadoInforme.EN_REVISION);
+        i.setActivo(true);
+        return i;
+    }
+
+    private static Informe informeSinRevisor(Long id, Usuario contratista, Usuario supervisor) {
+        Contrato c = new Contrato();
+        c.setId(1L);
+        c.setNumero("OPS-2026-001");
+        c.setObjeto("Objeto");
+        c.setTipo(TipoContrato.OPS);
+        c.setValorTotal(BigDecimal.valueOf(18000000));
+        c.setFechaInicio(LocalDate.of(2026, 1, 15));
+        c.setFechaFin(LocalDate.of(2026, 12, 31));
+        c.setEstado(EstadoContrato.EN_EJECUCION);
+        c.setContratista(contratista);
+        c.setRevisor(null);   // sin revisor
         c.setSupervisor(supervisor);
         c.setActivo(true);
 

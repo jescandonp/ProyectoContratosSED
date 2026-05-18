@@ -43,19 +43,15 @@ public class EmailNotificacionService {
      * @param informe informe recien aprobado
      */
     public void notificarAprobacion(Informe informe) {
-        Usuario contratista = informe.getContrato().getContratista();
-        String descripcion = construirDescripcionAprobacion(informe);
-
-        // Notificar al contratista
-        enviar(contratista, TipoEvento.INFORME_APROBADO, informe.getId(), descripcion);
-
-        // Notificar al correo administrador configurable si esta configurado
+        // El email al contratista ya fue enviado por EventoInformeService.publicar()
+        // Este método solo gestiona la copia adicional al correo administrador
         String adminEmail = mailProperties.getAdminEmail();
         if (adminEmail != null && !adminEmail.trim().isEmpty()) {
             Usuario adminVirtual = new Usuario();
             adminVirtual.setEmail(adminEmail.trim());
             adminVirtual.setNombre("Administrador SIGCON");
-            enviar(adminVirtual, TipoEvento.INFORME_APROBADO, informe.getId(), descripcion);
+            enviar(adminVirtual, TipoEvento.INFORME_APROBADO, informe.getId(),
+                   construirDescripcionAprobacion(informe));
         } else {
             log.info("EMAIL ADMIN no configurado — omitiendo copia admin para informe id={}", informe.getId());
         }
