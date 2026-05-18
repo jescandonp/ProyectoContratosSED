@@ -2,6 +2,7 @@ package co.gov.bogota.sed.sigcon.application.service;
 
 import co.gov.bogota.sed.sigcon.domain.entity.ActividadInforme;
 import co.gov.bogota.sed.sigcon.domain.entity.AporteSgssi;
+import co.gov.bogota.sed.sigcon.domain.entity.Contrato;
 import co.gov.bogota.sed.sigcon.domain.entity.DocumentoAdicional;
 import co.gov.bogota.sed.sigcon.domain.entity.Informe;
 import co.gov.bogota.sed.sigcon.domain.entity.SoporteAdjunto;
@@ -12,17 +13,22 @@ import co.gov.bogota.sed.sigcon.domain.repository.AporteSgssiRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.DocumentoAdicionalRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.SoporteAdjuntoRepository;
 import com.lowagie.text.DocumentException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 import org.xml.sax.InputSource;
 
+import javax.annotation.PostConstruct;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
@@ -32,28 +38,46 @@ import java.util.Locale;
 
 /**
  * Construye el PDF institucional SED del informe aprobado en XHTML y lo renderiza
- * via Flying Saucer + OpenPDF. Layout de 8 secciones segun plantilla SED I6.
+ * via Flying Saucer + OpenPDF. Layout segun plantilla 11-IF-023 V1.
  */
 @Service
 public class InformePdfTemplateService {
 
-    private static final DateTimeFormatter DATE_FMT     = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-    private static final DateTimeFormatter DATETIME_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-    private static final Locale            LOCALE_CO    = new Locale("es", "CO");
+    private static final Logger log = LoggerFactory.getLogger(InformePdfTemplateService.class);
 
-    private final ActividadInformeRepository  actividadRepository;
-    private final SoporteAdjuntoRepository    soporteRepository;
+    private static final DateTimeFormatter DATE_FMT  = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final Locale            LOCALE_CO = new Locale("es", "CO");
+
+    private final ActividadInformeRepository   actividadRepository;
+    private final SoporteAdjuntoRepository     soporteRepository;
     private final DocumentoAdicionalRepository documentoAdicionalRepository;
-    private final AporteSgssiRepository       aporteSgssiRepository;
+    private final AporteSgssiRepository        aporteSgssiRepository;
+
+    private String logoBase64 = null;
 
     public InformePdfTemplateService(ActividadInformeRepository actividadRepository,
                                      SoporteAdjuntoRepository soporteRepository,
                                      DocumentoAdicionalRepository documentoAdicionalRepository,
                                      AporteSgssiRepository aporteSgssiRepository) {
-        this.actividadRepository         = actividadRepository;
-        this.soporteRepository           = soporteRepository;
+        this.actividadRepository          = actividadRepository;
+        this.soporteRepository            = soporteRepository;
         this.documentoAdicionalRepository = documentoAdicionalRepository;
         this.aporteSgssiRepository        = aporteSgssiRepository;
+    }
+
+    @PostConstruct
+    public void cargarLogo() {
+        try {
+            ClassPathResource res = new ClassPathResource("logo-alcaldia.png");
+            if (res.exists()) {
+                byte[] bytes = res.getInputStream().readAllBytes();
+                logoBase64 = Base64.getEncoder().encodeToString(bytes);
+            } else {
+                log.warn("logo-alcaldia.png no encontrado en classpath; encabezado se generara sin logo.");
+            }
+        } catch (Exception e) {
+            log.warn("No se pudo cargar logo-alcaldia.png: {}", e.getMessage());
+        }
     }
 
     /**
@@ -110,9 +134,8 @@ public class InformePdfTemplateService {
         Usuario supervisor  = informe.getContrato().getSupervisor();
         Usuario revisor     = informe.getContrato().getRevisor();
 
-        StringBuilder sb = new StringBuilder(8192);
+        StringBuilder sb = new StringBuilder(16384);
 
-        // ── XHTML boilerplate ─────────────────────────────────────────────
         sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
         sb.append("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"");
         sb.append(" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">");
@@ -121,199 +144,21 @@ public class InformePdfTemplateService {
         appendCss(sb);
         sb.append("</head><body>");
 
-        // ── Sec 1: Encabezado institucional ──────────────────────────────
-        sb.append("<div class=\"hdr\">");
-        sb.append("<div class=\"hdr-entity\">SECRETAR&#205;A DE EDUCACI&#211;N DEL DISTRITO</div>");
-        sb.append("<div class=\"hdr-sub\">Subdirecci&#243;n de Gesti&#243;n Contractual</div>");
-        sb.append("<div class=\"hdr-title\">INFORME DE ACTIVIDADES N&#250;m. ")
-          .append(informe.getNumero()).append("</div>");
+        appendRunningHeader(sb, informe);
+
+        sb.append("<div class=\"running-footer\">");
+        sb.append("Avenida El Dorado N&#176; 66-63 &nbsp; PBX: 3241000 &nbsp; ");
+        sb.append("www.educacionbogota.edu.co &nbsp; L&#237;nea 195");
         sb.append("</div>");
 
-        // ── Sec 2: Datos del Contrato ────────────────────────────────────
-        sb.append("<div class=\"sec-title\">DATOS DEL CONTRATO</div>");
-        sb.append("<table><tbody>");
-        row2(sb, "N&#250;mero de Contrato", esc(informe.getContrato().getNumero()), false);
-        row2(sb, "Tipo de Contrato", esc(informe.getContrato().getTipo().name()), true);
-        row2(sb, "Valor Total", formatPesos(informe.getContrato().getValorTotal()), false);
-        row2(sb, "Valor en Letras", esc(NumeroPesosConverter.convertir(informe.getContrato().getValorTotal())), true);
-        row2(sb, "Vigencia", informe.getContrato().getFechaInicio().format(DATE_FMT)
-                + " al " + informe.getContrato().getFechaFin().format(DATE_FMT), false);
-        if (notEmpty(informe.getContrato().getDependencia())) {
-            row2(sb, "Dependencia", esc(informe.getContrato().getDependencia()), true);
-        }
-        if (notEmpty(informe.getContrato().getFormaPago())) {
-            row2(sb, "Forma de Pago", esc(informe.getContrato().getFormaPago()), false);
-        }
-        sb.append("</tbody></table>");
+        appendSeccion1(sb, informe);
+        appendSeccion2(sb, actividades);
+        appendSeccion3(sb, informe, aportes);
+        appendSeccion4(sb, informe);
+        appendSeccion5(sb, informe);
 
-        // Objeto en fila completa
-        sb.append("<table><tbody>");
-        sb.append("<tr><td class=\"lbl\">Objeto</td><td class=\"val\">")
-          .append(esc(informe.getContrato().getObjeto())).append("</td></tr>");
-        sb.append("</tbody></table>");
-
-        if (notEmpty(informe.getContrato().getModificaciones())) {
-            sb.append("<table><tbody>");
-            sb.append("<tr><td class=\"lbl\">Modificaciones / Adiciones</td><td class=\"val\">")
-              .append(esc(informe.getContrato().getModificaciones())).append("</td></tr>");
-            sb.append("</tbody></table>");
-        }
-
-        // ── Sec 3: Partes del Contrato ───────────────────────────────────
-        sb.append("<div class=\"sec-title\">PARTES DEL CONTRATO</div>");
-        sb.append("<table><thead><tr>");
-        sb.append("<th>Rol</th><th>Nombre</th><th>Cargo / Entidad</th>");
-        sb.append("</tr></thead><tbody>");
-
-        sb.append("<tr class=\"alt\">");
-        sb.append("<td>Contratista</td>");
-        sb.append("<td>").append(esc(contratista.getNombre())).append("</td>");
-        sb.append("<td>").append(esc(safe(contratista.getCargo()))).append("</td>");
-        sb.append("</tr>");
-
-        if (revisor != null) {
-            sb.append("<tr>");
-            sb.append("<td>Revisor</td>");
-            sb.append("<td>").append(esc(revisor.getNombre())).append("</td>");
-            sb.append("<td>").append(esc(safe(revisor.getCargo()))).append("</td>");
-            sb.append("</tr>");
-        }
-
-        if (supervisor != null) {
-            sb.append("<tr class=\"alt\">");
-            sb.append("<td>Supervisor</td>");
-            sb.append("<td>").append(esc(supervisor.getNombre())).append("</td>");
-            sb.append("<td>").append(esc(safe(supervisor.getCargo()))).append("</td>");
-            sb.append("</tr>");
-        }
-        sb.append("</tbody></table>");
-
-        // ── Sec 4: Datos del Informe ─────────────────────────────────────
-        sb.append("<div class=\"sec-title\">DATOS DEL INFORME</div>");
-        sb.append("<table><tbody>");
-        row2(sb, "N&#250;mero de Informe", String.valueOf(informe.getNumero()), false);
-        row2(sb, "Per&#237;odo", informe.getFechaInicio().format(DATE_FMT)
-                + " al " + informe.getFechaFin().format(DATE_FMT), true);
-        row2(sb, "Estado", "APROBADO", false);
-
-        if (informe.getNumeroDesembolso() != null) {
-            row2(sb, "N&#250;mero de Desembolso", String.valueOf(informe.getNumeroDesembolso()), true);
-        }
-        if (informe.getValorDesembolso() != null) {
-            row2(sb, "Valor del Desembolso", formatPesos(informe.getValorDesembolso()), false);
-        }
-        if (informe.getPorcentajeEjecucion() != null) {
-            row2(sb, "Porcentaje de Ejecuci&#243;n", informe.getPorcentajeEjecucion().stripTrailingZeros().toPlainString() + " %", true);
-        }
-        boolean corrPendiente = informe.getCorrespondenciaPendiente() != null
-                && informe.getCorrespondenciaPendiente() > 0;
-        row2(sb, "Correspondencia Pendiente", corrPendiente ? "S&#237;" : "No", false);
-        sb.append("</tbody></table>");
-
-        // ── Sec 5: Aportes al Sistema de Seguridad Social (SGSSI) ────────
-        sb.append("<div class=\"sec-title\">APORTES AL SISTEMA GENERAL DE SEGURIDAD SOCIAL</div>");
-        if (aportes.isEmpty()) {
-            sb.append("<p class=\"empty-msg\">Sin aportes SGSSI registrados para este informe.</p>");
-        } else {
-            YearMonth periodoSgssi = YearMonth.from(informe.getFechaInicio()).minusMonths(1);
-            String periodoLabel = periodoSgssi.atDay(1)
-                    .format(DateTimeFormatter.ofPattern("MMMM yyyy", LOCALE_CO)).toUpperCase();
-            sb.append("<p class=\"sgssi-periodo\">Per&#237;odo de aportes: <b>").append(esc(periodoLabel)).append("</b></p>");
-            sb.append("<table><thead><tr>");
-            sb.append("<th>Concepto</th><th>Entidad</th><th>Fecha de Pago</th><th>Valor Aportado</th>");
-            sb.append("</tr></thead><tbody>");
-            boolean alt = false;
-            for (AporteSgssi aporte : aportes) {
-                sb.append(alt ? "<tr class=\"alt\">" : "<tr>");
-                sb.append("<td>").append(esc(labelSgssi(aporte.getItem()))).append("</td>");
-                sb.append("<td>").append(esc(safe(aporte.getEntidad()))).append("</td>");
-                sb.append("<td>").append(aporte.getFechaPago() != null ? aporte.getFechaPago().format(DATE_FMT) : "").append("</td>");
-                sb.append("<td>").append(formatPesos(aporte.getValorAportado())).append("</td>");
-                sb.append("</tr>");
-                alt = !alt;
-            }
-            sb.append("</tbody></table>");
-        }
-
-        // ── Sec 6: Obligaciones y Actividades ────────────────────────────
-        sb.append("<div class=\"sec-title\">OBLIGACIONES Y ACTIVIDADES</div>");
-        if (actividades.isEmpty()) {
-            sb.append("<p class=\"empty-msg\">Sin actividades registradas.</p>");
-        } else {
-            sb.append("<table><thead><tr>");
-            sb.append("<th>Obligaci&#243;n</th><th>Descripci&#243;n</th><th>Soportes</th>");
-            sb.append("</tr></thead><tbody>");
-            boolean alt = false;
-            for (ActividadInforme act : actividades) {
-                List<SoporteAdjunto> soportes = soporteRepository.findByActividadIdAndActivoTrue(act.getId());
-                sb.append(alt ? "<tr class=\"alt\">" : "<tr>");
-                sb.append("<td>")
-                  .append(esc(act.getObligacion() != null ? safe(act.getObligacion().getDescripcion()) : ""))
-                  .append("</td>");
-                sb.append("<td>").append(esc(act.getDescripcion())).append("</td>");
-                sb.append("<td>");
-                if (soportes.isEmpty()) {
-                    sb.append("Sin soportes");
-                } else {
-                    for (SoporteAdjunto s : soportes) {
-                        sb.append("&#8226; ").append(esc(s.getNombre()))
-                          .append(" (").append(s.getTipo().name()).append(")<br/>");
-                    }
-                }
-                sb.append("</td></tr>");
-                alt = !alt;
-            }
-            sb.append("</tbody></table>");
-        }
-
-        // ── Sec 7: Documentos Adicionales ────────────────────────────────
-        if (!documentos.isEmpty()) {
-            sb.append("<div class=\"sec-title\">DOCUMENTOS ADICIONALES</div>");
-            sb.append("<table><thead><tr><th>Documento</th><th>Referencia</th></tr></thead><tbody>");
-            boolean alt = false;
-            for (DocumentoAdicional doc : documentos) {
-                sb.append(alt ? "<tr class=\"alt\">" : "<tr>");
-                sb.append("<td>")
-                  .append(esc(doc.getCatalogo() != null ? doc.getCatalogo().getNombre() : ""))
-                  .append("</td>");
-                sb.append("<td>").append(esc(safe(doc.getReferencia()))).append("</td>");
-                sb.append("</tr>");
-                alt = !alt;
-            }
-            sb.append("</tbody></table>");
-        }
-
-        // ── Sec 8: Firmas ─────────────────────────────────────────────────
-        sb.append("<div class=\"sec-title\">FIRMAS</div>");
-        boolean hasRevisorFirma = firmaRevisor != null && firmaRevisor.length > 0;
-        int cols = hasRevisorFirma ? 3 : 2;
-        String colWidth = cols == 3 ? "33%" : "50%";
-
-        sb.append("<table class=\"firma-table\"><tbody><tr>");
-
-        // Contratista
-        appendFirmaCell(sb, firmaContratista, contratista.getNombre(), safe(contratista.getCargo()), "Contratista", colWidth);
-
-        // Revisor (solo si tiene firma)
-        if (hasRevisorFirma && revisor != null) {
-            appendFirmaCell(sb, firmaRevisor, revisor.getNombre(), safe(revisor.getCargo()), "Revisor", colWidth);
-        }
-
-        // Supervisor
-        if (supervisor != null) {
-            appendFirmaCell(sb, firmaSupervisor, supervisor.getNombre(), safe(supervisor.getCargo()), "Supervisor", colWidth);
-        }
-
-        sb.append("</tr></tbody></table>");
-
-        // Metadata
-        String fechaAprobacion = informe.getFechaAprobacion() != null
-                ? informe.getFechaAprobacion().format(DATETIME_FMT) : "N/A";
-        sb.append("<div class=\"meta\">");
-        sb.append("Informe N&#250;m. ").append(informe.getNumero());
-        sb.append(" &#183; Contrato ").append(esc(informe.getContrato().getNumero()));
-        sb.append(" &#183; Aprobado: ").append(fechaAprobacion);
-        sb.append("</div>");
+        appendFirmas(sb, informe, contratista, supervisor, revisor,
+                     firmaContratista, firmaSupervisor, firmaRevisor);
 
         sb.append("</body></html>");
         return sb.toString();
@@ -321,67 +166,365 @@ public class InformePdfTemplateService {
 
     // ─── CSS ─────────────────────────────────────────────────────────────────
 
-    private static void appendCss(StringBuilder sb) {
+    private void appendCss(StringBuilder sb) {
         sb.append("<style type=\"text/css\">");
-        sb.append("body{font-family:Arial,sans-serif;font-size:10pt;color:#1a1a1a;margin:24pt 30pt 24pt 30pt}");
-        sb.append(".hdr{text-align:center;margin-bottom:14pt;padding-bottom:6pt;border-bottom:1.5pt solid #002869}");
-        sb.append(".hdr-entity{font-weight:bold;font-size:13pt;color:#002869;text-transform:uppercase}");
-        sb.append(".hdr-sub{font-size:10pt;color:#444;margin-top:2pt}");
-        sb.append(".hdr-title{font-size:12pt;font-weight:bold;color:#002869;margin-top:6pt;text-transform:uppercase}");
-        sb.append(".sec-title{background:#C0C0C0;color:#002869;font-weight:bold;font-size:10pt;");
-        sb.append("padding:4pt 8pt;margin-top:10pt;margin-bottom:4pt;text-transform:uppercase}");
-        sb.append("table{width:100%;border-collapse:collapse;margin-bottom:4pt;font-size:9.5pt}");
-        sb.append("th{background:#002869;color:#fff;padding:4pt 6pt;text-align:left;font-size:9pt;font-weight:bold}");
-        sb.append("td{padding:3pt 6pt;border:0.5pt solid #c0c4cc;vertical-align:top}");
-        sb.append(".alt{background:#eff4ff}");
-        sb.append(".lbl{color:#333;font-weight:bold;width:38%}");
-        sb.append(".val{color:#111}");
-        sb.append(".sgssi-periodo{font-size:9pt;color:#444;margin:2pt 0 4pt 0}");
-        sb.append(".empty-msg{font-size:9pt;color:#666;font-style:italic;margin:2pt 0 6pt 0}");
-        sb.append(".firma-table{border-collapse:collapse;margin-top:10pt}");
-        sb.append(".firma-cell{text-align:center;border:none;padding:8pt 14pt;vertical-align:bottom}");
-        sb.append(".firma-img{max-height:55pt;max-width:140pt}");
-        sb.append(".firma-name{font-weight:bold;font-size:9.5pt;margin-top:4pt}");
-        sb.append(".firma-cargo{font-size:8.5pt;color:#444}");
-        sb.append(".firma-rol{font-size:8pt;color:#002869;font-weight:bold;text-transform:uppercase;margin-top:2pt}");
-        sb.append(".meta{font-size:7.5pt;color:#999;text-align:right;margin-top:14pt;");
-        sb.append("border-top:0.5pt solid #ddd;padding-top:4pt}");
+        sb.append("@page{margin:90pt 36pt 54pt 36pt;}");
+        sb.append("@page{@top-center{content:element(pageHeader)}@bottom-center{content:element(pageFooter)}}");
+        sb.append(".running-header{position:running(pageHeader);width:100%;}");
+        sb.append(".running-footer{position:running(pageFooter);width:100%;text-align:center;");
+        sb.append("font-size:7.5pt;color:#444;border-top:0.5pt solid #ccc;padding-top:3pt;}");
+        sb.append(".page-num:before{content:counter(page);}");
+        sb.append(".page-total:before{content:counter(pages);}");
+        sb.append("body{font-family:Arial,sans-serif;font-size:9pt;color:#1a1a1a;margin:0;}");
+        sb.append(".ph-wrap{border:0.8pt solid #000;width:100%;border-collapse:collapse;font-size:8pt;}");
+        sb.append(".ph-logo{width:14%;text-align:center;padding:2pt;border-right:0.8pt solid #000;vertical-align:middle;}");
+        sb.append(".ph-logo img{max-height:42pt;max-width:50pt;}");
+        sb.append(".ph-center{width:60%;text-align:center;vertical-align:top;padding:2pt 4pt;}");
+        sb.append(".ph-center-title{font-weight:bold;font-size:9.5pt;}");
+        sb.append(".ph-center-sub{font-size:7.5pt;margin-top:1pt;}");
+        sb.append(".ph-right{width:26%;text-align:center;vertical-align:top;padding:2pt;border-left:0.8pt solid #000;}");
+        sb.append(".ph-right-title{font-weight:bold;font-size:8pt;}");
+        sb.append(".ph-right-period{font-size:7.5pt;margin-top:1pt;}");
+        sb.append(".ph-code{text-align:right;font-size:7pt;color:#555;padding:1pt 2pt;border-top:0.5pt solid #aaa;}");
+        sb.append(".sec-title{background:#d9d9d9;color:#000;font-weight:bold;font-size:9pt;");
+        sb.append("padding:3pt 6pt;margin-top:8pt;margin-bottom:0;text-transform:uppercase;border:0.5pt solid #999;}");
+        sb.append("table{width:100%;border-collapse:collapse;font-size:8.5pt;margin-bottom:0;}");
+        sb.append("th{background:#000;color:#fff;padding:3pt 5pt;text-align:left;font-size:8pt;font-weight:bold;border:0.5pt solid #555;}");
+        sb.append("td{padding:3pt 5pt;border:0.5pt solid #999;vertical-align:top;}");
+        sb.append(".lbl{font-weight:bold;width:30%;background:#f0f0f0;}");
+        sb.append(".val{width:70%;}");
+        sb.append(".bullet-list{margin:0;padding:0 0 0 10pt;list-style-type:disc;}");
+        sb.append(".bullet-list li{margin-bottom:2pt;}");
+        sb.append(".parr{font-size:8.5pt;text-align:justify;margin:4pt 0;}");
+        sb.append(".firma-section{margin-top:14pt;}");
+        sb.append(".firma-table{width:100%;border-collapse:collapse;}");
+        sb.append(".firma-cell{text-align:center;padding:6pt 10pt;vertical-align:bottom;border:none;width:50%;}");
+        sb.append(".firma-cell-full{text-align:center;padding:6pt 10pt;vertical-align:bottom;border:none;width:100%;}");
+        sb.append(".firma-img{max-height:70pt;max-width:200pt;}");
+        sb.append(".firma-line{border-top:0.8pt solid #000;margin:4pt auto;width:180pt;}");
+        sb.append(".firma-name{font-weight:bold;font-size:8.5pt;margin-top:2pt;}");
+        sb.append(".firma-cargo{font-size:8pt;color:#333;}");
+        sb.append(".firma-rol{font-size:7.5pt;font-weight:bold;text-transform:uppercase;color:#000;margin-top:1pt;}");
         sb.append("</style>");
     }
 
-    // ─── Helpers ─────────────────────────────────────────────────────────────
+    // ─── Running header ───────────────────────────────────────────────────────
 
-    private static void row2(StringBuilder sb, String label, String value, boolean alt) {
-        sb.append(alt ? "<tr class=\"alt\">" : "<tr>");
-        sb.append("<td class=\"lbl\">").append(label).append("</td>");
-        sb.append("<td class=\"val\">").append(value).append("</td>");
-        sb.append("</tr>");
+    private void appendRunningHeader(StringBuilder sb, Informe informe) {
+        String numContrato  = esc(informe.getContrato().getNumero());
+        int    anioContrato = informe.getContrato().getFechaInicio().getYear();
+        String periodoDesde = informe.getFechaInicio().format(DATE_FMT);
+        String periodoHasta = informe.getFechaFin().format(DATE_FMT);
+
+        sb.append("<div class=\"running-header\">");
+        sb.append("<table class=\"ph-wrap\"><tbody><tr>");
+
+        sb.append("<td class=\"ph-logo\">");
+        if (logoBase64 != null) {
+            sb.append("<img src=\"data:image/png;base64,").append(logoBase64)
+              .append("\" style=\"max-height:42pt;max-width:50pt;\" alt=\"Logo SED\"/>");
+        }
+        sb.append("</td>");
+
+        sb.append("<td class=\"ph-center\">");
+        sb.append("<div class=\"ph-center-title\">INFORME DE ACTIVIDADES No. ")
+          .append(String.format("%02d", informe.getNumero())).append("</div>");
+        sb.append("<div class=\"ph-center-sub\">CONTRATO DE PRESTACION DE SERVICIOS PROFESIONALES</div>");
+        sb.append("<div class=\"ph-center-sub\">").append(numContrato)
+          .append(" DEL ").append(anioContrato).append("</div>");
+        sb.append("</td>");
+
+        sb.append("<td class=\"ph-right\">");
+        sb.append("<div class=\"ph-right-title\">PERIODO DEL INFORME</div>");
+        sb.append("<div class=\"ph-right-period\">Desde (").append(periodoDesde).append(")</div>");
+        sb.append("<div class=\"ph-right-period\">Hasta (").append(periodoHasta).append(")</div>");
+        sb.append("<div class=\"ph-code\">11-IF-023 V1</div>");
+        sb.append("</td>");
+
+        sb.append("</tr></tbody></table>");
+        sb.append("</div>");
+    }
+
+    // ─── Secciones ────────────────────────────────────────────────────────────
+
+    private void appendSeccion1(StringBuilder sb, Informe informe) {
+        Contrato c   = informe.getContrato();
+        Usuario  sup = c.getSupervisor();
+
+        sb.append("<div class=\"sec-title\">1. DATOS DEL CONTRATO</div>");
+        sb.append("<table><tbody>");
+
+        fila2(sb, "Contratista:", esc(c.getContratista().getNombre()), false);
+        fila2(sb, "Objeto:", esc(c.getObjeto()), true);
+
+        String valorTexto = "El valor del contrato es de "
+            + esc(NumeroPesosConverter.convertir(c.getValorTotal()))
+            + " (" + formatPesos(c.getValorTotal()) + ").";
+        fila2(sb, "Valor del Contrato:", valorTexto, false);
+
+        fila2(sb, "Forma de Pago:", esc(safe(c.getFormaPago())), true);
+
+        String plazo = "El plazo del contrato ser&#225; hasta el " + c.getFechaFin().format(DATE_FMT)
+            + " y a partir de la suscripci&#243;n del acta de inicio, previo cumplimiento de los"
+            + " requisitos de perfeccionamiento y ejecuci&#243;n. En todo caso, la fecha de Inicio"
+            + " no podr&#225; ser anterior al " + c.getFechaInicio().format(DATE_FMT) + ".";
+        fila2(sb, "Plazo:", plazo, false);
+
+        fila2(sb, "Modificaciones:", esc(notEmpty(c.getModificaciones()) ? c.getModificaciones() : "No se han presentado"), true);
+
+        sb.append("<tr><td class=\"lbl\">Fecha de Inicio:</td><td class=\"val\">")
+          .append(c.getFechaInicio().format(DATE_FMT))
+          .append("</td><td class=\"lbl\">Fecha de Terminaci&#243;n:</td><td class=\"val\">")
+          .append(c.getFechaFin().format(DATE_FMT))
+          .append("</td></tr>");
+
+        fila2(sb, "Dependencia:", esc(safe(c.getDependencia())), false);
+
+        String supNombreCargo = sup != null
+            ? esc(sup.getNombre()) + " &#8211; " + esc(safe(sup.getCargo()))
+            : "No asignado";
+        fila2(sb, "Supervisor - Cargo:", supNombreCargo, true);
+
+        sb.append("</tbody></table>");
+    }
+
+    private void appendSeccion2(StringBuilder sb, List<ActividadInforme> actividades) {
+        sb.append("<div class=\"sec-title\">2. EJECUCI&#211;N DE ACTIVIDADES FRENTE A LAS OBLIGACIONES DURANTE EL PER&#205;ODO REPORTADO</div>");
+        sb.append("<table><thead><tr>");
+        sb.append("<th style=\"width:30%\">Obligaci&#243;n Contractual</th>");
+        sb.append("<th style=\"width:40%\">Actividades realizadas</th>");
+        sb.append("<th style=\"width:30%\">Evidencia Verificable</th>");
+        sb.append("</tr></thead><tbody>");
+
+        boolean alt   = false;
+        int     orden = 1;
+        for (ActividadInforme act : actividades) {
+            List<SoporteAdjunto> soportes = soporteRepository.findByActividadIdAndActivoTrue(act.getId());
+            sb.append(alt ? "<tr style=\"background:#f7f7f7\">" : "<tr>");
+
+            String descObl = act.getObligacion() != null ? safe(act.getObligacion().getDescripcion()) : "";
+            sb.append("<td>").append(orden).append(". ").append(esc(descObl)).append("</td>");
+
+            sb.append("<td>");
+            String   desc   = safe(act.getDescripcion());
+            String[] lineas = desc.split("\\n");
+            if (lineas.length > 1) {
+                sb.append("<ul class=\"bullet-list\">");
+                for (String linea : lineas) {
+                    String trimmed = linea.trim();
+                    if (!trimmed.isEmpty()) {
+                        sb.append("<li>").append(esc(trimmed)).append("</li>");
+                    }
+                }
+                sb.append("</ul>");
+            } else {
+                sb.append("&#8226; ").append(esc(desc));
+            }
+            sb.append("</td>");
+
+            sb.append("<td>");
+            if (soportes.isEmpty()) {
+                sb.append("&#8212;");
+            } else {
+                for (SoporteAdjunto s : soportes) {
+                    if (s.getTipo() == co.gov.bogota.sed.sigcon.domain.enums.TipoSoporte.URL
+                            && notEmpty(s.getReferencia())) {
+                        sb.append("<div><u>").append(esc(s.getNombre())).append("</u></div>");
+                    } else {
+                        sb.append("<div>").append(esc(s.getNombre())).append("</div>");
+                    }
+                }
+            }
+            sb.append("</td>");
+
+            sb.append("</tr>");
+            alt = !alt;
+            orden++;
+        }
+        sb.append("</tbody></table>");
+    }
+
+    private void appendSeccion3(StringBuilder sb, Informe informe, List<AporteSgssi> aportes) {
+        sb.append("<div class=\"sec-title\">3. RELACI&#211;N DEL PAGO DE APORTES AL SISTEMA DE SEGURIDAD SOCIAL INTEGRAL</div>");
+        sb.append("<table><thead><tr>");
+        sb.append("<th>ITEM</th>");
+        sb.append("<th>PER&#205;ODO PAGO<br/>(mm/aaaa)</th>");
+        sb.append("<th>FECHA DE PAGO<br/>(dd/mm/aaaa)</th>");
+        sb.append("<th>VALOR APORTADO<br/>(Sobre el 40% del ingreso mensual)</th>");
+        sb.append("<th>ENTIDAD</th>");
+        sb.append("</tr></thead><tbody>");
+
+        YearMonth periodo    = YearMonth.from(informe.getFechaInicio()).minusMonths(1);
+        String    periodoStr = periodo.format(DateTimeFormatter.ofPattern("MM/yyyy"));
+
+        boolean alt = false;
+        for (AporteSgssi aporte : aportes) {
+            sb.append(alt ? "<tr style=\"background:#f7f7f7\">" : "<tr>");
+            sb.append("<td><b>").append(esc(labelSgssi(aporte.getItem()))).append("</b></td>");
+            sb.append("<td>").append(periodoStr).append("</td>");
+            sb.append("<td>").append(aporte.getFechaPago() != null ? aporte.getFechaPago().format(DATE_FMT) : "").append("</td>");
+            sb.append("<td>").append(formatPesos(aporte.getValorAportado())).append("</td>");
+            sb.append("<td>").append(esc(safe(aporte.getEntidad()))).append("</td>");
+            sb.append("</tr>");
+            alt = !alt;
+        }
+        sb.append("</tbody></table>");
+    }
+
+    private void appendSeccion4(StringBuilder sb, Informe informe) {
+        boolean pendiente = informe.getCorrespondenciaPendiente() != null
+                         && informe.getCorrespondenciaPendiente() > 0;
+        String marcaSi = pendiente ? "<u>SI<b>_X_</b></u>" : "<u>SI<b>___</b></u>";
+        String marcaNo = pendiente ? "<u>NO<b>___</b></u>" : "<u>NO<b>_X_</b></u>";
+
+        sb.append("<div class=\"sec-title\">4. ESTADO RADICACI&#211;N DE LA CORRESPONDENCIA</div>");
+        sb.append("<table><tbody><tr><td style=\"border:0.5pt solid #999;padding:5pt 6pt;\">");
+
+        sb.append("<p class=\"parr\">Una vez revisado el aplicativo de seguimiento de la correspondencia")
+          .append(" a cargo del contratista, se identific&#243; que ")
+          .append(marcaSi).append(" &nbsp; ").append(marcaNo)
+          .append(" se encuentran radicados pendientes a la fecha, para el per&#237;odo objeto")
+          .append(" del presente informe.</p>");
+
+        sb.append("<p class=\"parr\">La anterior informaci&#243;n corresponde a la verificaci&#243;n")
+          .append(" realizada por el responsable del manejo de la correspondencia en el &#225;rea,")
+          .append(" remitida por correo electr&#243;nico, el cual se adjunta al presente en")
+          .append(" <b>01</b> folios.</p>");
+
+        sb.append("</td></tr></tbody></table>");
+    }
+
+    private void appendSeccion5(StringBuilder sb, Informe informe) {
+        sb.append("<div class=\"sec-title\">5. DECLARACI&#211;N ESPECIAL</div>");
+        sb.append("<table><tbody><tr><td style=\"border:0.5pt solid #999;padding:5pt 6pt;\">");
+
+        sb.append("<p class=\"parr\" style=\"text-align:justify\">")
+          .append("El contratista declara que toda la informaci&#243;n relacionada en el presente informe")
+          .append(" corresponde fidedignamente a todas las actividades ejecutadas dentro del respectivo")
+          .append(" periodo, as&#237; como los pagos efectuados en el marco del Sistema General de")
+          .append(" Seguridad Social Integral &#8211; SGSSI. Esta declaraci&#243;n se realiza bajo la")
+          .append(" responsabilidad del contratista.")
+          .append("</p>");
+
+        String numDesembolso = informe.getNumeroDesembolso() != null
+            ? String.valueOf(informe.getNumeroDesembolso()) : "&#8212;";
+        String valDesembolso = informe.getValorDesembolso() != null
+            ? formatPesos(informe.getValorDesembolso()) : "&#8212;";
+        String pctEjecucion  = informe.getPorcentajeEjecucion() != null
+            ? informe.getPorcentajeEjecucion().setScale(2, java.math.RoundingMode.HALF_UP)
+                     .toPlainString() + "%" : "&#8212;";
+
+        sb.append("<p class=\"parr\" style=\"text-align:justify\">")
+          .append("La supervisi&#243;n verific&#243; el cumplimiento de las actividades a cargo del")
+          .append(" contratista, en virtud de lo cual se establece la procedencia de la autorizaci&#243;n")
+          .append(" del pago/ desembolso No.<b>").append(numDesembolso).append("</b>")
+          .append(", el cual corresponde a <b>").append(valDesembolso).append("</b> m/cte.")
+          .append(" A la fecha el porcentaje de ejecuci&#243;n es: <b>").append(pctEjecucion).append("</b>")
+          .append("</p>");
+
+        String fechaElab = informe.getFechaElaboracion() != null
+            ? informe.getFechaElaboracion().format(DATE_FMT) : "N/A";
+        sb.append("<p class=\"parr\">Fecha de elaboraci&#243;n: <b>").append(fechaElab).append("</b></p>");
+
+        sb.append("</td></tr></tbody></table>");
+    }
+
+    // ─── Firmas ───────────────────────────────────────────────────────────────
+
+    private void appendFirmas(StringBuilder sb, Informe informe,
+                               Usuario contratista, Usuario supervisor, Usuario revisor,
+                               byte[] firmaContratista, byte[] firmaSupervisor, byte[] firmaRevisor) {
+
+        LocalDate fe       = informe.getFechaElaboracion() != null ? informe.getFechaElaboracion() : LocalDate.now();
+        String    diaNro   = String.valueOf(fe.getDayOfMonth());
+        String    diaLetra = nombreDia(fe);
+        String    mesNombre = fe.getMonth().getDisplayName(TextStyle.FULL, LOCALE_CO).toUpperCase();
+        int       anio     = fe.getYear();
+
+        sb.append("<div class=\"firma-section\">");
+        sb.append("<p class=\"parr\">Para constancia se firma por quienes en ella intervinieron al")
+          .append(" <b>").append(diaNro).append("</b> d&#237;a (").append(diaLetra).append(")")
+          .append(" del mes de <b>").append(mesNombre).append("</b> de <b>").append(anio).append("</b>")
+          .append("</p>");
+
+        sb.append("<table class=\"firma-table\"><tbody><tr>");
+        appendFirmaCell(sb, firmaContratista, contratista.getNombre(), safe(contratista.getCargo()), "Contratista", "50%");
+        if (supervisor != null) {
+            appendFirmaCell(sb, firmaSupervisor,
+                "Vo. Bo " + supervisor.getNombre(),
+                safe(supervisor.getCargo()), "Supervisor(a)", "50%");
+        }
+        sb.append("</tr></tbody></table>");
+
+        boolean hasRevisorFirma = firmaRevisor != null && firmaRevisor.length > 0 && revisor != null;
+        if (hasRevisorFirma) {
+            sb.append("<table class=\"firma-table\"><tbody><tr>");
+            sb.append("<td class=\"firma-cell-full\">");
+            String b64 = toBase64(firmaRevisor);
+            if (b64 != null) {
+                sb.append("<img src=\"data:image/png;base64,").append(b64)
+                  .append("\" class=\"firma-img\" alt=\"Firma revisor\"/>");
+            } else {
+                sb.append("<div style=\"height:70pt\"/>");
+            }
+            sb.append("<div class=\"firma-line\"></div>");
+            sb.append("<div class=\"firma-name\">Revis&#243;: ").append(esc(revisor.getNombre())).append("</div>");
+            if (notEmpty(revisor.getCargo())) {
+                sb.append("<div class=\"firma-cargo\">").append(esc(revisor.getCargo())).append("</div>");
+            }
+            sb.append("<div class=\"firma-rol\">Apoyo a la Supervisi&#243;n</div>");
+            sb.append("</td>");
+            sb.append("</tr></tbody></table>");
+        }
+
+        sb.append("</div>");
     }
 
     private static void appendFirmaCell(StringBuilder sb, byte[] firma,
                                          String nombre, String cargo, String rol, String width) {
-        sb.append("<td class=\"firma-cell\" style=\"width:").append(width).append(";border:none\">");
+        sb.append("<td class=\"firma-cell\" style=\"width:").append(width).append("\">");
         String b64 = toBase64(firma);
         if (b64 != null) {
             sb.append("<img src=\"data:image/png;base64,").append(b64)
-              .append("\" class=\"firma-img\" alt=\"Firma ").append(rol.toLowerCase()).append("\"/>");
+              .append("\" class=\"firma-img\" alt=\"Firma\"/>");
         } else {
-            sb.append("<div style=\"height:55pt\"/>"); // espacio en blanco si no hay firma
+            sb.append("<div style=\"height:70pt\"/>");
         }
-        sb.append("<br/><div class=\"firma-name\">").append(esc(nombre)).append("</div>");
-        if (!cargo.isEmpty()) {
+        sb.append("<div class=\"firma-line\"></div>");
+        sb.append("<div class=\"firma-name\">").append(esc(nombre)).append("</div>");
+        if (notEmpty(cargo)) {
             sb.append("<div class=\"firma-cargo\">").append(esc(cargo)).append("</div>");
         }
         sb.append("<div class=\"firma-rol\">").append(esc(rol)).append("</div>");
         sb.append("</td>");
     }
 
+    // ─── Helpers ─────────────────────────────────────────────────────────────
+
+    private static void fila2(StringBuilder sb, String label, String value, boolean alt) {
+        sb.append(alt ? "<tr style=\"background:#f7f7f7\">" : "<tr>");
+        sb.append("<td class=\"lbl\">").append(label).append("</td>");
+        sb.append("<td class=\"val\">").append(value).append("</td>");
+        sb.append("</tr>");
+    }
+
+    private static String nombreDia(LocalDate fecha) {
+        switch (fecha.getDayOfMonth()) {
+            case 1:  return "primero";
+            case 2:  return "segundo";
+            case 3:  return "tercero";
+            case 4:  return "cuarto";
+            case 5:  return "quinto";
+            default: return String.valueOf(fecha.getDayOfMonth());
+        }
+    }
+
     private static String labelSgssi(ItemSgssi item) {
         if (item == null) return "";
         switch (item) {
-            case SALUD:   return "Salud";
-            case PENSION: return "Pensión";
-            case ARL:     return "A.R.L.";
+            case SALUD:   return "SALUD";
+            case PENSION: return "PENSI&#211;N";
+            case ARL:     return "ARL";
             default:      return item.name();
         }
     }
