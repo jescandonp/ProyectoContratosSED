@@ -54,6 +54,7 @@
 - [x] Spec y plan I8 versionados en `main`: `docs/specs/2026-05-18-sigcon-i8-spec.md`, `docs/superpowers/plans/2026-05-18-sigcon-i8-plan.md`
 - [x] Cierre handoff y logo PDF versionados en `main`: `f7e8ea1`
 - [x] `main` publicado a `origin/main`: `f7e8ea1`
+- [x] Handoff post-build: documentada migracion requerida `db/05_add_fecha_elaboracion.sql` cuando Oracle reporta `Schema-validation: missing column [fecha_elaboracion] in table [sgcn_informes]`
 - [x] Execution log cerrado
 
 ## Pendiente post-merge

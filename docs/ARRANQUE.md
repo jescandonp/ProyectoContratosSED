@@ -196,6 +196,20 @@ Este script crea de forma idempotente:
 
 Si al levantar backend aparece `Schema-validation: missing table [sgcn_docs_requeridos]`, falta ejecutar esta migracion en la BD objetivo.
 
+### 4. Actualizar esquemas existentes a I8
+
+Si el esquema ya existia antes de I8, no repetir `db/00_setup.sql` completo. Ejecutar solo la migracion incremental I8:
+
+```powershell
+sqlplus SED_SIGCON/<password>@localhost:1521/XEPDB1 @db/05_add_fecha_elaboracion.sql
+```
+
+Este script agrega de forma idempotente:
+
+- `SGCN_INFORMES.FECHA_ELABORACION`
+
+Si al levantar backend aparece `Schema-validation: missing column [fecha_elaboracion] in table [sgcn_informes]`, falta ejecutar esta migracion en la BD objetivo.
+
 ## Configuracion I3: PDF Y Email
 
 ### Local-dev
