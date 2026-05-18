@@ -52,9 +52,10 @@
 - [x] SHA merge: `ed426eb` (fast-forward en main)
 - [x] Consolidacion post-handoff en `main`: `4b0313e`, `a1752ad`, `8879501`
 - [x] Spec y plan I8 versionados en `main`: `docs/specs/2026-05-18-sigcon-i8-spec.md`, `docs/superpowers/plans/2026-05-18-sigcon-i8-plan.md`
+- [x] Cierre handoff y logo PDF versionados en `main`: `f7e8ea1`
+- [x] `main` publicado a `origin/main`: `f7e8ea1`
 - [x] Execution log cerrado
 
 ## Pendiente post-merge
 
-- [ ] Publicar `main` a `origin/main`. Estado local al handoff: `main` ahead de `origin/main`; falta `git push origin main`.
 - [ ] Mantener fuera del cierre I8 los cambios locales no relacionados: `db/03_reset_informes_local_dev.sql` y archivos personales/no versionados.
