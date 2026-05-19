@@ -19,31 +19,48 @@
 11. Spec tecnica I7: `docs/specs/2026-05-11-sigcon-i7-spec.md`
 12. Plan I7: `docs/plans/2026-05-11-sigcon-i7-plan.md`
 13. Log de ejecucion I7: `docs/plans/2026-05-11-sigcon-i7-execution-log.md`
+14. Spec tecnica I8: `docs/specs/2026-05-18-sigcon-i8-spec.md`
+15. Log de ejecucion I8: `docs/plans/2026-05-18-sigcon-i8-execution-log.md`
 
 ## Estado GitHub
 
 Repositorio remoto: `https://github.com/jescandonp/ProyectoContratosSED.git`
 
-| Rama | Referencia local | Estado |
+| Rama | Commit | Estado |
 |---|---:|---|
-| `main` | `3768101` | Pendiente push post-I7 |
+| `main` | `f181398` | Sincronizada — incluye hasta I8 + fix despliegue SED |
 | `feat/sigcon-i1` | `be26bbe` | Sincronizada |
 | `feat/sigcon-i2` | `0658cef` | Sincronizada |
 | `feat/sigcon-i3` | `9be9c73` | Sincronizada |
 | `feat/sigcon-i4` | `7b61d09` | Sincronizada |
 | `feat/sigcon-i5` | `0cc76a9` | Sincronizada |
 | `feat/sigcon-i6` | `df9762c` | Sincronizada |
-| `feat/sigcon-i7` | Ver `git log origin/feat/sigcon-i7 -1` | Sincronizada; PR pendiente si aplica |
+| `feat/sigcon-i7` | Ver `git log origin/feat/sigcon-i7 -1` | Sincronizada |
+| `feat/sigcon-i8` | mergeado a `main` directamente | No existe como rama separada |
 
-Para retomar o continuar desde I7:
+> **I8 fue integrado directamente en `main`** — no tiene rama `feat/sigcon-i8` en remoto.
+> Todos los commits `feat(i8)` / `fix(i8)` / `docs(i8)` estan en `origin/main`.
+
+Para clonar y continuar desde I8 (estado actual):
 
 ```powershell
 git clone https://github.com/jescandonp/ProyectoContratosSED.git
 Set-Location ProyectoContratosSED
-git checkout feat/sigcon-i7
+# main ya incluye I8 completo
 ```
 
 El lider tecnico puede cambiar apuntamientos locales despues del clone usando los valores reales del ambiente SED para Oracle, WebLogic, Azure AD y rutas compartidas de firmas.
+
+## Alcance I8 (implementado)
+
+Incluye:
+- **PDF formato institucional SED 11-IF-023 V1** — rediseno completo de `InformePdfTemplateService`: encabezado con logo Alcaldia Mayor + datos del informe repetido en cada pagina, pie de pagina institucional, 5 secciones numeradas (Datos del Contrato, Ejecucion de Actividades, Aportes SGSSI, Estado Radicacion Correspondencia, Declaracion Especial), layout de firmas 2+1 (contratista + supervisor / revisor opcional).
+- **Campo `fechaElaboracion`** — nueva columna `SGCN_INFORMES.FECHA_ELABORACION` (migration idempotente `db/05_add_fecha_elaboracion.sql`); editable por el contratista en BORRADOR/DEVUELTO; default a fecha actual si no se envia.
+- **Logo institucional en classpath** — `logo-alcaldia.png` empaquetado en `WEB-INF/classes/`; fallback graceful con WARN si ausente.
+- **Fix Java 8** — `StreamUtils.copyToByteArray()` reemplaza `readAllBytes()` (Java 9+) para compatibilidad con WebLogic.
+- **Datasource JNDI** — perfil `weblogic` usa `spring.datasource.jndi-name` en lugar de JDBC directo; compatible con pools Oracle administrados por WebLogic Admin Console.
+- Build Angular sin errores TypeScript. Tests backend: todos GREEN.
+- Spec tecnica, log de ejecucion y documentacion de despliegue versionados.
 
 ## Alcance I7 (implementado)
 
