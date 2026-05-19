@@ -419,10 +419,9 @@ spring:
     activate:
       on-profile: weblogic
   datasource:
-    url: ${DB_URL}                     # jdbc:oracle:thin:@//host:1521/service
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-    driver-class-name: oracle.jdbc.OracleDriver
+    # WebLogic administra el pool Oracle via JNDI (configurar en WL Admin Console)
+    # Variable DB_JNDI_NAME: nombre del DataSource JNDI (default: jdbc/sigconDS)
+    jndi-name: ${DB_JNDI_NAME:jdbc/sigconDS}
   jpa:
     database-platform: org.hibernate.dialect.Oracle12cDialect
     hibernate:
@@ -1208,17 +1207,22 @@ WebLogic 12.2.1.4.0 — contexto: /sigcon
 En el servidor WebLogic configurar las siguientes JNDI properties o variables de sistema:
 
 ```properties
-# Fuente de datos Oracle (configurar JNDI en WebLogic o via application.yml)
-DB_URL=jdbc:oracle:thin:@//[host-oracle]:1521/[service-name]
-DB_USERNAME=SED_SIGCON
-DB_PASSWORD=[contraseña-segura]
-
 # Perfil Spring activo
 SPRING_PROFILE=weblogic
+
+# DataSource — configurar DataSource JNDI en WebLogic Admin Console
+# El nombre debe coincidir con el JNDI Name del DataSource creado en WL
+DB_JNDI_NAME=jdbc/sigconDS
 
 # Azure AD
 AZURE_TENANT_ID=[tenant-id-sed]
 AZURE_CLIENT_ID=[client-id-app-registration]
+
+# Mail (Office 365 Graph API)
+MAIL_FROM=[correo-institucional]
+MAIL_CLIENT_ID=[client-id-graph]
+MAIL_CLIENT_SECRET=[client-secret-graph]
+SIGCON_CORS_ALLOWED_ORIGINS=https://[url-frontend-sed]
 ```
 
 ### Estructura de Archivos del Proyecto (sin Docker)
@@ -1605,9 +1609,9 @@ En JPA: `@EnableJpaAuditing` + `@EntityListeners(AuditingEntityListener.class)`.
 
 ### Infraestructura WebLogic
 - [ ] Coordinar con TI SED acceso a consola WebLogic 12.2.1.4.0
-- [ ] Definir datasource JNDI en WebLogic para conexión Oracle
+- [ ] Crear DataSource JNDI en WebLogic Admin Console (JNDI name: `jdbc/sigconDS`)
 - [ ] Verificar que JDK 8 está disponible en el servidor
-- [ ] Configurar variables de sistema/JNDI: `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`
+- [ ] Configurar variables de sistema: `SPRING_PROFILE=weblogic`, `DB_JNDI_NAME`, `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `MAIL_*`, `SIGCON_CORS_ALLOWED_ORIGINS`
 - [ ] Desplegar WAR desde consola WebLogic admin
 
 ### CI/CD

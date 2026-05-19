@@ -1,8 +1,8 @@
 # SIGCON - Guia De Pruebas Funcionales
 
-Estado: guia operativa para pruebas manuales I1-I7  
-Fecha: 2026-05-12  
-Rama objetivo: `main` o `feat/sigcon-i7`  
+Estado: guia operativa para pruebas manuales I1-I8  
+Fecha: 2026-05-19  
+Rama objetivo: `main` (incluye hasta I8)  
 Marco: SDD Spec-Anchored por incrementos
 
 ## 1. Objetivo
@@ -15,6 +15,7 @@ Esta guia cubre:
 - Incremento 2: creacion y gestion de informes, actividades, soportes, documentos y revision.
 - Incremento 3: aprobacion final, PDF institucional y notificaciones.
 - Incrementos 4-7: edicion administrativa, PDF institucional, SGSSI, usuario IVA, documentos requeridos, email de aprobacion y busqueda administrativa.
+- Incremento 8: campo `fechaElaboracion` en informes y PDF formato institucional SED 11-IF-023 V1.
 
 ## 2. Prerrequisitos
 
@@ -31,13 +32,21 @@ sqlplus SED_SIGCON/Sigcon2026Local1@localhost:1521/XEPDB1 @db/01_datos_prueba.sq
 
 Si el usuario ya existe y los scripts ya fueron ejecutados, no repetir `00_setup.sql` sobre el mismo esquema porque no es idempotente.
 
-Para una base existente anterior a I7, ejecutar la migracion incremental antes de levantar backend:
+Para una base existente anterior a I7, ejecutar la migracion incremental:
 
 ```powershell
 sqlplus SED_SIGCON/Sigcon2026Local1@localhost:1521/XEPDB1 @db/04_apply_i7_schema.sql
 ```
 
-Esta migracion resuelve el error de arranque `Schema-validation: missing table [sgcn_docs_requeridos]`.
+Esta migracion resuelve el error `Schema-validation: missing table [sgcn_docs_requeridos]`.
+
+Para una base existente anterior a I8, ejecutar adicionalmente:
+
+```powershell
+sqlplus SED_SIGCON/Sigcon2026Local1@localhost:1521/XEPDB1 @db/05_add_fecha_elaboracion.sql
+```
+
+Esta migracion agrega `SGCN_INFORMES.FECHA_ELABORACION`. Si no se ejecuta, el backend arranca con error `Schema-validation: missing column [fecha_elaboracion] in table [sgcn_informes]`.
 
 ### 2.2 Backend
 
@@ -575,9 +584,11 @@ Entrar como `CONTRATISTA`.
 
 ---
 
-### 14.8 PDF Institucional (8 secciones)
+### 14.8 PDF Institucional (I6 — superado por I8)
 
-**Contexto:** El PDF generado sigue el diseño institucional SED con colores primarios (`#002869`) y encabezado de la entidad.
+> **Nota:** El PDF fue rediseñado completamente en I8 (plantilla 11-IF-023 V1). Las pruebas del PDF deben realizarse usando la Seccion 16.3 de esta guia. La descripcion anterior de 8 secciones (I6) ya no aplica al estado actual del sistema.
+
+**Contexto (referencia historica I6):** El PDF generado sigue el diseño institucional SED con colores primarios (`#002869`) y encabezado de la entidad.
 
 #### Flujo de generación
 
@@ -731,3 +742,94 @@ Entrar como `ADMIN`.
 | Email no aparece en logs | `sigcon.mail.enabled=false` y log level INFO no visible | Verificar configuración de logging |
 | Búsqueda no retorna resultados | Término no coincide con datos de prueba | Usar términos presentes en `db/01_datos_prueba.sql` |
 | 403 en búsqueda como ADMIN | Sesión expirada o rol incorrecto | Cerrar sesión y volver a entrar como ADMIN |
+
+---
+
+## 16. Incremento 8 — Fecha de Elaboracion y PDF Formato Institucional SED 11-IF-023 V1
+
+> Rama: `main` (mergeado directamente)
+> Fecha: 2026-05-18
+> Prerequisito de BD: ejecutar `db/05_add_fecha_elaboracion.sql` si el esquema es anterior a I8.
+
+### 16.1 Campo `fechaElaboracion` en nuevo informe
+
+Entrar como `CONTRATISTA`.
+
+| ID | Accion | Datos | Esperado |
+|---|---|---|---|
+| I8-FE-01 | Abrir formulario de nuevo informe | Contrato en ejecucion | Campo "Fecha de Elaboracion" visible con valor por defecto = hoy |
+| I8-FE-02 | Crear informe sin modificar la fecha | Dejar el default | Informe creado; `fechaElaboracion` guardada con la fecha actual |
+| I8-FE-03 | Crear informe con fecha personalizada | Seleccionar una fecha anterior | Informe creado; `fechaElaboracion` refleja la fecha ingresada |
+| I8-FE-04 | Dejar fecha en blanco y crear | Borrar el valor del campo | Informe creado; backend asigna la fecha actual como default |
+| I8-FE-05 | Abrir informe en BORRADOR | Informe creado | Campo "Fecha de Elaboracion" editable |
+| I8-FE-06 | Modificar `fechaElaboracion` en BORRADOR | Nueva fecha valida | Cambio persistido al guardar |
+| I8-FE-07 | Abrir informe en ENVIADO | Informe enviado | Campo "Fecha de Elaboracion" en solo lectura |
+| I8-FE-08 | Abrir informe en APROBADO | Informe aprobado | Campo "Fecha de Elaboracion" en solo lectura |
+
+### 16.2 Campo `fechaElaboracion` al corregir informe devuelto
+
+Entrar como `CONTRATISTA` con informe en estado `DEVUELTO`.
+
+| ID | Accion | Datos | Esperado |
+|---|---|---|---|
+| I8-FE-09 | Abrir formulario de correccion | Informe DEVUELTO | Campo "Fecha de Elaboracion" pre-cargado con el valor guardado |
+| I8-FE-10 | Modificar la fecha y enviar correccion | Nueva fecha valida | Informe pasa a ENVIADO con la nueva fecha |
+
+### 16.3 PDF Formato Institucional SED 11-IF-023 V1
+
+Prerequisito: tener un informe en estado `APROBADO` con actividades, aportes SGSSI y firmas de contratista y supervisor cargadas.
+
+#### Estructura del PDF
+
+| ID | Elemento a verificar | Esperado |
+|---|---|---|
+| I8-PDF-01 | Descargar PDF de informe APROBADO | Descarga exitosa; archivo valido |
+| I8-PDF-02 | Encabezado en CADA pagina | Logo Alcaldia Mayor a la izquierda, numero y nombre del informe en el centro, periodo y codigo "11-IF-023 V1" a la derecha |
+| I8-PDF-03 | Pie de pagina en CADA pagina | "Avenida El Dorado N° 66-63 · PBX: 3241000 · www.educacionbogota.edu.co · Linea 195" |
+| I8-PDF-04 | Seccion 1 — Datos del Contrato | Contratista, objeto, valor (cifra), forma de pago, plazo, modificaciones, fechas, dependencia, supervisor |
+| I8-PDF-05 | Seccion 2 — Ejecucion de Actividades | Tabla 3 columnas: Obligacion Contractual, Actividades realizadas, Evidencia Verificable |
+| I8-PDF-06 | Seccion 2 — Evidencia con URL | Nombre del soporte subrayado si es URL |
+| I8-PDF-07 | Seccion 3 — Aportes SGSSI | Tabla 5 columnas: ITEM, PERIODO PAGO (mes anterior al inicio del informe), FECHA DE PAGO, VALOR APORTADO, ENTIDAD |
+| I8-PDF-08 | Seccion 3 — Periodo calculado | Informe inicio 2026-04-01 → periodo SGSSI "Marzo 2026" |
+| I8-PDF-09 | Seccion 4 — Estado Radicacion | "SI" o "NO" segun `correspondenciaPendiente`; siempre dice "01 folios" |
+| I8-PDF-10 | Seccion 5 — Declaracion Especial | Parrafo 1 (declaracion contratista), parrafo 2 (supervision autoriza desembolso No. X por valor Y, % Z), linea final con `fechaElaboracion` |
+| I8-PDF-11 | Layout de firmas — Fila 1 | Firma contratista izquierda + firma supervisor derecha |
+| I8-PDF-12 | Layout de firmas — Fila 2 (revisor con firma) | Celda centrada "Reviso — Apoyo a la Supervision" con imagen de firma |
+| I8-PDF-13 | Texto introductorio de firmas | "Para constancia se firma por quienes en ella intervinieron al N dias del mes de MES de AAAA" |
+| I8-PDF-14 | PDF sin logo | Retirar `logo-alcaldia.png` del classpath (prueba negativa) | PDF se genera sin error; encabezado sin imagen (columna izquierda vacia); log muestra WARN |
+
+#### Casos de firma del revisor
+
+| Escenario | Esperado en el PDF |
+|---|---|
+| Revisor con firma cargada | Fila 2 visible con imagen de firma del revisor |
+| Revisor sin imagen de firma | Fila 2 ausente; PDF se genera sin error |
+| Contrato sin revisor | Fila 2 ausente; PDF se genera sin error |
+
+#### Verificacion de `fechaElaboracion` en PDF
+
+| Escenario | Esperado en Seccion 5 |
+|---|---|
+| Informe con `fechaElaboracion` = 2026-04-15 | "15/04/2026" en la linea final de la seccion |
+| Informe historico sin `fechaElaboracion` | Campo omitido o vacio (no NPE) |
+
+### 16.4 Pruebas Negativas I8
+
+| ID | Caso | Esperado |
+|---|---|---|
+| I8-NEG-01 | Arrancar backend sin ejecutar `db/05_add_fecha_elaboracion.sql` | Error de arranque: `Schema-validation: missing column [fecha_elaboracion]` |
+| I8-NEG-02 | Descargar PDF de informe NO aprobado | 404 o error "PDF no disponible" |
+| I8-NEG-03 | Contratista no asignado descarga el PDF | 403 ACCESO_DENEGADO |
+| I8-NEG-04 | REVISOR intenta descargar el PDF | 403 ACCESO_DENEGADO |
+
+### 16.5 Diagnostico de Errores Comunes I8
+
+| Sintoma | Causa probable | Solucion |
+|---------|----------------|----------|
+| `Schema-validation: missing column [fecha_elaboracion]` | Migracion I8 no ejecutada | Ejecutar `db/05_add_fecha_elaboracion.sql` |
+| `Cannot resolve method readAllBytes` al compilar | JDK anterior a Java 9 (correcto: Java 8 no tiene readAllBytes) | Verificar que el codigo usa `StreamUtils.copyToByteArray()` — ya corregido en main |
+| PDF sin encabezado institucional | `logo-alcaldia.png` no empaquetado en el WAR | Verificar que el archivo existe en `src/main/resources/` y ejecutar `mvn clean package` |
+| Encabezado sin logo en el PDF | Archivo presente pero no carga en classpath | Revisar logs de arranque: debe aparecer "WARN logo-alcaldia.png no encontrado" si falta; si el log no aparece, el logo carga correctamente |
+| Seccion 3 sin periodo SGSSI | `fechaInicio` del informe es null | Verificar que el informe tiene periodo definido |
+| NPE al generar PDF de informe historico | `fechaElaboracion` null sin null-check | Verificado y manejado en `InformePdfTemplateService`; si ocurre, reportar como bug |
+| PDF no se regenera al aprobar de nuevo | PDF inmutable por diseno — `pdfRuta` ya existe | Comportamiento correcto; para forzar regeneracion, borrar la ruta en BD (solo en pruebas) |
