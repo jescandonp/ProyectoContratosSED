@@ -1,8 +1,8 @@
 # ARRANQUE SIGCON
 
-> Estado: Incremento 7 completado.
+> Estado: Incremento 8 completado — listo para despliegue PROD (ambiente pruebas SED).
 > Metodologia: Spec-Driven Development (SDD), nivel Spec-Anchored.
-> Ultima actualizacion: 2026-05-11 — cierre I7 (Usuario IVA, Documentos Requeridos, Email de Aprobacion, Busqueda Administrativa).
+> Ultima actualizacion: 2026-05-19 — correcciones Java 8 + JNDI WebLogic para despliegue SED.
 
 ## Orden De Documentos
 
@@ -334,17 +334,35 @@ Usuarios disponibles en `db/01_datos_prueba.sql` y en `DevSecurityConfig` / `Dev
 
 > **IMPORTANTE:** La pantalla de login en local-dev muestra botones de acceso directo por rol. No se requiere ingresar credenciales manualmente.
 
-## Configuracion WebLogic (produccion)
+## Configuracion WebLogic (produccion — ambiente pruebas SED)
+
+### Datasource JNDI en WebLogic Admin Console
+
+El perfil `weblogic` usa **JNDI** en lugar de JDBC directo. El DBA / administrador WebLogic debe:
+
+1. Ingresar a **WebLogic Admin Console → Services → Data Sources → New → Generic Data Source**.
+2. Configurar con los siguientes valores:
+
+   | Campo | Valor |
+   |---|---|
+   | JNDI Name | `jdbc/sigconDS` (o el valor de `DB_JNDI_NAME`) |
+   | Database Type | Oracle |
+   | Driver | Oracle's Driver (Thin) for Instance connections |
+   | URL | `jdbc:oracle:thin:@<host>:<puerto>/<SID>` |
+   | Database User | `SED_SIGCON` |
+   | Password | (password del esquema Oracle produccion) |
+
+3. Hacer **Target** del datasource al servidor/cluster donde se desplegara `sigcon-backend.war`.
 
 ### Variables de entorno requeridas
 
 | Variable | Descripcion |
 |---|---|
-| `DB_URL` | JDBC URL de Oracle produccion (e.g. `jdbc:oracle:thin:@host:1521/SIDPROD`) |
-| `DB_USERNAME` | Usuario Oracle produccion |
-| `DB_PASSWORD` | Password Oracle produccion |
+| `DB_JNDI_NAME` | Nombre JNDI del DataSource en WebLogic (default: `jdbc/sigconDS`) |
 | `AZURE_TENANT_ID` | Tenant ID de Azure AD / Office 365 SED |
 | `SPRING_PROFILE` | `weblogic` |
+
+> **Nota:** `DB_URL`, `DB_USERNAME` y `DB_PASSWORD` ya NO son necesarios en el perfil `weblogic`. La conexion se obtiene via JNDI desde el pool de WebLogic.
 
 ### Configuracion de correo I3
 
@@ -366,10 +384,52 @@ En `local-dev` poner `sigcon.mail.enabled: false`; el sistema registra los email
 
 ### Despliegue WAR en WebLogic
 
-1. Generar WAR: `mvn clean package`
-2. Copiar `sigcon-backend/target/sigcon-backend.war` al directorio de despliegue WebLogic.
-3. Configurar variables de entorno antes de arrancar el servidor.
-4. El contexto sera `/sigcon` (configurado en `WEB-INF/weblogic.xml`).
+1. Generar WAR (requiere JDK 8+, Maven 3.9.x):
+   ```powershell
+   Set-Location sigcon-backend
+   mvn clean package -DskipTests
+   # Artefacto: sigcon-backend/target/sigcon-backend.war
+   ```
+
+2. Verificar que el WAR incluye el logo institucional (debe listar `logo-alcaldia.png`):
+   ```powershell
+   jar tf sigcon-backend/target/sigcon-backend.war | Select-String "logo-alcaldia"
+   # Resultado esperado: WEB-INF/classes/logo-alcaldia.png
+   ```
+   El archivo esta en `src/main/resources/logo-alcaldia.png` y Maven lo empaqueta
+   automaticamente en `WEB-INF/classes/`. No es necesario copiar la imagen manualmente.
+
+3. Configurar el DataSource JNDI en **WebLogic Admin Console** (ver seccion anterior).
+
+4. Configurar las variables de entorno en el servidor WebLogic antes del despliegue:
+   ```
+   SPRING_PROFILE=weblogic
+   DB_JNDI_NAME=jdbc/sigconDS
+   AZURE_TENANT_ID=<tenant-id-SED>
+   MAIL_FROM=<correo-institucional>
+   MAIL_CLIENT_ID=<client-id-Graph>
+   MAIL_CLIENT_SECRET=<client-secret-Graph>
+   SIGCON_CORS_ALLOWED_ORIGINS=<URL-frontend-SED>
+   SIGCON_ADMIN_EMAIL=<correo-admin-sigcon>
+   ```
+
+5. Desplegar `sigcon-backend.war` desde WebLogic Admin Console:
+   - **Deployments → Install → Upload → seleccionar WAR**.
+   - Contexto resultante: `/sigcon` (configurado en `WEB-INF/weblogic.xml`).
+
+6. Ejecutar migraciones de BD en Oracle produccion si el esquema no existe:
+   ```sql
+   -- Conectar como DBA y ejecutar en orden:
+   @db/00_setup.sql
+   -- Si el esquema ya existia hasta I7, solo ejecutar incrementales:
+   @db/05_add_fecha_elaboracion.sql
+   ```
+
+7. Verificar health del backend:
+   ```
+   GET http://<servidor>/sigcon/actuator/health
+   -- Respuesta esperada: {"status":"UP"}
+   ```
 
 ## Regla De Actualizacion
 

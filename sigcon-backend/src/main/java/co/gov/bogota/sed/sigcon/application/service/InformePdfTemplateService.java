@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StreamUtils;
 import org.w3c.dom.Document;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 import org.xml.sax.InputSource;
@@ -74,7 +75,7 @@ public class InformePdfTemplateService {
         try {
             ClassPathResource res = new ClassPathResource("logo-alcaldia.png");
             if (res.exists()) {
-                byte[] bytes = res.getInputStream().readAllBytes();
+                byte[] bytes = StreamUtils.copyToByteArray(res.getInputStream());
                 logoBase64 = Base64.getEncoder().encodeToString(bytes);
             } else {
                 log.warn("logo-alcaldia.png no encontrado en classpath; encabezado se generara sin logo.");
