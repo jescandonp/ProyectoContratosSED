@@ -217,6 +217,53 @@ public class InformeEstadoService {
         return devolver(informeId, supervisorEmail, observacion);
     }
 
+    // ── I9: Acciones del Actor Administrativo ────────────────────────────────
+
+    /**
+     * EN_VISTO_BUENO -> EN_REVISION (Dar Visto Bueno).
+     * I9: actor ADMINISTRATIVO aprueba el informe y lo pasa al Supervisor.
+     * Observacion opcional; accion = VISTO_BUENO para trazabilidad.
+     */
+    public InformeDetalleDto darVistosBueno(Long informeId, String observacionOpcional) {
+        Informe informe = informeService.findActiveInforme(informeId);
+        assertState(informe, EstadoInforme.EN_VISTO_BUENO);
+        if (hasText(observacionOpcional)) {
+            observacionService.registrarConAccion(
+                informe, RolObservacion.ADMINISTRATIVO, observacionOpcional, "VISTO_BUENO");
+        }
+        informe.setEstado(EstadoInforme.EN_REVISION);
+        return saveAndBuildDetalle(informe);
+    }
+
+    /**
+     * EN_VISTO_BUENO -> EN_REVISION (Escalar al Supervisor).
+     * I9: actor ADMINISTRATIVO escala el informe directamente al Supervisor.
+     * Observacion recomendada pero no bloqueante; accion = ESCALACION para trazabilidad.
+     */
+    public InformeDetalleDto escalar(Long informeId, String observacionRecomendada) {
+        Informe informe = informeService.findActiveInforme(informeId);
+        assertState(informe, EstadoInforme.EN_VISTO_BUENO);
+        observacionService.registrarConAccion(
+            informe, RolObservacion.ADMINISTRATIVO, observacionRecomendada, "ESCALACION");
+        informe.setEstado(EstadoInforme.EN_REVISION);
+        return saveAndBuildDetalle(informe);
+    }
+
+    /**
+     * EN_VISTO_BUENO -> DEVUELTO (Devolver al Contratista desde Visto Bueno).
+     * I9: actor ADMINISTRATIVO devuelve el informe al Contratista.
+     * Observacion obligatoria; accion = DEVOLUCION para trazabilidad.
+     */
+    public InformeDetalleDto devolverDesdeVistoBueno(Long informeId, String observacion) {
+        Informe informe = informeService.findActiveInforme(informeId);
+        assertState(informe, EstadoInforme.EN_VISTO_BUENO);
+        requireObservation(observacion);
+        observacionService.registrarConAccion(
+            informe, RolObservacion.ADMINISTRATIVO, observacion, "DEVOLUCION");
+        informe.setEstado(EstadoInforme.DEVUELTO);
+        return saveAndBuildDetalle(informe);
+    }
+
     private InformeDetalleDto saveAndBuildDetalle(Informe informe) {
         Informe saved = informeRepository.save(informe);
         return informeService.buildDetalle(saved);

@@ -47,6 +47,20 @@ public class ObservacionService {
         return observacionRepository.save(observacion);
     }
 
+    /**
+     * Registra una observacion con campo ACCION para trazabilidad del actor Administrativo (I9).
+     * La observacion puede ser null/vacia (accion es obligatoria, texto es opcional).
+     */
+    public Observacion registrarConAccion(Informe informe, RolObservacion autor, String texto, String accion) {
+        Observacion observacion = new Observacion();
+        observacion.setInforme(informe);
+        observacion.setTexto(texto != null && !texto.trim().isEmpty() ? texto.trim() : "-");
+        observacion.setAutorRol(autor);
+        observacion.setAccion(accion);
+        observacion.setActivo(true);
+        return observacionRepository.save(observacion);
+    }
+
     @Transactional(readOnly = true)
     public List<ObservacionDto> listarPorInforme(Long informeId) {
         return observacionRepository.findByInformeIdAndActivoTrueOrderByFechaAsc(informeId)

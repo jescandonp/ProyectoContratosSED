@@ -59,6 +59,9 @@ public class Observacion {
     @Column(name = "UPDATED_AT", insertable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "ACCION", length = 20)
+    private String accion;
+
     public Long getId() {
         return id;
     }
@@ -129,5 +132,13 @@ public class Observacion {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getAccion() {
+        return accion;
+    }
+
+    public void setAccion(String accion) {
+        this.accion = accion;
     }
 }

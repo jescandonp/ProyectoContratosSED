@@ -57,7 +57,7 @@ class InformeDomainMappingTest {
             .containsExactly(EstadoInforme.BORRADOR, EstadoInforme.ENVIADO, EstadoInforme.EN_VISTO_BUENO,
                 EstadoInforme.EN_REVISION, EstadoInforme.DEVUELTO, EstadoInforme.APROBADO);
         assertThat(TipoSoporte.values()).containsExactly(TipoSoporte.ARCHIVO, TipoSoporte.URL);
-        assertThat(RolObservacion.values()).containsExactly(RolObservacion.REVISOR, RolObservacion.SUPERVISOR);
+        assertThat(RolObservacion.values()).containsExactly(RolObservacion.REVISOR, RolObservacion.SUPERVISOR, RolObservacion.ADMINISTRATIVO);
     }
 
     @Test

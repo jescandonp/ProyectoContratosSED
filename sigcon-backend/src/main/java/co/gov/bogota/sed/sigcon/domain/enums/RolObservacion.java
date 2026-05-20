@@ -2,5 +2,6 @@ package co.gov.bogota.sed.sigcon.domain.enums;
 
 public enum RolObservacion {
     REVISOR,
-    SUPERVISOR
+    SUPERVISOR,
+    ADMINISTRATIVO
 }
