@@ -9,16 +9,74 @@
 
     <container-descriptor>
         <!--
-            Forzar uso de las librerias Spring empaquetadas en el WAR,
-            no las versiones propias de WebLogic (evita conflictos de version).
+            RAZON DEL CAMBIO (E-WL-04):
+            prefer-web-inf-classes=true NO cubre paquetes Java EE (javax.*).
+            WebLogic los carga SIEMPRE desde el servidor, sin excepcion.
+            WebLogic 12.2.1 trae Bean Validation 1.1; Spring Boot 2.7 requiere
+            Bean Validation 2.0 (getClockProviderClassName() fue agregado en 2.0).
+            Resultado: NoSuchMethodError en tiempo de activacion.
 
-            IMPORTANTE (WebLogic 12.2.1): prefer-web-inf-classes=true es
-            MUTUAMENTE EXCLUYENTE con prefer-application-packages y
-            prefer-application-resources. No se pueden usar simultaneamente.
-            Se usa prefer-web-inf-classes porque cubre todos los paquetes
-            del WAR de forma global, que es lo requerido para Spring Boot.
+            SOLUCION: usar prefer-application-packages con lista explicita.
+            Esto SI permite sobreescribir javax.* con las versiones del WAR.
+
+            RESTRICCION WebLogic 12.2.1: prefer-application-packages y
+            prefer-application-resources son MUTUAMENTE EXCLUYENTES con
+            prefer-web-inf-classes. Solo se usa uno de los dos bloques.
+            Se elimina prefer-web-inf-classes y se usa prefer-application-packages.
         -->
-        <prefer-web-inf-classes>true</prefer-web-inf-classes>
+        <prefer-application-packages>
+            <!-- ===================================================== -->
+            <!-- Bean Validation 2.0 — WL 12.2.1 solo trae BV 1.1     -->
+            <!-- getClockProviderClassName() existe SOLO en BV 2.0     -->
+            <!-- ===================================================== -->
+            <package-name>javax.validation.*</package-name>
+            <package-name>org.hibernate.validator.*</package-name>
+
+            <!-- ===================================================== -->
+            <!-- JPA 2.2 — WL 12.2.1 trae JPA 2.1                     -->
+            <!-- ===================================================== -->
+            <package-name>javax.persistence.*</package-name>
+            <package-name>org.hibernate.*</package-name>
+
+            <!-- ===================================================== -->
+            <!-- Spring Framework / Security / Data                    -->
+            <!-- ===================================================== -->
+            <package-name>org.springframework.*</package-name>
+            <package-name>org.aopalliance.*</package-name>
+            <package-name>org.aspectj.*</package-name>
+
+            <!-- ===================================================== -->
+            <!-- Jackson 2.x (WL puede traer version incompatible)     -->
+            <!-- ===================================================== -->
+            <package-name>com.fasterxml.*</package-name>
+
+            <!-- ===================================================== -->
+            <!-- Logging — evitar conflicto con log4j de WL            -->
+            <!-- ===================================================== -->
+            <package-name>org.slf4j.*</package-name>
+            <package-name>ch.qos.logback.*</package-name>
+
+            <!-- ===================================================== -->
+            <!-- Miscelaneo — dependencias transitivas Spring Boot     -->
+            <!-- ===================================================== -->
+            <package-name>org.apache.commons.*</package-name>
+            <package-name>antlr.*</package-name>
+            <package-name>net.bytebuddy.*</package-name>
+            <package-name>com.nimbusds.*</package-name>
+            <package-name>net.minidev.*</package-name>
+        </prefer-application-packages>
+
+        <prefer-application-resources>
+            <!-- Spring Boot auto-configuration SPI -->
+            <resource-name>META-INF/spring.factories</resource-name>
+            <resource-name>META-INF/spring/*.imports</resource-name>
+            <!-- JPA provider SPI -->
+            <resource-name>META-INF/services/javax.persistence.spi.PersistenceProvider</resource-name>
+            <!-- Bean Validation provider SPI -->
+            <resource-name>META-INF/services/javax.validation.spi.ValidationProvider</resource-name>
+            <!-- Jackson databind modules -->
+            <resource-name>META-INF/services/com.fasterxml.jackson.databind.Module</resource-name>
+        </prefer-application-resources>
     </container-descriptor>
 
     <context-root>/sigcon</context-root>
