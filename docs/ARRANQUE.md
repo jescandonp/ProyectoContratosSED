@@ -448,6 +448,49 @@ En `local-dev` poner `sigcon.mail.enabled: false`; el sistema registra los email
    -- Respuesta esperada: {"status":"UP"}
    ```
 
+## Errores Conocidos De Despliegue WebLogic
+
+### E-WL-01 — `cvc-enumeration-valid: string value '4.0'` al desplegar el WAR
+
+**Síntoma (WebLogic Admin Console):**
+```
+VALIDATION PROBLEMS WERE FOUND
+WEB-INF/lib/tomcat-embed-el-9.0.83.jar!/META-INF/web-fragment.xml
+problem: cvc-enumeration-valid: string value '4.0' is not a valid enumeration
+value for web-app-versionType in namespace http://xmlns.jcp.org/xml/ns/javaee
+```
+
+**Causa:** WebLogic 12.2.1 soporta hasta Servlet 3.1 (Java EE 7). El jar
+`tomcat-embed-el` incluye un `web-fragment.xml` que declara `web-app version="4.0"`
+(Servlet 4.0 / Java EE 8). Spring Boot lo incluía con scope `compile` para
+Bean Validation. WebLogic escanea todos los jars del WAR (incluyendo
+`WEB-INF/lib-provided/`) antes de desplegar y falla en la validación.
+
+**Solución (ya aplicada en `main`):** `tomcat-embed-el` excluido del WAR
+en `pom.xml` — WebLogic provee su propia implementación de `javax.el`.
+Verificar que el WAR generado **no** contiene el jar:
+```powershell
+jar tf sigcon-backend/target/sigcon-backend.war | Select-String "tomcat-embed-el"
+# No debe retornar ninguna línea
+```
+
+**Archivos modificados:** `sigcon-backend/pom.xml`, `WEB-INF/weblogic.xml`
+**Commit:** `dcd4e53`
+
+---
+
+### E-WL-02 — `Cannot resolve method readAllBytes` al compilar
+
+**Síntoma:** Error de compilación Maven en `InformePdfTemplateService.java`.
+
+**Causa:** `InputStream.readAllBytes()` es Java 9+. El proyecto compila en Java 8.
+
+**Solución (ya aplicada en `main`):** Reemplazado por
+`StreamUtils.copyToByteArray()` de Spring Framework.
+**Commit:** `83e9a80`
+
+---
+
 ## Regla De Actualizacion
 
 Actualizar este documento cuando:
