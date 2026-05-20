@@ -8,8 +8,33 @@
     <weblogic-version>12.2.1</weblogic-version>
 
     <container-descriptor>
-        <!-- Force use of Spring libs bundled in WAR, not WebLogic's own versions -->
+        <!--
+            Forzar uso de las librerias Spring empaquetadas en el WAR,
+            no las versiones propias de WebLogic (evita conflictos de version).
+        -->
         <prefer-web-inf-classes>true</prefer-web-inf-classes>
+
+        <!--
+            Paquetes especificos donde la aplicacion debe tener prioridad
+            sobre las librerias internas de WebLogic.
+            Necesario para Spring Security, SLF4J y Jackson en WL 12.2.1.
+            NOTA: javax.el.* NO se incluye aqui — WebLogic provee la
+            implementacion EL (tomcat-embed-el fue excluido del WAR).
+        -->
+        <prefer-application-packages>
+            <package-name>org.slf4j.*</package-name>
+            <package-name>org.springframework.*</package-name>
+            <package-name>com.fasterxml.jackson.*</package-name>
+            <package-name>org.hibernate.validator.*</package-name>
+        </prefer-application-packages>
+
+        <!--
+            Recursos (servicios SPI) que deben resolverse desde el WAR,
+            no desde el classloader del servidor.
+        -->
+        <prefer-application-resources>
+            <resource-name>META-INF/services/javax.ws.rs.ext.RuntimeDelegate</resource-name>
+        </prefer-application-resources>
     </container-descriptor>
 
     <context-root>/sigcon</context-root>

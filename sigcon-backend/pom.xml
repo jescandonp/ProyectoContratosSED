@@ -33,6 +33,23 @@
             <scope>provided</scope>
         </dependency>
 
+        <!--
+            WebLogic 12.2.1 soporta hasta Servlet 3.1 (Java EE 7).
+            tomcat-embed-el incluye un web-fragment.xml con web-app version="4.0"
+            (Servlet 4.0) que WebLogic rechaza con:
+              cvc-enumeration-valid: string value '4.0' is not a valid enumeration
+              value for web-app-versionType
+            Spring Boot fija este artefacto en scope 'compile' para Bean Validation,
+            pero WebLogic provee su propia implementacion de javax.el.
+            Se fuerza scope 'provided' aqui para sacarlo de WEB-INF/lib/;
+            maven-war-plugin lo excluye ademas de WEB-INF/lib-provided/ (ver build).
+        -->
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-el</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -122,7 +139,35 @@
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
                         </exclude>
+                        <!--
+                            Excluir tomcat-embed-el de WEB-INF/lib-provided/:
+                            WebLogic 12.2.1 escanea lib-provided/ y rechaza su
+                            web-fragment.xml (Servlet 4.0 vs soporte max 3.1).
+                            WebLogic provee javax.el propio — no se necesita este jar.
+                        -->
+                        <exclude>
+                            <groupId>org.apache.tomcat.embed</groupId>
+                            <artifactId>tomcat-embed-el</artifactId>
+                        </exclude>
                     </excludes>
+                </configuration>
+            </plugin>
+
+            <!--
+                WebLogic 12.2.1 solo soporta Servlet 3.1 (Java EE 7).
+                tomcat-embed-el lleva un web-fragment.xml con web-app version="4.0"
+                (Servlet 4.0) que WebLogic rechaza con cvc-enumeration-valid.
+                WebLogic provee su propia javax.el, por lo tanto se excluye
+                tomcat-embed-el del WAR completamente (lib y lib-provided).
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <configuration>
+                    <packagingExcludes>
+                        WEB-INF/lib/tomcat-embed-el-*.jar,
+                        WEB-INF/lib-provided/tomcat-embed-el-*.jar
+                    </packagingExcludes>
                 </configuration>
             </plugin>
         </plugins>
