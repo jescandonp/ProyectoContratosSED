@@ -159,6 +159,13 @@
                 (Servlet 4.0) que WebLogic rechaza con cvc-enumeration-valid.
                 WebLogic provee su propia javax.el, por lo tanto se excluye
                 tomcat-embed-el del WAR completamente (lib y lib-provided).
+
+                outputFileNameMapping: el WAR estandar (sin repackaging de
+                Spring Boot) se genera como sigcon-backend-weblogic.war para
+                que el equipo de despliegue lo identifique claramente.
+                Este es el artefacto correcto para desplegar en WebLogic.
+                sigcon-backend.war es el fat-WAR ejecutable de Spring Boot
+                (incluye WEB-INF/lib-provided/) y NO debe desplegarse en WL.
             -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
