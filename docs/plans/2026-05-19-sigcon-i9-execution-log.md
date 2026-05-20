@@ -54,7 +54,7 @@
 - [x] Crear `ParametroVbDto.java`
 - [x] Implementar `ParametroService.java`
 - [x] Ejecutar: `mvn test -Dtest=ParametroServiceTest` — 5 GREEN
-- [ ] Commit: `feat(i9): ParametroService — isVbActivo y setVbActivo con migracion`
+- [x] Commit: `feat(i9): ParametroService — isVbActivo y setVbActivo con migracion` — `103c010`
 
 ## T5 — InformeService: Bifurcacion VB en flujo de envio
 
@@ -189,6 +189,7 @@
 - Implementado `ParametroService.java` con `isVbActivo()` fail-safe a `false` cuando falta la clave, y `setVbActivo()` transaccional.
 - Agregado `InformeRepository.migrarEnVistoBuenoAEnRevision()` para migracion masiva `EN_VISTO_BUENO -> EN_REVISION`.
 - Validacion: `mvn test -Dtest=ParametroServiceTest` con resultado `BUILD SUCCESS`; 5 tests, 0 fallas, 0 errores, 0 omitidos.
+- Commit T4: `103c010` — `feat(i9): ParametroService — isVbActivo y setVbActivo con migracion`.
 
 ## Punto de Retoma
 
