@@ -38,7 +38,7 @@
 - [x] Agregar `EN_VISTO_BUENO` a `EstadoInforme.java` — anadir rama en cualquier `switch` exhaustivo encontrado
 - [x] Agregar `ADMINISTRATIVO` a `Rol.java`
 - [x] Compilar: `mvn compile -pl sigcon-backend` — 0 errores
-- [ ] Commit: `feat(i9): agregar EN_VISTO_BUENO y ADMINISTRATIVO a enums`
+- [x] Commit: `feat(i9): agregar EN_VISTO_BUENO y ADMINISTRATIVO a enums` — `34fd9b5`
 
 ## T3 — Entidad `SgcnParametro` y Repositorio
 
@@ -172,6 +172,7 @@
 - Se agrega `EN_VISTO_BUENO` a `EstadoInforme.java`.
 - Se agrega `ADMINISTRATIVO` a `RolUsuario.java`.
 - Validacion: `mvn compile -pl sigcon-backend` no aplica en la raiz porque el repo no es reactor Maven. Se ejecuto `mvn compile` desde `sigcon-backend` con resultado `BUILD SUCCESS` (124 source files, 0 errores).
+- Commit T2: `34fd9b5` — `feat(i9): agregar EN_VISTO_BUENO y ADMINISTRATIVO a enums`.
 
 ## Punto de Retoma
 
