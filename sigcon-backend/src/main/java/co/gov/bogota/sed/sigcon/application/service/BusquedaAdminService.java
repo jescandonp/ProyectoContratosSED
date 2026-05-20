@@ -49,10 +49,11 @@ public class BusquedaAdminService {
     static {
         PRIORIDAD_ESTADO = new java.util.EnumMap<>(EstadoInforme.class);
         PRIORIDAD_ESTADO.put(EstadoInforme.EN_REVISION, 1);
-        PRIORIDAD_ESTADO.put(EstadoInforme.ENVIADO,     2);
-        PRIORIDAD_ESTADO.put(EstadoInforme.DEVUELTO,    3);
-        PRIORIDAD_ESTADO.put(EstadoInforme.BORRADOR,    4);
-        PRIORIDAD_ESTADO.put(EstadoInforme.APROBADO,    5);
+        PRIORIDAD_ESTADO.put(EstadoInforme.EN_VISTO_BUENO, 2);
+        PRIORIDAD_ESTADO.put(EstadoInforme.ENVIADO,     3);
+        PRIORIDAD_ESTADO.put(EstadoInforme.DEVUELTO,    4);
+        PRIORIDAD_ESTADO.put(EstadoInforme.BORRADOR,    5);
+        PRIORIDAD_ESTADO.put(EstadoInforme.APROBADO,    6);
     }
 
     private final UsuarioRepository usuarioRepository;

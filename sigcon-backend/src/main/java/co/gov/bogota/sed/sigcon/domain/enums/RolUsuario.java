@@ -4,5 +4,6 @@ public enum RolUsuario {
     CONTRATISTA,
     REVISOR,
     SUPERVISOR,
+    ADMINISTRATIVO,
     ADMIN
 }

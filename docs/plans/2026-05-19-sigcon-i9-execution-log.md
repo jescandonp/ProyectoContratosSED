@@ -34,10 +34,10 @@
 
 ## T2 — Enums Java
 
-- [ ] Buscar todos los `switch` sobre `EstadoInforme` en el proyecto backend
-- [ ] Agregar `EN_VISTO_BUENO` a `EstadoInforme.java` — anadir rama en cualquier `switch` exhaustivo encontrado
-- [ ] Agregar `ADMINISTRATIVO` a `Rol.java`
-- [ ] Compilar: `mvn compile -pl sigcon-backend` — 0 errores
+- [x] Buscar todos los `switch` sobre `EstadoInforme` en el proyecto backend
+- [x] Agregar `EN_VISTO_BUENO` a `EstadoInforme.java` — anadir rama en cualquier `switch` exhaustivo encontrado
+- [x] Agregar `ADMINISTRATIVO` a `Rol.java`
+- [x] Compilar: `mvn compile -pl sigcon-backend` — 0 errores
 - [ ] Commit: `feat(i9): agregar EN_VISTO_BUENO y ADMINISTRATIVO a enums`
 
 ## T3 — Entidad `SgcnParametro` y Repositorio
@@ -164,11 +164,19 @@
 - Gate T1 completado por ejecucion manual confirmada: ambos scripts fueron ejecutados contra la BD local sin errores.
 - Commit T1: `61a8955` — `feat(i9): DDL SGCN_PARAMETROS y columna ACCION en observaciones`.
 
+### 2026-05-20 — T2 Enums Java en progreso
+
+- Inconsistencia documentada: la spec/plan nombran `Rol.java`, pero el codigo vigente usa `RolUsuario.java` como enum canonico de usuario.
+- No se encontraron `switch` sobre `EstadoInforme`; los `switch` existentes son sobre eventos de notificacion o items SGSSI.
+- Se detecto mapeo exhaustivo de prioridad por estado en `BusquedaAdminService`; se incluye `EN_VISTO_BUENO` con prioridad entre `EN_REVISION` y `ENVIADO`.
+- Se agrega `EN_VISTO_BUENO` a `EstadoInforme.java`.
+- Se agrega `ADMINISTRATIVO` a `RolUsuario.java`.
+- Validacion: `mvn compile -pl sigcon-backend` no aplica en la raiz porque el repo no es reactor Maven. Se ejecuto `mvn compile` desde `sigcon-backend` con resultado `BUILD SUCCESS` (124 source files, 0 errores).
+
 ## Punto de Retoma
 
-Continuar con T2 — Enums Java:
+Continuar con T3 — Entidad `SgcnParametro` y Repositorio:
 
-1. Buscar todos los `switch` sobre `EstadoInforme` en el backend.
-2. Agregar `EN_VISTO_BUENO` a `EstadoInforme.java`.
-3. Agregar `ADMINISTRATIVO` a `Rol.java`.
-4. Compilar backend antes del commit T2.
+1. Crear `SgcnParametro.java` con anotaciones JPA.
+2. Crear `SgcnParametroRepository.java`.
+3. Compilar backend antes del commit T3.
