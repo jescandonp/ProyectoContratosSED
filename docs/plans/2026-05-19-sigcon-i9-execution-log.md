@@ -49,11 +49,11 @@
 
 ## T4 — ParametroService
 
-- [ ] Escribir `ParametroServiceTest.java` con los 5 tests
-- [ ] Ejecutar: confirmar que fallan por clase no encontrada
-- [ ] Crear `ParametroVbDto.java`
-- [ ] Implementar `ParametroService.java`
-- [ ] Ejecutar: `mvn test -Dtest=ParametroServiceTest` — 5 GREEN
+- [x] Escribir `ParametroServiceTest.java` con los 5 tests
+- [x] Ejecutar: confirmar que fallan por clase no encontrada
+- [x] Crear `ParametroVbDto.java`
+- [x] Implementar `ParametroService.java`
+- [x] Ejecutar: `mvn test -Dtest=ParametroServiceTest` — 5 GREEN
 - [ ] Commit: `feat(i9): ParametroService — isVbActivo y setVbActivo con migracion`
 
 ## T5 — InformeService: Bifurcacion VB en flujo de envio
@@ -181,12 +181,19 @@
 - Validacion: `mvn compile` desde `sigcon-backend` con resultado `BUILD SUCCESS` (126 source files, 0 errores).
 - Commit T3: `c6e7097` — `feat(i9): entidad SgcnParametro y repositorio`.
 
+### 2026-05-20 — T4 ParametroService en progreso
+
+- Creado `ParametroServiceTest.java` con 5 casos: lectura `S`, lectura `N`, parametro ausente, desactivacion con migracion y activacion sin migracion.
+- RED TDD confirmado: `mvn test -Dtest=ParametroServiceTest` falla por clase `ParametroService` no encontrada.
+- Creado `ParametroVbDto.java` con campo `activo`.
+- Implementado `ParametroService.java` con `isVbActivo()` fail-safe a `false` cuando falta la clave, y `setVbActivo()` transaccional.
+- Agregado `InformeRepository.migrarEnVistoBuenoAEnRevision()` para migracion masiva `EN_VISTO_BUENO -> EN_REVISION`.
+- Validacion: `mvn test -Dtest=ParametroServiceTest` con resultado `BUILD SUCCESS`; 5 tests, 0 fallas, 0 errores, 0 omitidos.
+
 ## Punto de Retoma
 
-Continuar con T4 — ParametroService:
+Continuar con T5 — InformeService: Bifurcacion VB en flujo de envio:
 
-1. Escribir `ParametroServiceTest.java` con los 5 tests del plan.
-2. Ejecutar y confirmar RED por clase no encontrada.
-3. Crear `ParametroVbDto.java`.
-4. Implementar `ParametroService.java`.
-5. Ejecutar `mvn test -Dtest=ParametroServiceTest`.
+1. Escribir `InformeServiceVbBifurcacionTest.java` con 4 tests.
+2. Modificar el flujo de envio/revision para consultar `ParametroService`.
+3. Ejecutar `mvn test -Dtest=InformeServiceVbBifurcacionTest`.

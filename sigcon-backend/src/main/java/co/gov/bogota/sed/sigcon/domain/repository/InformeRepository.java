@@ -6,6 +6,7 @@ import co.gov.bogota.sed.sigcon.domain.enums.EstadoInforme;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -26,6 +27,11 @@ public interface InformeRepository extends JpaRepository<Informe, Long> {
     Optional<Informe> findByIdAndActivoTrue(Long id);
 
     Integer countByContratoId(Long contratoId);
+
+    @Modifying
+    @Query("UPDATE Informe i SET i.estado = co.gov.bogota.sed.sigcon.domain.enums.EstadoInforme.EN_REVISION "
+        + "WHERE i.estado = co.gov.bogota.sed.sigcon.domain.enums.EstadoInforme.EN_VISTO_BUENO")
+    int migrarEnVistoBuenoAEnRevision();
 
     /**
      * I7: Búsqueda de informes por texto libre + rango de periodo.
