@@ -106,6 +106,17 @@ public class InformeService {
     }
 
     @Transactional(readOnly = true)
+    public Page<InformeResumenDto> listarColaVistoBueno(Pageable pageable) {
+        Usuario usuario = currentUserService.getCurrentUser();
+        if (usuario.getRol() != RolUsuario.ADMINISTRATIVO) {
+            throw accessDenied();
+        }
+        return informeRepository
+            .findByEstadoAndActivoTrue(EstadoInforme.EN_VISTO_BUENO, pageable)
+            .map(informeMapper::toResumenDto);
+    }
+
+    @Transactional(readOnly = true)
     public Page<InformeResumenDto> listarPorContrato(Long contratoId, Pageable pageable) {
         Contrato contrato = findActiveContrato(contratoId);
         Usuario usuario = currentUserService.getCurrentUser();
@@ -270,6 +281,9 @@ public class InformeService {
 
     private void assertCanViewContrato(Usuario usuario, Contrato contrato) {
         if (usuario.getRol() == RolUsuario.ADMIN) {
+            return;
+        }
+        if (usuario.getRol() == RolUsuario.ADMINISTRATIVO) {
             return;
         }
         Long usuarioId = usuario.getId();

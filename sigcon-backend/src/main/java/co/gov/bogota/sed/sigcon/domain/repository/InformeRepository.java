@@ -33,6 +33,9 @@ public interface InformeRepository extends JpaRepository<Informe, Long> {
         + "WHERE i.estado = co.gov.bogota.sed.sigcon.domain.enums.EstadoInforme.EN_VISTO_BUENO")
     int migrarEnVistoBuenoAEnRevision();
 
+    /** I9: Cola compartida del actor ADMINISTRATIVO — todos los informes EN_VISTO_BUENO activos. */
+    Page<Informe> findByEstadoAndActivoTrue(EstadoInforme estado, Pageable pageable);
+
     /**
      * I7: Búsqueda de informes por texto libre + rango de periodo.
      * El informe cruza el rango si: informe.fechaInicio <= fechaFin AND informe.fechaFin >= fechaInicio.

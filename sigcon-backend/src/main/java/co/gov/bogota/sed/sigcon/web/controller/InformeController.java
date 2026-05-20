@@ -44,7 +44,7 @@ public class InformeController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('CONTRATISTA', 'REVISOR', 'SUPERVISOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('CONTRATISTA', 'REVISOR', 'SUPERVISOR', 'ADMIN', 'ADMINISTRATIVO')")
     @Operation(summary = "Lista informes según el rol autenticado o por contrato")
     public Page<InformeResumenDto> listarInformes(
         @RequestParam(required = false) Long contratoId,
@@ -63,6 +63,9 @@ public class InformeController {
         if (hasRole(authentication, "SUPERVISOR")) {
             return informeService.listarParaSupervisor(pageable);
         }
+        if (hasRole(authentication, "ADMINISTRATIVO")) {
+            return informeService.listarColaVistoBueno(pageable);
+        }
         throw new SigconBusinessException(
             ErrorCode.ACCESO_DENEGADO,
             "Debe consultar informes por contrato",
@@ -71,7 +74,7 @@ public class InformeController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('CONTRATISTA', 'REVISOR', 'SUPERVISOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('CONTRATISTA', 'REVISOR', 'SUPERVISOR', 'ADMIN', 'ADMINISTRATIVO')")
     @Operation(summary = "Obtiene el detalle de un informe")
     public InformeDetalleDto obtenerDetalle(@PathVariable Long id) {
         return informeService.obtenerDetalle(id);
@@ -137,14 +140,46 @@ public class InformeController {
     }
 
     @PostMapping("/{id}/devolver")
-    @PreAuthorize("hasRole('SUPERVISOR')")
-    @Operation(summary = "Devuelve un informe desde supervisión")
+    @PreAuthorize("hasAnyRole('SUPERVISOR', 'ADMINISTRATIVO')")
+    @Operation(summary = "Devuelve un informe desde supervisión o desde Visto Bueno")
     public InformeDetalleDto devolverInforme(
         @PathVariable Long id,
         @Valid @RequestBody ObservacionRequest request,
         Authentication authentication
     ) {
+        if (hasRole(authentication, "ADMINISTRATIVO")) {
+            return informeEstadoService.devolverDesdeVistoBueno(id, observacion(request));
+        }
         return informeEstadoService.devolver(id, authentication.getName(), observacion(request));
+    }
+
+    // ── I9: Endpoints Visto Bueno ─────────────────────────────────────────────
+
+    @GetMapping("/cola/visto-bueno")
+    @PreAuthorize("hasRole('ADMINISTRATIVO')")
+    @Operation(summary = "Cola compartida de informes en Visto Bueno")
+    public Page<InformeResumenDto> colaVistoBueno(Pageable pageable) {
+        return informeService.listarColaVistoBueno(pageable);
+    }
+
+    @PostMapping("/{id}/dar-visto-bueno")
+    @PreAuthorize("hasRole('ADMINISTRATIVO')")
+    @Operation(summary = "Dar Visto Bueno — mueve el informe a EN_REVISION")
+    public InformeDetalleDto darVistosBueno(
+        @PathVariable Long id,
+        @RequestBody(required = false) ObservacionRequest request
+    ) {
+        return informeEstadoService.darVistosBueno(id, observacion(request));
+    }
+
+    @PostMapping("/{id}/escalar")
+    @PreAuthorize("hasRole('ADMINISTRATIVO')")
+    @Operation(summary = "Escalar al Supervisor — mueve el informe a EN_REVISION con accion ESCALACION")
+    public InformeDetalleDto escalar(
+        @PathVariable Long id,
+        @RequestBody(required = false) ObservacionRequest request
+    ) {
+        return informeEstadoService.escalar(id, observacion(request));
     }
 
     private static String observacion(ObservacionRequest request) {

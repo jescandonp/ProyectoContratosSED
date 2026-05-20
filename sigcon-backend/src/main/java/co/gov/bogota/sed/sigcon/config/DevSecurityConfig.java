@@ -60,11 +60,14 @@ public class DevSecurityConfig {
                 .antMatchers(HttpMethod.PATCH, "/api/contratos/**").hasRole("ADMIN")
                 .antMatchers(HttpMethod.DELETE, "/api/contratos/**").hasRole("ADMIN")
                 .antMatchers(HttpMethod.GET, "/api/informes/*/pdf").hasAnyRole("CONTRATISTA", "SUPERVISOR", "ADMIN")
-                .antMatchers(HttpMethod.GET, "/api/informes/**").hasAnyRole("CONTRATISTA", "REVISOR", "SUPERVISOR", "ADMIN")
+                .antMatchers(HttpMethod.GET, "/api/informes/cola/visto-bueno").hasRole("ADMINISTRATIVO")
+                .antMatchers(HttpMethod.GET, "/api/informes/**").hasAnyRole("CONTRATISTA", "REVISOR", "SUPERVISOR", "ADMIN", "ADMINISTRATIVO")
                 .antMatchers(HttpMethod.POST, "/api/informes/*/aprobar-revision").hasRole("REVISOR")
                 .antMatchers(HttpMethod.POST, "/api/informes/*/devolver-revision").hasRole("REVISOR")
                 .antMatchers(HttpMethod.POST, "/api/informes/*/aprobar").hasRole("SUPERVISOR")
-                .antMatchers(HttpMethod.POST, "/api/informes/*/devolver").hasRole("SUPERVISOR")
+                .antMatchers(HttpMethod.POST, "/api/informes/*/devolver").hasAnyRole("SUPERVISOR", "ADMINISTRATIVO")
+                .antMatchers(HttpMethod.POST, "/api/informes/*/dar-visto-bueno").hasRole("ADMINISTRATIVO")
+                .antMatchers(HttpMethod.POST, "/api/informes/*/escalar").hasRole("ADMINISTRATIVO")
                 .antMatchers(HttpMethod.POST, "/api/informes/**").hasRole("CONTRATISTA")
                 .antMatchers(HttpMethod.PUT, "/api/informes/**").hasRole("CONTRATISTA")
                 .antMatchers(HttpMethod.DELETE, "/api/informes/**").hasRole("CONTRATISTA")
@@ -101,7 +104,9 @@ public class DevSecurityConfig {
             User.withUsername("juan.escandon@educacionbogota.edu.co").password("{noop}contratista123").roles("CONTRATISTA").build(),
             User.withUsername("aecheverry@educacionbogota.gov.co").password("{noop}contratista123").roles("CONTRATISTA").build(),
             User.withUsername("revisor1@educacionbogota.edu.co").password("{noop}revisor123").roles("REVISOR").build(),
-            User.withUsername("supervisor1@educacionbogota.edu.co").password("{noop}supervisor123").roles("SUPERVISOR").build()
+            User.withUsername("supervisor1@educacionbogota.edu.co").password("{noop}supervisor123").roles("SUPERVISOR").build(),
+            // I9: usuario de prueba para el rol ADMINISTRATIVO
+            User.withUsername("administrativo@educacionbogota.edu.co").password("{noop}admin123").roles("ADMINISTRATIVO").build()
         );
     }
 }
