@@ -95,6 +95,10 @@ public class InformeEstadoService {
         }
         InformeDetalleDto detalle = saveAndBuildDetalle(informe);
         eventoInformeService.publicar(TipoEvento.INFORME_ENVIADO, informe, null);
+        // I9: notificar a los ADMINISTRATIVO si el informe entro a EN_VISTO_BUENO
+        if (informe.getEstado() == EstadoInforme.EN_VISTO_BUENO) {
+            eventoInformeService.publicar(TipoEvento.INFORME_EN_VISTO_BUENO, informe, null);
+        }
         return detalle;
     }
 
@@ -119,6 +123,10 @@ public class InformeEstadoService {
         informe.setEstado(estadoDestino);
         InformeDetalleDto detalle = saveAndBuildDetalle(informe);
         eventoInformeService.publicar(TipoEvento.REVISION_APROBADA, informe, observacionOpcional);
+        // I9: notificar a los ADMINISTRATIVO si el informe entro a EN_VISTO_BUENO
+        if (estadoDestino == EstadoInforme.EN_VISTO_BUENO) {
+            eventoInformeService.publicar(TipoEvento.INFORME_EN_VISTO_BUENO, informe, null);
+        }
         return detalle;
     }
 
@@ -232,7 +240,9 @@ public class InformeEstadoService {
                 informe, RolObservacion.ADMINISTRATIVO, observacionOpcional, "VISTO_BUENO");
         }
         informe.setEstado(EstadoInforme.EN_REVISION);
-        return saveAndBuildDetalle(informe);
+        InformeDetalleDto detalle = saveAndBuildDetalle(informe);
+        eventoInformeService.publicar(TipoEvento.VB_DADO, informe, observacionOpcional);
+        return detalle;
     }
 
     /**
@@ -246,7 +256,9 @@ public class InformeEstadoService {
         observacionService.registrarConAccion(
             informe, RolObservacion.ADMINISTRATIVO, observacionRecomendada, "ESCALACION");
         informe.setEstado(EstadoInforme.EN_REVISION);
-        return saveAndBuildDetalle(informe);
+        InformeDetalleDto detalle = saveAndBuildDetalle(informe);
+        eventoInformeService.publicar(TipoEvento.VB_ESCALADO, informe, observacionRecomendada);
+        return detalle;
     }
 
     /**
@@ -261,7 +273,9 @@ public class InformeEstadoService {
         observacionService.registrarConAccion(
             informe, RolObservacion.ADMINISTRATIVO, observacion, "DEVOLUCION");
         informe.setEstado(EstadoInforme.DEVUELTO);
-        return saveAndBuildDetalle(informe);
+        InformeDetalleDto detalle = saveAndBuildDetalle(informe);
+        eventoInformeService.publicar(TipoEvento.VB_DEVUELTO, informe, observacion);
+        return detalle;
     }
 
     private InformeDetalleDto saveAndBuildDetalle(Informe informe) {
