@@ -50,6 +50,10 @@ export class SidebarComponent {
       items.push({ label: 'Aprobacion', icon: 'pi-verified', route: '/aprobacion/informes' });
     }
 
+    if (this.authService.hasRole('ADMINISTRATIVO')) {
+      items.push({ label: 'Visto Bueno', icon: 'pi-eye', route: '/visto-bueno' });
+    }
+
     if (this.authService.hasRole('ADMIN')) {
       items.push(
         { label: 'Administracion', icon: 'pi-th-large', route: '/admin' },

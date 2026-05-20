@@ -63,7 +63,7 @@ import { ObservacionService } from '../../core/services/observacion.service';
         </section>
 
         <!-- Actividades (solo lectura) -->
-        @if ((informe()!.actividades.length ?? 0) > 0) {
+        @if (informe()!.actividades.length > 0) {
           <section class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg">
             <h2 class="m-0 mb-md text-base font-bold text-[var(--color-on-surface)]">Actividades</h2>
             <ul class="space-y-sm">

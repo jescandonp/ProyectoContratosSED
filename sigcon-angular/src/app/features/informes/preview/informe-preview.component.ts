@@ -144,10 +144,11 @@ export class InformePreviewComponent implements OnInit {
     return map[estado];
   }
 
-  estadoTone(estado: EstadoInforme): 'neutral' | 'success' | 'warning' | 'danger' {
+  estadoTone(estado: EstadoInforme): 'neutral' | 'success' | 'warning' | 'danger' | 'vb' {
     if (estado === 'APROBADO') return 'success';
     if (estado === 'DEVUELTO') return 'danger';
     if (estado === 'BORRADOR') return 'neutral';
+    if (estado === 'EN_VISTO_BUENO') return 'vb';
     return 'warning';
   }
 }

@@ -12,14 +12,15 @@ import { Component, Input } from '@angular/core';
 export class StatusChipComponent {
   @Input({ required: true }) value = '';
   @Input() label = '';
-  @Input() tone: 'neutral' | 'success' | 'warning' | 'danger' = 'neutral';
+  @Input() tone: 'neutral' | 'success' | 'warning' | 'danger' | 'vb' = 'neutral';
 
   get toneClass() {
     const tones = {
       neutral: 'border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] text-[var(--color-on-surface)]',
       success: 'border-[var(--color-primary-container)] bg-[var(--color-primary-fixed)] text-[var(--color-primary)]',
       warning: 'border-[var(--color-secondary-container)] bg-[var(--color-secondary-fixed)] text-[var(--color-secondary)]',
-      danger: 'border-[var(--color-tertiary-container)] bg-[var(--color-tertiary-fixed)] text-[var(--color-tertiary)]'
+      danger: 'border-[var(--color-tertiary-container)] bg-[var(--color-tertiary-fixed)] text-[var(--color-tertiary)]',
+      vb: 'border-[#FFB300] bg-[#FFB300] text-[#281900]'
     };
     return tones[this.tone];
   }
