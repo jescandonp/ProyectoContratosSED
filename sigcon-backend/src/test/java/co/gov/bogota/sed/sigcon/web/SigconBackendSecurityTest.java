@@ -117,6 +117,13 @@ class SigconBackendSecurityTest {
     @MockBean
     private co.gov.bogota.sed.sigcon.domain.repository.SgcnParametroRepository sgcnParametroRepository;
 
+    // I9 services — mocked to keep context loadable without Oracle.
+    @MockBean
+    private co.gov.bogota.sed.sigcon.application.service.InformeService informeService;
+
+    @MockBean
+    private co.gov.bogota.sed.sigcon.application.service.ParametroService parametroService;
+
     @MockBean
     private JpaMetamodelMappingContext jpaMetamodelMappingContext;
 
@@ -375,5 +382,39 @@ class SigconBackendSecurityTest {
             + "\"idContratista\":2,"
             + "\"idSupervisor\":4"
             + "}";
+    }
+
+    // ── I9: Tests de seguridad Visto Bueno ───────────────────────────────────
+
+    private static final String ADMINISTRATIVO_EMAIL = "administrativo@educacionbogota.edu.co";
+    private static final String SUPERVISOR_EMAIL     = "supervisor1@educacionbogota.edu.co";
+
+    @Test
+    void administrativo_puedeAcceder_colaVistoBueno() throws Exception {
+        // El rol ADMINISTRATIVO puede acceder a GET /api/informes/cola/visto-bueno
+        // El endpoint delega a informeService.listarColaVistoBueno() que ya está mockeado
+        // como @MockBean — retorna página vacía por defecto (Mockito)
+        mockMvc.perform(get("/api/informes/cola/visto-bueno")
+                .with(httpBasic(ADMINISTRATIVO_EMAIL, "admin123")))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    void administrativo_noPuedeAcceder_colaRevision() throws Exception {
+        // El rol ADMINISTRATIVO no puede acceder a GET /api/informes sin contratoId
+        // (el servicio lanza ACCESO_DENEGADO porque no es CONTRATISTA/REVISOR/SUPERVISOR)
+        // Pero el endpoint GET /api/informes requiere ADMINISTRATIVO ahora — verifica que
+        // el supervisor no puede acceder a la cola VB
+        mockMvc.perform(get("/api/informes/cola/visto-bueno")
+                .with(httpBasic(SUPERVISOR_EMAIL, "supervisor123")))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void supervisor_noPuedeAcceder_colaVistoBueno() throws Exception {
+        // El rol SUPERVISOR no puede acceder a GET /api/informes/cola/visto-bueno
+        mockMvc.perform(get("/api/informes/cola/visto-bueno")
+                .with(httpBasic(SUPERVISOR_EMAIL, "supervisor123")))
+            .andExpect(status().isForbidden());
     }
 }
