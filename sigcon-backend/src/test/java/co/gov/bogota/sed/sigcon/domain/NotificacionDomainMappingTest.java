@@ -62,13 +62,18 @@ class NotificacionDomainMappingTest {
     @Test
     void tipoEventoEnumCoversFiveValues() {
         TipoEvento[] values = TipoEvento.values();
-        assertThat(values).hasSize(5);
-        assertThat(values).containsExactlyInAnyOrder(
+        // I3: 5 eventos originales + I9: 4 eventos VB = 9 total
+        assertThat(values).hasSize(9);
+        assertThat(values).contains(
             TipoEvento.INFORME_ENVIADO,
             TipoEvento.REVISION_APROBADA,
             TipoEvento.REVISION_DEVUELTA,
             TipoEvento.INFORME_APROBADO,
-            TipoEvento.INFORME_DEVUELTO
+            TipoEvento.INFORME_DEVUELTO,
+            TipoEvento.INFORME_EN_VISTO_BUENO,
+            TipoEvento.VB_DADO,
+            TipoEvento.VB_ESCALADO,
+            TipoEvento.VB_DEVUELTO
         );
     }
 
