@@ -11,6 +11,7 @@ import co.gov.bogota.sed.sigcon.domain.enums.TipoEvento;
 import co.gov.bogota.sed.sigcon.domain.repository.ActividadInformeRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.InformeRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.SoporteAdjuntoRepository;
+import co.gov.bogota.sed.sigcon.application.service.ParametroService;
 import co.gov.bogota.sed.sigcon.web.exception.ErrorCode;
 import co.gov.bogota.sed.sigcon.web.exception.SigconBusinessException;
 import org.springframework.http.HttpStatus;
@@ -36,6 +37,7 @@ public class InformeEstadoService {
     private final EventoInformeService eventoInformeService;
     private final DocumentoRequeridoInformeService documentoRequeridoInformeService;
     private final EmailNotificacionService emailNotificacionService;
+    private final ParametroService parametroService;
 
     public InformeEstadoService(
         InformeRepository informeRepository,
@@ -46,7 +48,8 @@ public class InformeEstadoService {
         PdfInformeService pdfInformeService,
         EventoInformeService eventoInformeService,
         DocumentoRequeridoInformeService documentoRequeridoInformeService,
-        EmailNotificacionService emailNotificacionService
+        EmailNotificacionService emailNotificacionService,
+        ParametroService parametroService
     ) {
         this.informeRepository = informeRepository;
         this.actividadRepository = actividadRepository;
@@ -57,12 +60,15 @@ public class InformeEstadoService {
         this.eventoInformeService = eventoInformeService;
         this.documentoRequeridoInformeService = documentoRequeridoInformeService;
         this.emailNotificacionService = emailNotificacionService;
+        this.parametroService = parametroService;
     }
 
     /**
      * BORRADOR | DEVUELTO -> ENVIADO
      * Requiere al menos una actividad.
      * I3: publica INFORME_ENVIADO al revisor.
+     * I9: si el contrato no tiene revisor y VB esta activo, el estado destino
+     *     es EN_VISTO_BUENO en lugar de EN_REVISION.
      */
     public InformeDetalleDto enviar(Long informeId, String contratistaEmail) {
         Informe informe = informeService.findActiveInforme(informeId);
@@ -80,14 +86,24 @@ public class InformeEstadoService {
         documentoRequeridoInformeService.assertDocumentosRequeridosCompletos(informe);
         informe.setEstado(EstadoInforme.ENVIADO);
         informe.setFechaUltimoEnvio(LocalDateTime.now());
+        // I9: si no hay revisor y VB esta activo, el informe salta directamente a EN_VISTO_BUENO
+        boolean sinRevisor = informe.getContrato().getRevisor() == null;
+        if (sinRevisor && parametroService.isVbActivo()) {
+            informe.setEstado(EstadoInforme.EN_VISTO_BUENO);
+        } else if (sinRevisor) {
+            informe.setEstado(EstadoInforme.EN_REVISION);
+        }
         InformeDetalleDto detalle = saveAndBuildDetalle(informe);
         eventoInformeService.publicar(TipoEvento.INFORME_ENVIADO, informe, null);
         return detalle;
     }
 
     /**
-     * ENVIADO -> EN_REVISION (aprobacion del revisor).
+     * ENVIADO -> EN_VISTO_BUENO | EN_REVISION (aprobacion del revisor).
      * I3: publica REVISION_APROBADA al supervisor.
+     * I9: el estado destino depende de VB_ACTIVO:
+     *     - VB activo  → EN_VISTO_BUENO (cola del equipo administrativo)
+     *     - VB inactivo → EN_REVISION   (flujo anterior directo al supervisor)
      */
     public InformeDetalleDto aprobarRevision(Long informeId, String revisorEmail, String observacionOpcional) {
         Informe informe = informeService.findActiveInforme(informeId);
@@ -96,7 +112,11 @@ public class InformeEstadoService {
         if (hasText(observacionOpcional)) {
             observacionService.registrar(informe, RolObservacion.REVISOR, observacionOpcional);
         }
-        informe.setEstado(EstadoInforme.EN_REVISION);
+        // I9: bifurcacion segun flag VB_ACTIVO
+        EstadoInforme estadoDestino = parametroService.isVbActivo()
+            ? EstadoInforme.EN_VISTO_BUENO
+            : EstadoInforme.EN_REVISION;
+        informe.setEstado(estadoDestino);
         InformeDetalleDto detalle = saveAndBuildDetalle(informe);
         eventoInformeService.publicar(TipoEvento.REVISION_APROBADA, informe, observacionOpcional);
         return detalle;

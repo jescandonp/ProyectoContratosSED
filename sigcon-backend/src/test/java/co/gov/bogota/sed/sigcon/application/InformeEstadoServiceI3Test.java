@@ -65,6 +65,7 @@ class InformeEstadoServiceI3Test {
     @Mock private EventoInformeService eventoInformeService;
     @Mock private DocumentoRequeridoInformeService documentoRequeridoInformeService;
     @Mock private EmailNotificacionService emailNotificacionService;
+    @Mock private co.gov.bogota.sed.sigcon.application.service.ParametroService parametroService;
 
     private InformeEstadoService service;
 
@@ -73,7 +74,8 @@ class InformeEstadoServiceI3Test {
         service = new InformeEstadoService(
             informeRepository, actividadRepository, soporteRepository,
             informeService, observacionService,
-            pdfInformeService, eventoInformeService, documentoRequeridoInformeService, emailNotificacionService
+            pdfInformeService, eventoInformeService, documentoRequeridoInformeService,
+            emailNotificacionService, parametroService
         );
     }
 

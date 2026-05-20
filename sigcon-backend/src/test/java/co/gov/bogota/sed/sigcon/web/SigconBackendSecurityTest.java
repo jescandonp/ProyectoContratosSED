@@ -113,6 +113,10 @@ class SigconBackendSecurityTest {
     @MockBean
     private co.gov.bogota.sed.sigcon.application.service.BusquedaAdminService busquedaAdminService;
 
+    // I9 repositories — mocked to keep context loadable without Oracle.
+    @MockBean
+    private co.gov.bogota.sed.sigcon.domain.repository.SgcnParametroRepository sgcnParametroRepository;
+
     @MockBean
     private JpaMetamodelMappingContext jpaMetamodelMappingContext;
 

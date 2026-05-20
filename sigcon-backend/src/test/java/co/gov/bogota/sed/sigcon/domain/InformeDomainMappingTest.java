@@ -54,8 +54,8 @@ class InformeDomainMappingTest {
     @Test
     void coversInformeStateMachineEnums() {
         assertThat(EstadoInforme.values())
-            .containsExactly(EstadoInforme.BORRADOR, EstadoInforme.ENVIADO, EstadoInforme.EN_REVISION,
-                EstadoInforme.DEVUELTO, EstadoInforme.APROBADO);
+            .containsExactly(EstadoInforme.BORRADOR, EstadoInforme.ENVIADO, EstadoInforme.EN_VISTO_BUENO,
+                EstadoInforme.EN_REVISION, EstadoInforme.DEVUELTO, EstadoInforme.APROBADO);
         assertThat(TipoSoporte.values()).containsExactly(TipoSoporte.ARCHIVO, TipoSoporte.URL);
         assertThat(RolObservacion.values()).containsExactly(RolObservacion.REVISOR, RolObservacion.SUPERVISOR);
     }
