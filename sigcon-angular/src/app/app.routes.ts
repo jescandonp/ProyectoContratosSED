@@ -138,6 +138,20 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/admin/busqueda/admin-busqueda.component').then((m) => m.AdminBusquedaComponent),
         title: 'Búsqueda global — Admin SIGCON'
+      },
+      {
+        path: 'visto-bueno',
+        canActivate: [roleGuard(['ADMINISTRATIVO'])],
+        loadComponent: () =>
+          import('./features/visto-bueno/cola-visto-bueno.component').then((m) => m.ColaVistoBuenoComponent),
+        title: 'Cola de Visto Bueno — SIGCON'
+      },
+      {
+        path: 'visto-bueno/:id',
+        canActivate: [roleGuard(['ADMINISTRATIVO'])],
+        loadComponent: () =>
+          import('./features/visto-bueno/detalle-visto-bueno.component').then((m) => m.DetalleVistoBuenoComponent),
+        title: 'Detalle — Visto Bueno — SIGCON'
       }
     ]
   },

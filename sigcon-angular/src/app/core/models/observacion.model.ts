@@ -1,4 +1,4 @@
-export type RolObservacion = 'REVISOR' | 'SUPERVISOR';
+export type RolObservacion = 'REVISOR' | 'SUPERVISOR' | 'ADMINISTRATIVO';
 
 export interface Observacion {
   id: number;

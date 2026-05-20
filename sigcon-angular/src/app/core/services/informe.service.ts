@@ -44,6 +44,19 @@ export class InformeService {
     return this.http.patch<InformeDetalle>(`${this.baseUrl}/${id}`, dto);
   }
 
+  listarColaVistoBueno(page = 0, size = 10) {
+    const params = new HttpParams().set('page', String(page)).set('size', String(size));
+    return this.http.get<Page<InformeResumen>>(`${this.baseUrl}/cola/visto-bueno`, { params });
+  }
+
+  darVistosBueno(id: number, observacion?: string) {
+    return this.http.post<InformeDetalle>(`${this.baseUrl}/${id}/dar-visto-bueno`, { observacion: observacion ?? null });
+  }
+
+  escalar(id: number, observacion?: string) {
+    return this.http.post<InformeDetalle>(`${this.baseUrl}/${id}/escalar`, { observacion: observacion ?? null });
+  }
+
   private toHttpParams(params: ListarInformesParams) {
     let httpParams = new HttpParams();
     Object.entries(params).forEach(([key, value]) => {
