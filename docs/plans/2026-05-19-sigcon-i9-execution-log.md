@@ -58,11 +58,11 @@
 
 ## T5 — InformeService: Bifurcacion VB en flujo de envio
 
-- [ ] Escribir `InformeServiceVbBifurcacionTest.java` — 4 tests
-- [ ] Modificar `InformeService.java`: inyectar `ParametroService`, actualizar `enviar()` y `aprobarRevision()`
-- [ ] Ejecutar: `mvn test -Dtest=InformeServiceVbBifurcacionTest` — 4 GREEN
-- [ ] Ejecutar suite completa: `mvn test` — 0 regresiones
-- [ ] Commit: `feat(i9): bifurcacion VB en enviar() y aprobarRevision()`
+- [x] Escribir `InformeServiceVbBifurcacionTest.java` — 4 tests
+- [x] Modificar `InformeEstadoService.java`: inyectar `ParametroService`, actualizar `enviar()` y `aprobarRevision()`
+- [x] Ejecutar: `mvn test -Dtest=InformeServiceVbBifurcacionTest` — 4 GREEN
+- [x] Ejecutar suite completa: `mvn test` — 0 regresiones (193 tests)
+- [x] Commit: `feat(i9): bifurcacion VB en enviar() y aprobarRevision()` — `00d159c`
 
 ## T6 — InformeService: Acciones del Actor Administrativo
 
@@ -191,10 +191,23 @@
 - Validacion: `mvn test -Dtest=ParametroServiceTest` con resultado `BUILD SUCCESS`; 5 tests, 0 fallas, 0 errores, 0 omitidos.
 - Commit T4: `103c010` — `feat(i9): ParametroService — isVbActivo y setVbActivo con migracion`.
 
+### 2026-05-20 — T5 InformeEstadoService: Bifurcacion VB en flujo de envio
+
+- Inconsistencia documentada: el plan I9 nombra `InformeService.java` como archivo a modificar, pero la maquina de estados real reside en `InformeEstadoService.java`. Se aplica el codigo vigente como fuente de verdad (CONSTITUTION §autoridad).
+- Creado `InformeServiceVbBifurcacionTest.java` con 4 tests TDD: `enviar_sinRevisor_vbActivo_pasaAEnVistoBueno`, `enviar_sinRevisor_vbInactivo_pasaAEnRevision`, `aprobarRevision_vbActivo_pasaAEnVistoBueno`, `aprobarRevision_vbInactivo_pasaAEnRevision`.
+- RED TDD confirmado: fallo de compilacion por constructor incompatible (ParametroService no inyectado aun).
+- Modificado `InformeEstadoService.java`: inyectado `ParametroService` por constructor; `enviar()` bifurca a `EN_VISTO_BUENO` cuando no hay revisor y VB activo; `aprobarRevision()` bifurca segun flag VB_ACTIVO.
+- Actualizados 7 tests existentes que usaban el constructor antiguo de `InformeEstadoService`: `InformeEstadoServiceTest`, `InformeEstadoServiceI3Test`, `InformeEstadoServiceSinRevisorTest`, `InformeDomainMappingTest` (orden de enum), `InformeSecurityTest` (MockBean SgcnParametroRepository + ParametroService), `SigconBackendSecurityTest` (MockBean SgcnParametroRepository).
+- Validacion: `mvn test -Dtest=InformeServiceVbBifurcacionTest` — 4 GREEN; `mvn test` — 193 tests, 0 fallos, 0 errores.
+- Commit T5: `00d159c` — `feat(i9): bifurcacion VB en enviar() y aprobarRevision()`.
+
 ## Punto de Retoma
 
-Continuar con T5 — InformeService: Bifurcacion VB en flujo de envio:
+Continuar con T6 — InformeService: Acciones del Actor Administrativo:
 
-1. Escribir `InformeServiceVbBifurcacionTest.java` con 4 tests.
-2. Modificar el flujo de envio/revision para consultar `ParametroService`.
-3. Ejecutar `mvn test -Dtest=InformeServiceVbBifurcacionTest`.
+1. Agregar `ADMINISTRATIVO` a `RolObservacion.java` (necesario para persistir observaciones del actor admin).
+2. Agregar campo `accion` a `Observacion.java` (columna ya existe en BD desde T1).
+3. Escribir `InformeServiceVbAccionesTest.java` con 5 tests.
+4. Implementar `darVistosBueno()`, `escalar()` y extensión de `devolver()` en `InformeEstadoService.java`.
+5. Ejecutar `mvn test -Dtest=InformeServiceVbAccionesTest` — 5 GREEN.
+6. Ejecutar `mvn test` — 0 regresiones.

@@ -22,5 +22,19 @@ public enum TipoEvento {
     INFORME_APROBADO,
 
     /** Supervisor devuelve el informe al contratista sin aprobarlo. */
-    INFORME_DEVUELTO
+    INFORME_DEVUELTO,
+
+    // ── I9: Eventos de Visto Bueno Administrativo ────────────────────────────
+
+    /** Informe entra a EN_VISTO_BUENO; notifica a todos los usuarios ADMINISTRATIVO. */
+    INFORME_EN_VISTO_BUENO,
+
+    /** Actor ADMINISTRATIVO da Visto Bueno; notifica al Supervisor del contrato. */
+    VB_DADO,
+
+    /** Actor ADMINISTRATIVO escala el informe; notifica al Supervisor del contrato. */
+    VB_ESCALADO,
+
+    /** Actor ADMINISTRATIVO devuelve el informe; notifica al Contratista. */
+    VB_DEVUELTO
 }

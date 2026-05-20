@@ -1,6 +1,6 @@
 # TECNOLOGIAS SIGCON
 
-> Estado: base pre-implementacion I1.
+> Estado: actualizado I8 — stack validado en despliegue WebLogic 12.2.1.
 > Fuente rectora: `docs/ARCHITECTURE.md` y `docs/CONSTITUTION.md`.
 > Alcance: versiones canonicas para implementar SIGCON bajo SDD Spec-Anchored.
 
@@ -11,7 +11,7 @@
 | Sistema | `SIGCON` |
 | Backend | `sigcon-backend` |
 | Frontend | `sigcon-angular` |
-| WAR | `sigcon-backend.war` |
+| WAR (despliegue WebLogic) | `sigcon-backend.war.original` (~47 MB) |
 | Contexto WebLogic | `/sigcon` |
 | Paquete Java base | `co.gov.bogota.sed.sigcon` |
 | Esquema Oracle MVP | `SED_SIGCON` |
@@ -27,6 +27,8 @@
 | Spring Security | 5.7.x | Compatible con Spring Boot 2.7.x |
 | Spring Data JPA | 2.7.x | Persistencia principal |
 | Hibernate | 5.6.x | ORM provider |
+| Bean Validation | **2.0** (`jakarta.validation-api 2.0.2`) | WebLogic 12.2.1 trae BV 1.1 — el WAR DEBE incluir BV 2.0; resuelto via `prefer-application-packages` en `weblogic.xml` |
+| Hibernate Validator | 6.2.x | Implementacion BV 2.0 |
 | SpringDoc OpenAPI | 1.7.0 | Swagger UI siempre activo |
 | Oracle JDBC | ojdbc8 19.x | Compatible con JDK 8 y Oracle 19c |
 | Maven | 3.9.x | Build backend |

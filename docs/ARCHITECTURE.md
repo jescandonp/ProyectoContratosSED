@@ -38,7 +38,7 @@ Esta arquitectura se interpreta para SIGCON con las siguientes coordenadas canon
 |------------|--------------|
 | Sistema | `SIGCON` |
 | Backend | `sigcon-backend` |
-| WAR | `sigcon-backend.war` |
+| WAR (despliegue WebLogic) | `sigcon-backend.war.original` (~47 MB) |
 | Contexto WebLogic | `/sigcon` |
 | Paquete Java base | `co.gov.bogota.sed.sigcon` |
 | Frontend | `sigcon-angular` |
@@ -253,6 +253,20 @@ src/main/java/co/gov/bogota/sed/{nombre-si}/
             <scope>provided</scope>
         </dependency>
 
+        <!--
+            CRITICO para WebLogic 12.2.1: tomcat-embed-el contiene
+            web-fragment.xml con web-app version="4.0" (Servlet 4.0).
+            WebLogic falla con cvc-enumeration-valid al desplegarlo.
+            Spring Boot 2.7 lo resuelve como compile aunque su padre
+            spring-boot-starter-tomcat sea provided. Se fuerza provided
+            para sacarlo del WAR. WebLogic provee javax.el propio.
+        -->
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-el</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- Spring Boot starters -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -294,6 +308,7 @@ src/main/java/co/gov/bogota/sed/{nombre-si}/
     </dependencies>
 
     <build>
+        <finalName>${project.artifactId}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -304,15 +319,44 @@ src/main/java/co/gov/bogota/sed/{nombre-si}/
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
                         </exclude>
+                        <!--
+                            tomcat-embed-el lleva web-fragment.xml con web-app version="4.0"
+                            (Servlet 4.0). WebLogic 12.2.1 solo soporta Servlet 3.1 y falla
+                            con cvc-enumeration-valid al escanear el JAR.
+                            WebLogic provee javax.el propio — este JAR no es necesario.
+                            Se excluye de WEB-INF/lib-provided/ via este plugin.
+                        -->
+                        <exclude>
+                            <groupId>org.apache.tomcat.embed</groupId>
+                            <artifactId>tomcat-embed-el</artifactId>
+                        </exclude>
                     </excludes>
                 </configuration>
             </plugin>
+
+            <!--
+                Excluir tomcat-embed-el también de WEB-INF/lib/ (doble seguro).
+                Spring Boot 2.7 puede resolverlo como compile-scope transitivo
+                aunque spring-boot-starter-tomcat esté como provided.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <configuration>
+                    <packagingExcludes>
+                        WEB-INF/lib/tomcat-embed-el-*.jar,
+                        WEB-INF/lib-provided/tomcat-embed-el-*.jar
+                    </packagingExcludes>
+                </configuration>
+            </plugin>
         </plugins>
-        <!-- Nombre del WAR para despliegue en WebLogic -->
-        <finalName>${project.artifactId}</finalName>
     </build>
 </project>
 ```
+
+> **Nota — dos WARs generados:** `mvn package` produce dos archivos en `target/`:
+> - `sigcon-backend.war` (~57 MB) → Spring Boot fat WAR ejecutable. **NO desplegar en WebLogic.**
+> - `sigcon-backend.war.original` (~47 MB) → WAR estándar Maven sin `lib-provided/`. **Este es el artefacto correcto para WebLogic.**
 
 **Clase de arranque para WAR:**
 
@@ -336,6 +380,12 @@ public class SigconBackendApplication extends SpringBootServletInitializer {
 
 **Descriptor WebLogic (`src/main/webapp/WEB-INF/weblogic.xml`):**
 
+> **CRITICO — WebLogic 12.2.1:** `prefer-web-inf-classes=true` NO cubre paquetes Java EE
+> (`javax.*`). WebLogic los carga siempre desde el servidor sin excepción. Usar
+> `prefer-application-packages` con lista explícita es la única forma de sobreescribir
+> `javax.validation`, `javax.persistence`, etc. Ambas directivas son **mutuamente
+> excluyentes** — nunca usar las dos al mismo tiempo.
+
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <weblogic-web-app
@@ -347,9 +397,41 @@ public class SigconBackendApplication extends SpringBootServletInitializer {
     <weblogic-version>12.2.1</weblogic-version>
 
     <container-descriptor>
-        <!-- Forzar uso de librerías Spring empaquetadas en el WAR,
-             no las del servidor WebLogic (evita conflictos de versión) -->
-        <prefer-web-inf-classes>true</prefer-web-inf-classes>
+        <!--
+            prefer-application-packages permite sobreescribir paquetes javax.*
+            con las versiones del WAR. Requerido porque:
+            - WebLogic 12.2.1 trae Bean Validation 1.1; Spring Boot 2.7 necesita BV 2.0
+            - WebLogic 12.2.1 trae JPA 2.1; Spring Boot 2.7 usa JPA 2.2
+            - prefer-web-inf-classes NO cubre javax.* — siempre carga del servidor
+
+            RESTRICCION: prefer-application-packages y prefer-web-inf-classes
+            son MUTUAMENTE EXCLUYENTES en WebLogic 12.2.1.
+        -->
+        <prefer-application-packages>
+            <package-name>javax.validation.*</package-name>
+            <package-name>org.hibernate.validator.*</package-name>
+            <package-name>javax.persistence.*</package-name>
+            <package-name>org.hibernate.*</package-name>
+            <package-name>org.springframework.*</package-name>
+            <package-name>org.aopalliance.*</package-name>
+            <package-name>org.aspectj.*</package-name>
+            <package-name>com.fasterxml.*</package-name>
+            <package-name>org.slf4j.*</package-name>
+            <package-name>ch.qos.logback.*</package-name>
+            <package-name>org.apache.commons.*</package-name>
+            <package-name>antlr.*</package-name>
+            <package-name>net.bytebuddy.*</package-name>
+            <package-name>com.nimbusds.*</package-name>
+            <package-name>net.minidev.*</package-name>
+        </prefer-application-packages>
+
+        <prefer-application-resources>
+            <resource-name>META-INF/spring.factories</resource-name>
+            <resource-name>META-INF/spring/*.imports</resource-name>
+            <resource-name>META-INF/services/javax.persistence.spi.PersistenceProvider</resource-name>
+            <resource-name>META-INF/services/javax.validation.spi.ValidationProvider</resource-name>
+            <resource-name>META-INF/services/com.fasterxml.jackson.databind.Module</resource-name>
+        </prefer-application-resources>
     </container-descriptor>
 
     <context-root>/sigcon</context-root>
@@ -1186,21 +1268,28 @@ Los `DocumentoRequeridoInformeService` (facturas, documentos requeridos) tienen 
 ```
 Desarrollador
     │
-    │  mvn clean package -P weblogic
-    │  → genera: target/sigcon-backend.war
+    │  mvn clean package -DskipTests
+    │  → genera en target/:
+    │    sigcon-backend.war          (~57 MB) — fat WAR Spring Boot (NO usar en WL)
+    │    sigcon-backend.war.original (~47 MB) — WAR estándar Maven  ← ESTE
     │
     ▼
 Control de versiones / repositorio de artefactos
     │
     ▼
 DBA / DevOps SED
-    │  1. Copia WAR a servidor WebLogic
-    │  2. Despliega desde consola WebLogic admin
-    │     (http://[servidor]:7001/console)
-    │  3. Activa despliegue
+    │  1. Copiar sigcon-backend.war.original al servidor WebLogic
+    │  2. Desplegar desde consola WebLogic admin
+    │     (http://[servidor]:7001/console → Deployments → Install)
+    │  3. Activar despliegue
     ▼
 WebLogic 12.2.1.4.0 — contexto: /sigcon
 ```
+
+> **ATENCION:** `-P weblogic` es un perfil Maven inexistente en este proyecto.
+> El perfil Spring `weblogic` se activa mediante la variable de entorno
+> `SPRING_PROFILE=weblogic` en el servidor, no durante el build.
+> El WAR se genera una sola vez con `mvn clean package -DskipTests`.
 
 ### Variables de Configuración (properties WebLogic)
 
@@ -1553,6 +1642,54 @@ En JPA: `@EnableJpaAuditing` + `@EntityListeners(AuditingEntityListener.class)`.
 
 ---
 
+## 12-bis. Compatibilidad Java 8 — Reglas Inmutables
+
+> Estas reglas aplican mientras el servidor distrital sea WebLogic 12.2.1.4.0 con JDK 8.
+> No pueden relajarse sin coordinación con TI SED.
+
+### APIs Java prohibidas (no existen en Java 8)
+
+| API | Versión mínima | Alternativa Java 8 |
+|-----|---------------|---------------------|
+| `InputStream.readAllBytes()` | Java 9 | `org.springframework.util.StreamUtils.copyToByteArray(is)` |
+| `InputStream.transferTo(OutputStream)` | Java 9 | `StreamUtils.copy(is, os)` o `IOUtils.copy(is, os)` |
+| `String.isBlank()` | Java 11 | `str == null \|\| str.trim().isEmpty()` |
+| `String.strip()`, `stripLeading()`, `stripTrailing()` | Java 11 | `.trim()` |
+| `String.repeat(n)` | Java 11 | Loop o `StringUtils.repeat()` |
+| `Optional.isEmpty()` | Java 11 | `!optional.isPresent()` |
+| `List.copyOf()`, `Map.copyOf()`, `Set.copyOf()` | Java 10 | `Collections.unmodifiableList(new ArrayList<>(list))` |
+| `var` (inferencia de tipo local) | Java 10 | Declaración explícita del tipo |
+| Records (`record Foo(...)`) | Java 16 | Clase con Lombok `@Value` |
+| Switch expressions (`yield`) | Java 14 | Switch statement tradicional |
+| Text blocks (`"""..."""`) | Java 15 | `String.join("\n", ...)` o concatenación |
+| `HttpClient` de `java.net.http` | Java 11 | `RestTemplate` de Spring |
+
+### Dependencias críticas y versiones Java EE en WebLogic 12.2.1
+
+| Librería | WL 12.2.1 trae | Spring Boot 2.7 requiere | Resolucion |
+|----------|----------------|--------------------------|------------|
+| Bean Validation (`javax.validation`) | **1.1** | **2.0** | `prefer-application-packages` en `weblogic.xml` |
+| JPA (`javax.persistence`) | **2.1** | **2.2** | `prefer-application-packages` en `weblogic.xml` |
+| Servlet API | **3.1** | usa WL | Tomcat `provided`, `tomcat-embed-el` excluido |
+| `javax.el` (Expression Language) | propio WL | usa WL | `tomcat-embed-el` excluido del WAR |
+
+### Verificación de compatibilidad Java 8 en build
+
+```powershell
+# Compilar y verificar que no hay errores de version:
+mvn clean package -DskipTests
+
+# Verificar que el WAR no contiene tomcat-embed-el (causa E-WL-01):
+jar tf sigcon-backend/target/sigcon-backend.war.original | Select-String "tomcat-embed-el"
+# Debe retornar: (nada)
+
+# Verificar que Bean Validation 2.0 esta en el WAR:
+jar tf sigcon-backend/target/sigcon-backend.war.original | Select-String "validation-api"
+# Debe retornar: WEB-INF/lib/jakarta.validation-api-2.0.2.jar
+```
+
+---
+
 ## 13. Checklist para Nuevos Proyectos
 
 ### Setup Inicial
@@ -1569,7 +1706,8 @@ En JPA: `@EnableJpaAuditing` + `@EntityListeners(AuditingEntityListener.class)`.
 - [ ] Configurar `<packaging>war</packaging>` y `<java.version>8</java.version>`
 - [ ] Marcar `spring-boot-starter-tomcat` como `<scope>provided</scope>`
 - [ ] Extender `SpringBootServletInitializer` en la clase principal
-- [ ] Crear `src/main/webapp/WEB-INF/weblogic.xml` con `prefer-web-inf-classes: true`
+- [ ] Crear `src/main/webapp/WEB-INF/weblogic.xml` con `prefer-application-packages` (ver §4 — NO usar `prefer-web-inf-classes` ya que no cubre `javax.*`)
+- [ ] Agregar `tomcat-embed-el` con `<scope>provided</scope>` en `pom.xml` y excluirlo en `spring-boot-maven-plugin` + `maven-war-plugin`
 - [ ] Configurar paquete base: `co.gov.bogota.sed.[modulo]`
 - [ ] Crear estructura de capas: `domain/`, `application/`, `web/`, `config/`
 - [ ] Configurar `SecurityConfig` con **Azure AD JWT** (perfil `weblogic`)
@@ -1579,7 +1717,9 @@ En JPA: `@EnableJpaAuditing` + `@EntityListeners(AuditingEntityListener.class)`.
 - [ ] Configurar **Swagger (SpringDoc 1.7.0)** — **siempre activo**, no solo local
 - [ ] Anotar todos los controllers con `@Tag` y `@Operation`
 - [ ] Configurar `application.yml` con perfiles `local-dev` y `weblogic`
-- [ ] Verificar compilación con JDK 8: `mvn clean package`
+- [ ] Verificar compilación con JDK 8: `mvn clean package -DskipTests`
+- [ ] Verificar que `sigcon-backend.war.original` (no `.war`) no contiene `tomcat-embed-el`
+- [ ] No usar APIs Java 9+ (`readAllBytes`, `var`, records, text blocks) — ver §12-bis
 
 ### Frontend
 - [ ] Inicializar proyecto **Angular 20** (standalone, strict mode)
