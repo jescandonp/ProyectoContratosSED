@@ -4,7 +4,7 @@ import type { DocumentoAdicional } from './documento-adicional.model';
 import type { Observacion } from './observacion.model';
 import type { Usuario } from './usuario.model';
 
-export type EstadoInforme = 'BORRADOR' | 'ENVIADO' | 'EN_REVISION' | 'DEVUELTO' | 'APROBADO';
+export type EstadoInforme = 'BORRADOR' | 'ENVIADO' | 'EN_REVISION' | 'DEVUELTO' | 'APROBADO' | 'EN_VISTO_BUENO';
 
 export interface InformeResumen {
   id: number;
