@@ -42,9 +42,9 @@
 
 ## T3 — Entidad `SgcnParametro` y Repositorio
 
-- [ ] Crear `SgcnParametro.java` con anotaciones JPA
-- [ ] Crear `SgcnParametroRepository.java`
-- [ ] Compilar: `mvn compile -pl sigcon-backend` — 0 errores
+- [x] Crear `SgcnParametro.java` con anotaciones JPA
+- [x] Crear `SgcnParametroRepository.java`
+- [x] Compilar: `mvn compile -pl sigcon-backend` — 0 errores
 - [ ] Commit: `feat(i9): entidad SgcnParametro y repositorio`
 
 ## T4 — ParametroService
@@ -174,10 +174,18 @@
 - Validacion: `mvn compile -pl sigcon-backend` no aplica en la raiz porque el repo no es reactor Maven. Se ejecuto `mvn compile` desde `sigcon-backend` con resultado `BUILD SUCCESS` (124 source files, 0 errores).
 - Commit T2: `34fd9b5` — `feat(i9): agregar EN_VISTO_BUENO y ADMINISTRATIVO a enums`.
 
+### 2026-05-20 — T3 Entidad `SgcnParametro` y Repositorio en progreso
+
+- Creado `SgcnParametro.java` mapeado a `SGCN_PARAMETROS`, con `CLAVE` como PK `String`, `VALOR` obligatorio y `DESCRIPCION` opcional.
+- Creado `SgcnParametroRepository.java` extendiendo `JpaRepository<SgcnParametro, String>`.
+- Validacion: `mvn compile` desde `sigcon-backend` con resultado `BUILD SUCCESS` (126 source files, 0 errores).
+
 ## Punto de Retoma
 
-Continuar con T3 — Entidad `SgcnParametro` y Repositorio:
+Continuar con T4 — ParametroService:
 
-1. Crear `SgcnParametro.java` con anotaciones JPA.
-2. Crear `SgcnParametroRepository.java`.
-3. Compilar backend antes del commit T3.
+1. Escribir `ParametroServiceTest.java` con los 5 tests del plan.
+2. Ejecutar y confirmar RED por clase no encontrada.
+3. Crear `ParametroVbDto.java`.
+4. Implementar `ParametroService.java`.
+5. Ejecutar `mvn test -Dtest=ParametroServiceTest`.
