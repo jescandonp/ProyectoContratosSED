@@ -26,10 +26,10 @@
 
 ## T1 — Base de Datos
 
-- [ ] Escribir `db/06_sgcn_parametros.sql`
-- [ ] Escribir `db/07_observaciones_accion.sql`
-- [ ] Verificar que `db/03_reset_informes_local_dev.sql` incluye limpieza de `SGCN_PARAMETROS` si el entorno local lo requiere
-- [ ] Ejecutar ambos scripts en BD local — 0 errores
+- [x] Escribir `db/06_sgcn_parametros.sql`
+- [x] Escribir `db/07_observaciones_accion.sql`
+- [x] Verificar que `db/03_reset_informes_local_dev.sql` incluye limpieza de `SGCN_PARAMETROS` si el entorno local lo requiere
+- [x] Ejecutar ambos scripts en BD local — 0 errores
 - [ ] Commit: `feat(i9): DDL SGCN_PARAMETROS y columna ACCION en observaciones`
 
 ## T2 — Enums Java
@@ -154,11 +154,20 @@
 - Se abre este execution log en `main`, siguiendo la rama definida por la spec/plan I9.
 - Commit T0: `6bf04bd` — `docs(i9): abrir execution log I9`.
 
+### 2026-05-20 — T1 Base de Datos en progreso
+
+- Creados `db/06_sgcn_parametros.sql` y `db/07_observaciones_accion.sql` como scripts incrementales idempotentes Oracle 19c.
+- `db/06_sgcn_parametros.sql` crea `SGCN_PARAMETROS` si no existe e inserta `VB_ACTIVO=S` solo cuando falta la clave; si ya existe, conserva el valor operativo actual.
+- `db/07_observaciones_accion.sql` agrega `SGCN_OBSERVACIONES.ACCION VARCHAR2(20) DEFAULT NULL` solo si la columna no existe.
+- Actualizado `db/03_reset_informes_local_dev.sql` para normalizar `VB_ACTIVO=S` durante reset local cuando `SGCN_PARAMETROS` ya existe, sin romper esquemas pre-I9.
+- Validacion disponible: `sqlplus -V` retorna SQL*Plus 21.3 instalado.
+- Gate T1 completado por ejecucion manual confirmada: ambos scripts fueron ejecutados contra la BD local sin errores.
+
 ## Punto de Retoma
 
-Continuar con T1 — Base de Datos:
+Continuar con T2 — Enums Java:
 
-1. Crear `db/06_sgcn_parametros.sql`.
-2. Crear `db/07_observaciones_accion.sql`.
-3. Revisar `db/03_reset_informes_local_dev.sql` para limpieza local de `SGCN_PARAMETROS` si aplica.
-4. Validar scripts contra la BD local disponible antes del commit T1.
+1. Buscar todos los `switch` sobre `EstadoInforme` en el backend.
+2. Agregar `EN_VISTO_BUENO` a `EstadoInforme.java`.
+3. Agregar `ADMINISTRATIVO` a `Rol.java`.
+4. Compilar backend antes del commit T2.

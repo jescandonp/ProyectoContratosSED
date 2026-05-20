@@ -68,6 +68,33 @@ WHERE ID_INFORME IN (SELECT I.ID FROM SGCN_INFORMES I);
 DELETE FROM SGCN_INFORMES;
 
 DECLARE
+    v_parametros_existe NUMBER;
+BEGIN
+    SELECT COUNT(*)
+    INTO v_parametros_existe
+    FROM USER_TABLES
+    WHERE TABLE_NAME = 'SGCN_PARAMETROS';
+
+    IF v_parametros_existe > 0 THEN
+        MERGE INTO SGCN_PARAMETROS p
+        USING (
+            SELECT
+                'VB_ACTIVO' AS CLAVE,
+                'S' AS VALOR,
+                'Visto Bueno Administrativo activo en el flujo de informes' AS DESCRIPCION
+            FROM DUAL
+        ) src
+        ON (p.CLAVE = src.CLAVE)
+        WHEN MATCHED THEN
+            UPDATE SET p.VALOR = src.VALOR, p.DESCRIPCION = src.DESCRIPCION
+        WHEN NOT MATCHED THEN
+            INSERT (CLAVE, VALOR, DESCRIPCION)
+            VALUES (src.CLAVE, src.VALOR, src.DESCRIPCION);
+    END IF;
+END;
+/
+
+DECLARE
     v_restantes NUMBER;
 BEGIN
     SELECT COUNT(*)
