@@ -1,10 +1,13 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+
+import { ParametroService } from '../../../core/services/parametro.service';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, FormsModule],
   template: `
     <div class="space-y-lg">
 
@@ -93,7 +96,118 @@ import { RouterLink } from '@angular/router';
           </div>
         </a>
       </div>
+
+      <!-- Parámetros del sistema -->
+      <section class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg">
+        <h2 class="m-0 mb-md text-base font-bold text-[var(--color-on-surface)]">Parámetros del sistema</h2>
+
+        @if (errorVb()) {
+          <div class="mb-md rounded border border-[var(--color-error-container)] bg-[var(--color-error-container)] px-md py-sm text-sm text-[var(--color-on-error-container)]">
+            {{ errorVb() }}
+          </div>
+        }
+
+        @if (mensajeVb()) {
+          <div class="mb-md rounded border border-[var(--color-primary-container)] bg-[var(--color-primary-container)] px-md py-sm text-sm text-[var(--color-on-primary-container)]">
+            {{ mensajeVb() }}
+          </div>
+        }
+
+        <div class="flex items-center gap-md">
+          <label class="flex cursor-pointer items-center gap-sm select-none">
+            <input
+              type="checkbox"
+              class="h-5 w-5 cursor-pointer accent-[var(--color-primary)]"
+              [ngModel]="vbActivo()"
+              (ngModelChange)="onToggleVb($event)"
+              [disabled]="cargandoVb()"
+            />
+            <span class="text-sm font-semibold text-[var(--color-on-surface)]">Visto Bueno Administrativo</span>
+          </label>
+          <span class="text-xs text-[var(--color-on-surface-variant)]">
+            {{ vbActivo() ? 'Activo — los informes revisados pasan por el visto bueno' : 'Inactivo — los informes van directamente al Supervisor' }}
+          </span>
+        </div>
+      </section>
+
+      <!-- Diálogo confirmación desactivar VB -->
+      @if (dialogoDesactivar()) {
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-on-surface)]/40">
+          <div class="w-full max-w-lg rounded-xl bg-white p-lg shadow-xl">
+            <h2 class="m-0 text-lg font-bold text-[var(--color-on-surface)]">Desactivar Visto Bueno</h2>
+            <p class="mt-sm text-sm text-[var(--color-on-surface-variant)]">
+              Los informes en espera de Visto Bueno serán enviados automáticamente al Supervisor. ¿Desea continuar?
+            </p>
+            <div class="mt-md flex justify-end gap-sm">
+              <button
+                class="rounded border border-[var(--color-outline-variant)] px-md py-sm text-sm font-semibold text-[var(--color-on-surface)]"
+                type="button"
+                (click)="cancelarDesactivar()"
+              >
+                Cancelar
+              </button>
+              <button
+                class="rounded bg-[var(--color-primary)] px-md py-sm text-sm font-semibold text-white disabled:opacity-50"
+                type="button"
+                [disabled]="cargandoVb()"
+                (click)="confirmarDesactivar()"
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      }
     </div>
   `
 })
-export class AdminDashboardComponent {}
+export class AdminDashboardComponent implements OnInit {
+  readonly vbActivo = signal(false);
+  readonly cargandoVb = signal(false);
+  readonly errorVb = signal('');
+  readonly mensajeVb = signal('');
+  readonly dialogoDesactivar = signal(false);
+
+  constructor(private readonly parametroService: ParametroService) {}
+
+  ngOnInit() {
+    this.parametroService.obtenerVb().subscribe({
+      next: (p) => this.vbActivo.set(p.activo),
+      error: () => this.errorVb.set('No se pudo cargar el estado del parámetro VB.')
+    });
+  }
+
+  onToggleVb(valor: boolean) {
+    if (!valor) {
+      this.dialogoDesactivar.set(true);
+    } else {
+      this.aplicarVb(true);
+    }
+  }
+
+  cancelarDesactivar() {
+    this.dialogoDesactivar.set(false);
+  }
+
+  confirmarDesactivar() {
+    this.dialogoDesactivar.set(false);
+    this.aplicarVb(false);
+  }
+
+  private aplicarVb(activo: boolean) {
+    this.cargandoVb.set(true);
+    this.errorVb.set('');
+    this.mensajeVb.set('');
+    this.parametroService.setVbActivo(activo).subscribe({
+      next: (p) => {
+        this.vbActivo.set(p.activo);
+        this.cargandoVb.set(false);
+        this.mensajeVb.set(activo ? 'Visto Bueno activado.' : 'Visto Bueno desactivado. Informes migrados a revisión.');
+      },
+      error: () => {
+        this.cargandoVb.set(false);
+        this.errorVb.set('No se pudo actualizar el parámetro. Intente de nuevo.');
+      }
+    });
+  }
+}
