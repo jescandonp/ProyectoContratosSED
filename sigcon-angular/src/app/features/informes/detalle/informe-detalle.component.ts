@@ -582,7 +582,8 @@ export class InformeDetalleComponent implements OnInit {
       ENVIADO: 'Enviado',
       EN_REVISION: 'En revision',
       DEVUELTO: 'Devuelto',
-      APROBADO: 'Aprobado'
+      APROBADO: 'Aprobado',
+      EN_VISTO_BUENO: 'En Visto Bueno'
     };
     return map[estado];
   }

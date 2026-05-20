@@ -138,7 +138,8 @@ export class InformePreviewComponent implements OnInit {
       ENVIADO: 'Enviado',
       EN_REVISION: 'En revisión',
       DEVUELTO: 'Devuelto',
-      APROBADO: 'Aprobado'
+      APROBADO: 'Aprobado',
+      EN_VISTO_BUENO: 'En Visto Bueno'
     };
     return map[estado];
   }

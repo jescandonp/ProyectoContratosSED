@@ -45,6 +45,14 @@ const DEV_USERS: Record<RolUsuario, DevSession> = {
     cargo: 'Supervisor',
     rol: 'SUPERVISOR',
     password: 'supervisor123'
+  },
+  ADMINISTRATIVO: {
+    id: 5,
+    email: 'administrativo@educacionbogota.edu.co',
+    nombre: 'Administrativo SIGCON',
+    cargo: 'Administrativo',
+    rol: 'ADMINISTRATIVO',
+    password: 'admin123'
   }
 };
 

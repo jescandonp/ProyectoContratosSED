@@ -196,10 +196,16 @@ export class CentroNotificacionesComponent implements OnInit {
     switch (tipoEvento) {
       case 'INFORME_APROBADO':
       case 'REVISION_APROBADA':
+      case 'VB_DADO':
         return 'pi pi-check-circle';
       case 'INFORME_DEVUELTO':
       case 'REVISION_DEVUELTA':
+      case 'VB_DEVUELTO':
         return 'pi pi-exclamation-circle';
+      case 'INFORME_EN_VISTO_BUENO':
+        return 'pi pi-eye';
+      case 'VB_ESCALADO':
+        return 'pi pi-arrow-up';
       default:
         return 'pi pi-send';
     }

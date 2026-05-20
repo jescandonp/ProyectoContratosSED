@@ -3,7 +3,11 @@ export type TipoEventoNotificacion =
   | 'REVISION_APROBADA'
   | 'REVISION_DEVUELTA'
   | 'INFORME_APROBADO'
-  | 'INFORME_DEVUELTO';
+  | 'INFORME_DEVUELTO'
+  | 'INFORME_EN_VISTO_BUENO'
+  | 'VB_DADO'
+  | 'VB_ESCALADO'
+  | 'VB_DEVUELTO';
 
 export interface Notificacion {
   id: number;
