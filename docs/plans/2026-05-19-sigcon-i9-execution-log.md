@@ -45,7 +45,7 @@
 - [x] Crear `SgcnParametro.java` con anotaciones JPA
 - [x] Crear `SgcnParametroRepository.java`
 - [x] Compilar: `mvn compile -pl sigcon-backend` — 0 errores
-- [ ] Commit: `feat(i9): entidad SgcnParametro y repositorio`
+- [x] Commit: `feat(i9): entidad SgcnParametro y repositorio` — `c6e7097`
 
 ## T4 — ParametroService
 
@@ -179,6 +179,7 @@
 - Creado `SgcnParametro.java` mapeado a `SGCN_PARAMETROS`, con `CLAVE` como PK `String`, `VALOR` obligatorio y `DESCRIPCION` opcional.
 - Creado `SgcnParametroRepository.java` extendiendo `JpaRepository<SgcnParametro, String>`.
 - Validacion: `mvn compile` desde `sigcon-backend` con resultado `BUILD SUCCESS` (126 source files, 0 errores).
+- Commit T3: `c6e7097` — `feat(i9): entidad SgcnParametro y repositorio`.
 
 ## Punto de Retoma
 
