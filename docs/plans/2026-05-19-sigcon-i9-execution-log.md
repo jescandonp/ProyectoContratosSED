@@ -30,7 +30,7 @@
 - [x] Escribir `db/07_observaciones_accion.sql`
 - [x] Verificar que `db/03_reset_informes_local_dev.sql` incluye limpieza de `SGCN_PARAMETROS` si el entorno local lo requiere
 - [x] Ejecutar ambos scripts en BD local — 0 errores
-- [ ] Commit: `feat(i9): DDL SGCN_PARAMETROS y columna ACCION en observaciones`
+- [x] Commit: `feat(i9): DDL SGCN_PARAMETROS y columna ACCION en observaciones` — `61a8955`
 
 ## T2 — Enums Java
 
@@ -162,6 +162,7 @@
 - Actualizado `db/03_reset_informes_local_dev.sql` para normalizar `VB_ACTIVO=S` durante reset local cuando `SGCN_PARAMETROS` ya existe, sin romper esquemas pre-I9.
 - Validacion disponible: `sqlplus -V` retorna SQL*Plus 21.3 instalado.
 - Gate T1 completado por ejecucion manual confirmada: ambos scripts fueron ejecutados contra la BD local sin errores.
+- Commit T1: `61a8955` — `feat(i9): DDL SGCN_PARAMETROS y columna ACCION en observaciones`.
 
 ## Punto de Retoma
 
