@@ -22,7 +22,7 @@
 ## T0 — Documentacion base I9
 
 - [x] Crear el execution log I9 en `docs/plans/2026-05-19-sigcon-i9-execution-log.md` con encabezado: spec, plan, rama, inicio, estado ABIERTO y tareas T0-T14 sin marcar
-- [x] Commit: `docs(i9): abrir execution log I9` — `14d87d5`
+- [x] Commit: `docs(i9): abrir execution log I9` — `6bf04bd`
 
 ## T1 — Base de Datos
 
@@ -152,7 +152,7 @@
 - Se revisaron `README.md`, `docs/CONSTITUTION.md`, `docs/ARCHITECTURE.md`, `docs/TECNOLOGIAS.md`, `docs/specs/`, `docs/plans/` y el execution log vigente I8.
 - Se confirmo que I8 esta cerrado y que I9 es el incremento activo aprobado con plan listo para ejecucion.
 - Se abre este execution log en `main`, siguiendo la rama definida por la spec/plan I9.
-- Commit T0: `14d87d5` — `docs(i9): abrir execution log I9`.
+- Commit T0: `6bf04bd` — `docs(i9): abrir execution log I9`.
 
 ## Punto de Retoma
 
