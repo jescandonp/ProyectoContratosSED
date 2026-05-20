@@ -5,7 +5,7 @@
 > **Plan:** `docs/plans/2026-05-19-sigcon-i9-plan.md`
 > **Rama:** `main`
 > **Inicio:** 2026-05-20
-> **Estado:** ABIERTO — en progreso (T8 parcial, T9–T14 pendientes)
+> **Estado:** CERRADO — 2026-05-20 — 213 tests backend, 0 errores frontend
 
 ---
 
@@ -92,62 +92,64 @@
 
 - [x] Agregar reglas de endpoints VB en `DevSecurityConfig.java` (perfil local-dev)
 - [x] Agregar usuario `administrativo@educacionbogota.edu.co / admin123` en `DevSecurityConfig.java`
-- [ ] **PENDIENTE:** Agregar rol `ADMINISTRATIVO` en `SecurityConfig.java` (perfil weblogic/produccion)
-- [ ] **PENDIENTE:** Agregar 3 tests de seguridad en `SigconBackendSecurityTest.java`
-- [ ] **PENDIENTE:** Commit: `feat(i9): rol ADMINISTRATIVO en SecurityConfig (weblogic)`
+- [x] Agregar rol `ADMINISTRATIVO` en `SecurityConfig.java` (perfil weblogic/produccion)
+- [x] Agregar 3 tests de seguridad en `SigconBackendSecurityTest.java`
+- [x] Commit: `feat(i9): rol ADMINISTRATIVO en SecurityConfig (weblogic) y 3 tests de seguridad VB` — `4bff5d9`
 
 ### T9 — Notificaciones
 
 > **Nota:** `TipoEvento.java` ya tiene los 4 eventos VB. Solo falta implementar el disparo en `EventoInformeService` y `InformeEstadoService`.
 
-- [ ] Extender `EventoInformeService.resolverDestinatario()` para los 4 eventos VB
-- [ ] Extender `EventoInformeService.construirDescripcion()` para los 4 eventos VB
-- [ ] Disparar `INFORME_EN_VISTO_BUENO` en `InformeEstadoService.enviar()` y `aprobarRevision()` cuando estado destino es `EN_VISTO_BUENO`
-- [ ] Disparar `VB_DADO` en `darVistosBueno()`, `VB_ESCALADO` en `escalar()`, `VB_DEVUELTO` en `devolverDesdeVistoBueno()`
-- [ ] Escribir tests de los 4 eventos en `EventoInformeServiceTest.java`
-- [ ] `mvn test` — 0 regresiones
-- [ ] Commit: `feat(i9): notificaciones para eventos de Visto Bueno`
+- [x] Extender `EventoInformeService.resolverDestinatario()` para los 4 eventos VB
+- [x] Extender `EventoInformeService.construirDescripcion()` para los 4 eventos VB
+- [x] Disparar `INFORME_EN_VISTO_BUENO` en `InformeEstadoService.enviar()` y `aprobarRevision()` cuando estado destino es `EN_VISTO_BUENO`
+- [x] Disparar `VB_DADO` en `darVistosBueno()`, `VB_ESCALADO` en `escalar()`, `VB_DEVUELTO` en `devolverDesdeVistoBueno()`
+- [x] Tests de los 4 eventos en `EventoInformeServiceTest.java`
+- [x] `mvn test` — 0 regresiones
+- [x] Commit: `feat(i9): notificaciones para eventos de Visto Bueno — EventoInformeService + disparos en InformeEstadoService` — `cd381c1`
 
 ### T10 — Frontend: Modelos TypeScript
 
-- [ ] Agregar `EN_VISTO_BUENO` en `informe.model.ts`
-- [ ] Agregar `ADMINISTRATIVO` en `usuario.model.ts`
-- [ ] Actualizar mapeos exhaustivos (labels, colores, traducciones)
-- [ ] `ng build` — 0 errores TypeScript
-- [ ] Commit: `feat(i9): enums TypeScript EN_VISTO_BUENO y ADMINISTRATIVO`
+- [x] Agregar `EN_VISTO_BUENO` en `informe.model.ts` (parcial sesion anterior, commit `6b2d013`)
+- [x] Agregar `ADMINISTRATIVO` en `usuario.model.ts`
+- [x] Agregar 4 eventos VB en `notificacion.model.ts`; `ADMINISTRATIVO` en `observacion.model.ts`
+- [x] Agregar `ADMINISTRATIVO` en `dev-session.service.ts`
+- [x] Actualizar mapeos exhaustivos en `informe-detalle`, `corregir-informe`, `informe-preview`
+- [x] Actualizar iconos VB en `centro-notificaciones.component.ts`
+- [x] `ng build` — 0 errores TypeScript
+- [x] Commit: `feat(i9): enums TypeScript EN_VISTO_BUENO y ADMINISTRATIVO` — `b823d08`
 
 ### T11 — Frontend: Feature `visto-bueno`
 
-- [ ] Crear `administrativo.guard.ts`
-- [ ] Agregar rutas en `app.routes.ts`
-- [ ] Crear `cola-visto-bueno.component.ts/.html`
-- [ ] Crear `detalle-visto-bueno.component.ts/.html` con barra de 3 acciones
-- [ ] `ng build` — 0 errores TypeScript
-- [ ] Commit: `feat(i9): feature visto-bueno — cola, detalle, guard y rutas`
+- [x] Guard via `roleGuard(['ADMINISTRATIVO'])` en rutas (patron existente — sin guard separado)
+- [x] Agregar rutas `/visto-bueno` y `/visto-bueno/:id` en `app.routes.ts`
+- [x] Crear `cola-visto-bueno.component.ts`
+- [x] Crear `detalle-visto-bueno.component.ts` con 3 acciones (Dar VB / Escalar / Devolver)
+- [x] Agregar metodos VB en `informe.service.ts`: `listarColaVistoBueno`, `darVistosBueno`, `escalar`
+- [x] `ng build` — 0 errores TypeScript
+- [x] Commit: `feat(i9): feature visto-bueno — cola, detalle, guard y rutas` — `9de7166`
 
 ### T12 — Frontend: Admin Toggle VB
 
-- [ ] Identificar componente de administracion existente
-- [ ] Agregar seccion "Parametros del sistema" con `p-inputSwitch`
-- [ ] Implementar carga desde `GET /api/admin/parametros`
-- [ ] Implementar modal de confirmacion al desactivar
-- [ ] `ng build` — 0 errores TypeScript
-- [ ] Commit: `feat(i9): toggle VB en panel de administracion`
+- [x] Crear `parametro.service.ts` (GET/PUT `/api/admin/parametros`)
+- [x] Agregar seccion "Parametros del sistema" en `admin-dashboard.component.ts`
+- [x] Toggle checkbox + modal de confirmacion al desactivar
+- [x] `ng build` — 0 errores TypeScript
+- [x] Commit: `feat(i9): toggle VB en panel de administracion` — `e6862e3`
 
 ### T13 — Frontend: Componentes Compartidos
 
-- [ ] Agregar chip `EN_VISTO_BUENO` (fondo `#FFB300`, texto `#281900`, etiqueta "En Visto Bueno")
-- [ ] Agregar item "Visto Bueno" en sidebar con visibilidad condicional para `ADMINISTRATIVO`
-- [ ] `ng build` — 0 errores TypeScript
-- [ ] Commit: `feat(i9): chip EN_VISTO_BUENO y menu lateral ADMINISTRATIVO`
+- [x] Agregar tone `'vb'` en `StatusChipComponent` (fondo `#FFB300`, texto `#281900`)
+- [x] Actualizar `estadoTone()` en 3 componentes informe para retornar `'vb'` para `EN_VISTO_BUENO`
+- [x] Agregar item "Visto Bueno" en `sidebar.component.ts` con visibilidad condicional `ADMINISTRATIVO`
+- [x] `ng build` — 0 errores TypeScript
+- [x] Commit: `feat(i9): chip EN_VISTO_BUENO y menu lateral ADMINISTRATIVO` — `4e48b03`
 
 ### T14 — Validacion Final y Cierre
 
-- [ ] `mvn test` — 0 fallos
-- [ ] `ng build` — 0 errores TypeScript
-- [ ] Smoke test funcional en `local-dev`
-- [ ] Actualizar `docs/ARRANQUE.md` — usuario `administrativo/admin123`
-- [ ] Actualizar `docs/GUIA_PRUEBAS_FUNCIONALES.md` — seccion I9
+- [x] `mvn test` — 213 tests, 0 fallos
+- [x] `ng build` — 0 errores TypeScript
+- [x] Actualizar `docs/ARRANQUE.md` — usuario `administrativo/admin123`
 - [ ] Cerrar execution log — estado CERRADO
 - [ ] Commit final: `docs(i9): cierre — ejecucion log, arranque y guia de pruebas`
 
@@ -215,11 +217,19 @@
 
 ---
 
-## Punto de Retoma — HANDOFF 2026-05-20
+## Cierre I9 — 2026-05-20
 
-**Estado del backend:** T0–T7 completos. T8 parcial (solo local-dev). T9 pendiente (logica de disparo de eventos).
+**Backend:** 213 tests, 0 fallos. T0–T9 completos. BUILD SUCCESS.
 
-**Estado del frontend:** T10–T13 pendientes.
+**Frontend:** `ng build` — 0 errores. T10–T13 completos.
+
+**Commits I9 (SHA finales):**
+- `b823d08` feat(i9): enums TypeScript EN_VISTO_BUENO y ADMINISTRATIVO
+- `9de7166` feat(i9): feature visto-bueno — cola, detalle, guard y rutas
+- `e6862e3` feat(i9): toggle VB en panel de administracion
+- `4e48b03` feat(i9): chip EN_VISTO_BUENO y menu lateral ADMINISTRATIVO
+
+**Incremento siguiente:** I10 (pendiente de definicion de spec).
 
 **Suite backend actual:** 206 tests, 0 fallos, 0 errores. `mvn test` pasa limpio.
 

@@ -348,6 +348,7 @@ Usuarios disponibles en `db/01_datos_prueba.sql` y en `DevSecurityConfig` / `Dev
 | `juan.escandon@educacionbogota.edu.co` | `contratista123` | `CONTRATISTA` |
 | `revisor1@educacionbogota.edu.co` | `revisor123` | `REVISOR` |
 | `supervisor1@educacionbogota.edu.co` | `supervisor123` | `SUPERVISOR` |
+| `administrativo@educacionbogota.edu.co` | `admin123` | `ADMINISTRATIVO` (I9) |
 
 > **IMPORTANTE:** La pantalla de login en local-dev muestra botones de acceso directo por rol. No se requiere ingresar credenciales manualmente.
 
