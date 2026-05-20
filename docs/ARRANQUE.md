@@ -2,7 +2,7 @@
 
 > Estado: Incremento 8 completado — listo para despliegue PROD (ambiente pruebas SED).
 > Metodologia: Spec-Driven Development (SDD), nivel Spec-Anchored.
-> Ultima actualizacion: 2026-05-19 — correcciones Java 8 + JNDI WebLogic para despliegue SED.
+> Ultima actualizacion: 2026-05-20 — 4 errores WebLogic resueltos (E-WL-01 a E-WL-04).
 
 ## Orden De Documentos
 
@@ -28,7 +28,7 @@ Repositorio remoto: `https://github.com/jescandonp/ProyectoContratosSED.git`
 
 | Rama | Commit | Estado |
 |---|---:|---|
-| `main` | `f181398` | Sincronizada — incluye hasta I8 + fix despliegue SED |
+| `main` | `9c93fdd` | Sincronizada — incluye hasta I8 + 4 fixes WebLogic (E-WL-01..04) |
 | `feat/sigcon-i1` | `be26bbe` | Sincronizada |
 | `feat/sigcon-i2` | `0658cef` | Sincronizada |
 | `feat/sigcon-i3` | `9be9c73` | Sincronizada |
@@ -405,8 +405,13 @@ En `local-dev` poner `sigcon.mail.enabled: false`; el sistema registra los email
    ```powershell
    Set-Location sigcon-backend
    mvn clean package -DskipTests
-   # Artefacto: sigcon-backend/target/sigcon-backend.war
+   # Se generan DOS archivos en target/:
+   #   sigcon-backend.war          (~57 MB) → Spring Boot fat WAR  ⚠️  NO usar en WebLogic
+   #   sigcon-backend.war.original (~47 MB) → WAR estandar Maven   ✅  ESTE es el correcto
    ```
+   > **CRITICO:** Desplegar `sigcon-backend.war.original`, no `sigcon-backend.war`.
+   > El fat WAR incluye `WEB-INF/lib-provided/` que WebLogic interpreta y que puede
+   > causar conflictos de classpath adicionales.
 
 2. Verificar que el WAR incluye el logo institucional (debe listar `logo-alcaldia.png`):
    ```powershell
@@ -430,9 +435,11 @@ En `local-dev` poner `sigcon.mail.enabled: false`; el sistema registra los email
    SIGCON_ADMIN_EMAIL=<correo-admin-sigcon>
    ```
 
-5. Desplegar `sigcon-backend.war` desde WebLogic Admin Console:
-   - **Deployments → Install → Upload → seleccionar WAR**.
+5. Desplegar `sigcon-backend.war.original` desde WebLogic Admin Console:
+   - **Deployments → Install → Upload → seleccionar `sigcon-backend.war.original`**.
    - Contexto resultante: `/sigcon` (configurado en `WEB-INF/weblogic.xml`).
+   - ⚠️ **No confundir** con `sigcon-backend.war` (~57 MB): ese es el fat WAR ejecutable
+     de Spring Boot y **no** debe desplegarse en WebLogic.
 
 6. Ejecutar migraciones de BD en Oracle produccion si el esquema no existe:
    ```sql
@@ -488,6 +495,60 @@ jar tf sigcon-backend/target/sigcon-backend.war | Select-String "tomcat-embed-el
 **Solución (ya aplicada en `main`):** Reemplazado por
 `StreamUtils.copyToByteArray()` de Spring Framework.
 **Commit:** `83e9a80`
+
+---
+
+### E-WL-03 — `prefer-application-packages cannot be specified when prefer-web-inf-classes is turned on`
+
+**Síntoma (WebLogic Admin Console):**
+```
+Neither <prefer-application-packages> nor <prefer-application-resources> can be specified
+when <prefer-web-inf-classes> is turned on in weblogic.xml
+```
+
+**Causa:** `weblogic.xml` tenía simultáneamente `<prefer-web-inf-classes>true</prefer-web-inf-classes>`
+y `<prefer-application-packages>`. En WebLogic 12.2.1 son **mutuamente excluyentes**
+por diseño — no se pueden usar a la vez.
+
+**Solución (ya aplicada en `main`):** Se eliminó `prefer-application-packages` y
+`prefer-application-resources` del intento anterior. Solo queda `prefer-web-inf-classes`.
+**Commit:** `67dde25`
+
+---
+
+### E-WL-04 — `NoSuchMethodError: javax.validation.BootstrapConfiguration.getClockProviderClassName()`
+
+**Síntoma (WebLogic Admin Console):**
+```
+java.lang.NoSuchMethodError: javax.validation.BootstrapConfiguration.getClockProviderClassName()Ljava/lang/String;
+```
+
+**Causa:** `prefer-web-inf-classes=true` **no cubre paquetes Java EE** (`javax.*`).
+WebLogic los carga siempre desde el servidor, sin excepción. WebLogic 12.2.1 incluye
+Bean Validation **1.1**; Spring Boot 2.7 requiere Bean Validation **2.0**
+(`getClockProviderClassName()` fue introducido en BV 2.0).
+El WAR contiene `jakarta.validation-api-2.0.2.jar` pero WebLogic lo ignora para
+`javax.validation.*` y usa su propia versión 1.1.
+
+**Solución (ya aplicada en `main` — commit `9c93fdd`):**
+Se reemplazó `prefer-web-inf-classes` por `prefer-application-packages` con lista
+explícita de paquetes. Esta directiva **sí** permite sobreescribir paquetes `javax.*`.
+
+Paquetes declarados en `weblogic.xml`:
+- `javax.validation.*` y `org.hibernate.validator.*` — Bean Validation 2.0
+- `javax.persistence.*` y `org.hibernate.*` — JPA 2.2 / Hibernate ORM 5.6
+- `org.springframework.*`, `com.fasterxml.*`, `org.slf4j.*`, `ch.qos.logback.*`
+- `org.aopalliance.*`, `org.aspectj.*`, `org.apache.commons.*`
+- `antlr.*`, `net.bytebuddy.*`, `com.nimbusds.*`, `net.minidev.*`
+
+Recursos SPI declarados en `<prefer-application-resources>`:
+- `META-INF/spring.factories`, `META-INF/spring/*.imports`
+- `META-INF/services/javax.persistence.spi.PersistenceProvider`
+- `META-INF/services/javax.validation.spi.ValidationProvider`
+- `META-INF/services/com.fasterxml.jackson.databind.Module`
+
+**Archivos modificados:** `WEB-INF/weblogic.xml`
+**Commit:** `9c93fdd`
 
 ---
 
