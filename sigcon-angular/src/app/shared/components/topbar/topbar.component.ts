@@ -9,10 +9,17 @@ import { StatusChipComponent } from '../status-chip/status-chip.component';
   standalone: true,
   imports: [StatusChipComponent, NotificacionesMenuComponent],
   template: `
-    <header class="flex min-h-16 items-center justify-between border-b border-[var(--color-outline-variant)] bg-white px-lg">
-      <div>
-        <p class="m-0 text-xs font-bold uppercase tracking-normal text-[var(--color-on-surface-variant)]">Sistema de Gestion de Contratos</p>
-        <h2 class="m-0 text-lg font-semibold text-[var(--color-on-surface)]">Panel operativo</h2>
+    <header class="flex min-h-14 items-center justify-between border-b border-[var(--color-outline-variant)] bg-white px-lg">
+      <div class="flex items-center gap-md">
+        <img
+          src="assets/images/logo-sigcon.png"
+          alt="SIGCON"
+          class="h-8 w-auto object-contain"
+        />
+        <div class="h-6 w-px bg-[var(--color-outline-variant)]"></div>
+        <p class="m-0 text-sm font-medium text-[var(--color-on-surface-variant)]">
+          Sistema de Gestion de Contratos - SED
+        </p>
       </div>
 
       @if (authService.currentUser(); as user) {
@@ -24,7 +31,7 @@ import { StatusChipComponent } from '../status-chip/status-chip.component';
             <p class="m-0 text-xs text-[var(--color-on-surface-variant)]">{{ user.email }}</p>
           </div>
           <button
-            class="h-9 rounded border border-[var(--color-outline-variant)] bg-white px-sm text-sm font-semibold text-[var(--color-on-surface)]"
+            class="h-9 rounded border border-[var(--color-outline-variant)] bg-white px-sm text-sm font-semibold text-[var(--color-on-surface)] hover:bg-[var(--color-surface-container-low)]"
             type="button"
             (click)="authService.logout()"
           >
