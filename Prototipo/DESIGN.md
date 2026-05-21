@@ -1,93 +1,102 @@
 ---
 name: SED Bogotá Design System
 colors:
-  surface: '#f8f9ff'
-  surface-dim: '#cbdbf5'
-  surface-bright: '#f8f9ff'
+  # Superficies — azul frío institucional
+  surface: '#f5f7ff'
+  surface-dim: '#c9d6f0'
+  surface-bright: '#f5f7ff'
   surface-container-lowest: '#ffffff'
-  surface-container-low: '#eff4ff'
-  surface-container: '#e5eeff'
-  surface-container-high: '#dce9ff'
-  surface-container-highest: '#d3e4fe'
+  surface-container-low: '#eef2fb'
+  surface-container: '#e4ebf8'
+  surface-container-high: '#dae3f5'
+  surface-container-highest: '#d0dbf2'
   on-surface: '#0b1c30'
   on-surface-variant: '#434652'
-  inverse-surface: '#213145'
+  inverse-surface: '#1a2d44'
   inverse-on-surface: '#eaf1ff'
   outline: '#747783'
   outline-variant: '#c4c6d3'
-  surface-tint: '#345baf'
-  primary: '#002869'
+  surface-tint: '#0a0e5a'
+  # Primario — Azul marino SED (navegación, sidebar, iconografía)
+  primary: '#0a0e5a'
   on-primary: '#ffffff'
-  primary-container: '#0b3d91'
-  on-primary-container: '#8dadff'
-  inverse-primary: '#b1c5ff'
-  secondary: '#7e5700'
+  primary-container: '#1a2080'
+  on-primary-container: '#9eaaff'
+  inverse-primary: '#b8c0ff'
+  # Acento — Naranja SED (CTAs, highlights, logo bubble)
+  accent: '#e8401c'
+  on-accent: '#ffffff'
+  accent-container: '#ff6d45'
+  on-accent-container: '#3d0e00'
+  accent-dim: '#ff8a6a'
+  # Secundario — Azul medio (estados activos, badges)
+  secondary: '#002869'
   on-secondary: '#ffffff'
-  secondary-container: '#feb300'
-  on-secondary-container: '#6a4800'
-  tertiary: '#5f001b'
-  on-tertiary: '#ffffff'
-  tertiary-container: '#89002a'
-  on-tertiary-container: '#ff8d99'
+  secondary-container: '#0b3d91'
+  on-secondary-container: '#8dadff'
+  # Estados semánticos
   error: '#ba1a1a'
   on-error: '#ffffff'
   error-container: '#ffdad6'
   on-error-container: '#93000a'
-  primary-fixed: '#dae2ff'
-  primary-fixed-dim: '#b1c5ff'
-  on-primary-fixed: '#001947'
-  on-primary-fixed-variant: '#144296'
-  secondary-fixed: '#ffdeac'
-  secondary-fixed-dim: '#ffba38'
-  on-secondary-fixed: '#281900'
-  on-secondary-fixed-variant: '#604100'
-  tertiary-fixed: '#ffdadb'
-  tertiary-fixed-dim: '#ffb2b8'
-  on-tertiary-fixed: '#40000f'
-  on-tertiary-fixed-variant: '#91022d'
-  background: '#f8f9ff'
+  success: '#1b6b3a'
+  on-success: '#ffffff'
+  success-container: '#d4f5e0'
+  warning: '#7e5700'
+  on-warning: '#ffffff'
+  warning-container: '#ffdeac'
+  # Fondo
+  background: '#f5f7ff'
   on-background: '#0b1c30'
-  surface-variant: '#d3e4fe'
+  surface-variant: '#d0dbf2'
 typography:
+  # Montserrat — headings y display
   h1:
-    fontFamily: Public Sans
+    fontFamily: Montserrat
     fontSize: 40px
     fontWeight: '700'
     lineHeight: 48px
     letterSpacing: -0.02em
   h2:
-    fontFamily: Public Sans
+    fontFamily: Montserrat
     fontSize: 32px
     fontWeight: '700'
     lineHeight: 40px
     letterSpacing: -0.01em
   h3:
-    fontFamily: Public Sans
+    fontFamily: Montserrat
     fontSize: 24px
     fontWeight: '600'
     lineHeight: 32px
+  h4:
+    fontFamily: Montserrat
+    fontSize: 20px
+    fontWeight: '600'
+    lineHeight: 28px
+  # Work Sans — body, UI, datos
   body-lg:
-    fontFamily: Public Sans
+    fontFamily: Work Sans
     fontSize: 18px
     fontWeight: '400'
     lineHeight: 28px
   body-md:
-    fontFamily: Public Sans
+    fontFamily: Work Sans
     fontSize: 16px
     fontWeight: '400'
     lineHeight: 24px
   body-sm:
-    fontFamily: Public Sans
+    fontFamily: Work Sans
     fontSize: 14px
     fontWeight: '400'
     lineHeight: 20px
   label-bold:
-    fontFamily: Public Sans
+    fontFamily: Work Sans
     fontSize: 12px
     fontWeight: '700'
     lineHeight: 16px
+    letterSpacing: 0.04em
   table-data:
-    fontFamily: Public Sans
+    fontFamily: Work Sans
     fontSize: 13px
     fontWeight: '400'
     lineHeight: 18px
@@ -111,29 +120,91 @@ spacing:
 
 ## Brand & Style
 
-This design system is built to reflect the authority, transparency, and service-oriented nature of the Secretaría de Educación del Distrito. The brand personality is **Institutional, Efficient, and Accessible**. It prioritizes the clear communication of administrative data while maintaining the formal visual language of the Bogotá district government.
+This design system reflects the identity defined by the Oficina de Prensa de la Secretaría de Educación del Distrito for SIGCON. The brand personality is **Cercana, Eficiente y Confiable** — a system that speaks to the citizen ("Una educación que te responde") while maintaining the institutional authority of the district government.
 
-The chosen aesthetic is **Corporate / Modern**. It utilizes a structured layout and a restrained decorative palette to ensure that users—ranging from administrative officials to citizens—can navigate complex information without cognitive overload. The interface focuses on functional clarity, employing a "utility-first" visual hierarchy that balances the weight of the Bogotá Red and Gold against a dominant, trustworthy Blue.
+The chosen aesthetic is **Institucional Moderno**. The interface uses a strong navy-blue structural foundation (sidebar, iconography, navigation) anchored by the SED Orange as the primary action and brand color. This combination reflects the official visual identity delivered by Prensa SED and moves away from the previous cold-blue/gold palette toward a warmer, more energetic identity that communicates proximity and responsiveness.
+
+The logo is the combined lockup: the "Una educación que te responde" logotype alongside the SIGCON speech-bubble mark in SED Orange (`#E8401C`). Both assets are in `Prototipo/SIGCON_/logo-head-SIGCON_.png`.
 
 ## Colors
 
-The color palette is derived directly from the institutional identity of the District. 
+The palette is derived from the visual assets provided by Prensa SED.
 
-- **Primary Blue (#0B3D91):** Used for primary navigation, headers, and main action buttons. It establishes the foundation of trust and officiality.
-- **Institutional Gold (#FFB300):** Applied sparingly as an accent color for highlights, warning states, or secondary call-to-actions that require visibility without the urgency of red.
-- **Bogotá Red (#92032E):** Reserved for high-importance semantic markers, specific district branding elements, and critical alerts.
-- **Neutral Slate (#64748B):** Used for secondary text, borders, and UI scaffolding to provide contrast without competing with the primary brand colors.
+- **Azul Marino SED (`#0A0E5A`):** Primary structural color. Used for sidebar background, navigation, iconography, and headings. Communicates authority and depth.
+- **Naranja SED (`#E8401C`):** Primary accent and action color. Used for primary CTA buttons, the SIGCON logo bubble, active navigation indicators, and key highlights. Replaces the previous Gold and Bogotá Red accents.
+- **Azul Institucional (`#002869`):** Secondary brand blue. Used for secondary actions, active state backgrounds, and link colors.
+- **Neutral Slate (`#747783`):** Secondary text, borders, and UI scaffolding.
 
-The default mode is **Light**, utilizing high-contrast ratios to meet accessibility standards required for public government platforms.
+The default mode is **Light**. High-contrast ratios are maintained to meet accessibility standards for public government platforms. The Naranja SED on white (`#E8401C` on `#FFFFFF`) achieves a contrast ratio of ~4.5:1, meeting WCAG AA for large text and UI components.
+
+Semantic colors (error, success, warning) are independent of the brand palette and follow standard accessibility conventions.
 
 ## Typography
 
-The typography system utilizes **Public Sans** for all levels of the hierarchy. As a typeface designed for government use, it offers exceptional readability across different screen sizes and densities.
+The typography system uses a **dual-family pairing** provided by Prensa SED:
 
-- **Headlines:** Use Bold weights with slight negative letter-spacing to maintain a strong institutional presence.
-- **Body Text:** Primarily uses the Regular weight at 16px for general content and 14px for administrative forms to increase information density.
-- **Data Display:** A specific `table-data` style is defined at 13px to allow for high-density data grids without sacrificing legibility.
-- **Labels:** Small, bold, and occasionally uppercase to clearly delineate form fields and metadata.
+- **Montserrat** — Display and headings (h1–h4). A geometric sans-serif that projects confidence and modernity. Used at Bold (700) and SemiBold (600) weights. Font files are in `Prototipo/SIGCON_/font_/Montserrat/`.
+- **Work Sans** — Body, UI labels, form fields, and data tables. Optimized for on-screen legibility at small sizes. Used at Regular (400) and Bold (700). Font files are in `Prototipo/SIGCON_/font_/Work_Sans/`.
+
+Usage rules:
+- **Headings:** Montserrat Bold with negative letter-spacing (`-0.02em` for h1, `-0.01em` for h2) to maintain strong visual presence.
+- **Body Text:** Work Sans Regular at 16px for content, 14px for form fields and dense administrative data.
+- **Data Tables:** Work Sans Regular 13px with 18px line-height for high-density grids.
+- **Labels:** Work Sans Bold 12px with slight positive tracking (`0.04em`) for uppercase form labels.
+
+## Logo
+
+SIGCON usa un lockup de dos piezas provisto por Prensa SED (`Prototipo/SIGCON_/logo-head-SIGCON_.png`):
+
+1. **Logotipo institucional izquierdo:** "Una educación que te responde" con el ícono de la *e* en Naranja SED sobre fondo blanco. Tipografía en gris oscuro (`#3d3d3d`).
+2. **Marca SIGCON derecha:** Texto "SIGCON" en blanco, sobre una burbuja de diálogo en Naranja SED (`#E8401C`). Comunica que el sistema "responde" al usuario.
+
+**Reglas de uso del logo:**
+- Siempre usar el lockup completo en el header de la aplicación.
+- No separar las dos piezas.
+- Sobre fondos oscuros (navbar navy) usar versión con texto blanco.
+- Tamaño mínimo: 200px de ancho para preservar legibilidad del logotipo institucional.
+- Fondo del header: blanco (`#FFFFFF`) o navy (`#0A0E5A`). No usar sobre grises medios.
+
+## Iconografía
+
+El set de iconos personalizados de Prensa SED reemplaza los íconos genéricos de Material Icons. Son **15 PNGs de línea**, trazo grueso, sin relleno. Se encuentran en `Prototipo/SIGCON_/iconos_/`.
+
+### Dos grupos por color
+
+**Grupo A — Iconos de Navegación (navy `#0A0E5A`)**  
+Usados en sidebar, menú lateral y secciones principales.
+
+| Archivo | Uso en la app |
+|---|---|
+| `ico-inicio_.png` | Dashboard / Inicio |
+| `ico-contratos_.png` | Mis Contratos |
+| `ico-contratos-admin_.png` | Gestión de Contratos (admin) |
+| `ico-admin_.png` | Administración / Archivos |
+| `ico-catalogo_.png` | Catálogo / Reportes |
+| `ico-usuarios_.png` | Gestión de Usuarios |
+| `ico-perfil_.png` | Mi Perfil |
+| `ico-filtro_.png` | Filtrar (tablas) |
+| `icon-flecha-der_.png` | Paginación / siguiente |
+| `icon-flecha-iz_.png` | Paginación / anterior |
+| `icon-mail_.png` | Notificaciones email |
+| `icon-check_.png` | Estado aprobado / confirmación |
+
+**Grupo B — Iconos Utilitarios (gris `#333333`)**  
+Usados en barras de búsqueda, alertas y acciones secundarias sobre fondo claro.
+
+| Archivo | Uso en la app |
+|---|---|
+| `icon-buscar_.png` | Barra de búsqueda global |
+| `icon-alerta_.png` | Alertas y advertencias |
+| `icon-salir_.png` | Cerrar sesión |
+
+### Reglas de uso
+- **Tamaño base:** 24×24px en UI. Los PNG fuente son ~257px, escalar con `width/height` fijo.
+- **No recolorear** los PNGs — ya tienen su color de marca embebido.
+- En el sidebar sobre fondo navy, los iconos del Grupo A aparecen en blanco (usar filtro CSS `brightness(0) invert(1)` o versión SVG cuando esté disponible).
+- Los iconos del Grupo B **no se usan** sobre fondo navy.
+- Espaciado entre ícono y label: `8px` (`spacing.sm`).
 
 ## Layout & Spacing
 
@@ -161,23 +232,78 @@ The shape language is **Soft**, striking a balance between the rigid tradition o
 ## Components
 
 ### Buttons
-- **Primary:** Solid Primary Blue (#0B3D91) with white text. High-contrast and authoritative.
-- **Secondary:** Outlined Blue or Solid Gold (#FFB300) for supporting actions.
-- **Tertiary:** Text-only with bold weights for utility actions within tables.
+
+| Variante | Fondo | Texto | Uso |
+|---|---|---|---|
+| **Primary** | Naranja SED `#E8401C` | Blanco | CTA principal: "Crear Informe", "Nuevo Contrato", "Aprobar" |
+| **Secondary** | Transparente + borde `#0A0E5A` | Navy `#0A0E5A` | Acciones secundarias: "Filtrar", "Exportar" |
+| **Tertiary** | Transparente | Navy `#0A0E5A` | Acciones de tabla: "Ver detalle", "Editar" |
+| **Danger** | Transparente + borde `#BA1A1A` | Rojo `#BA1A1A` | Acciones destructivas: "Eliminar", "Rechazar" |
+
+Estados:
+- **Hover Primary:** `#C93518` (naranja 15% más oscuro)
+- **Disabled:** fondo `#E0E0E0`, texto `#9E9E9E`
+- **Focus ring:** 2px solid `#E8401C` con 2px offset
+
+### Sidebar / Navegación
+
+El sidebar usa Azul Marino SED (`#0A0E5A`) como fondo con texto e íconos blancos.
+
+- **Ancho:** 220px (expandido) / 64px (colapsado con solo íconos)
+- **Logo:** Lockup completo de Prensa SED en la parte superior sobre fondo blanco (`#FFFFFF`) — franja de ~72px de alto
+- **Ítem inactivo:** ícono blanco + label Work Sans 14px Regular, blanco `rgba(255,255,255,0.75)`
+- **Ítem activo:** fondo `#1a2080` (primary-container) + ícono blanco + label blanco `#FFFFFF` + borde izquierdo 3px Naranja SED `#E8401C`
+- **Sección inferior** (Configuración / Cerrar Sesión): separador `rgba(255,255,255,0.15)`, misma jerarquía visual
 
 ### Input Fields & Forms
-Forms must be compact. Use 14px text for labels placed directly above the input. Input height is capped at 36px to allow for high-density vertical stacking. Borders are 1px solid neutral.
+
+Forms deben ser compactos para alta densidad administrativa.
+
+- **Label:** Work Sans Bold 12px, `#434652`, uppercase con tracking `0.04em`, 4px sobre el input
+- **Input height:** 36px
+- **Border:** 1px solid `#C4C6D3` (outline-variant)
+- **Border focus:** 2px solid `#E8401C` (Naranja SED) — señal de acción activa
+- **Placeholder:** Work Sans Regular 14px, `#747783`
+- **Error state:** borde `#BA1A1A` + mensaje 12px rojo debajo
 
 ### Data Tables
-Tables are the core of this system. 
-- **Header:** Light gray background (#F1F5F9) with bold 12px labels.
-- **Rows:** Alternating zebra stripes (white and #F8FAFC) to aid horizontal scanning.
-- **Density:** 8px vertical padding per cell.
+
+Las tablas son el núcleo del sistema administrativo.
+
+- **Header:** fondo `#EEF2FB` (surface-container-low), Montserrat SemiBold 12px uppercase, color `#0A0E5A`
+- **Rows:** alternancia blanco / `#F5F7FF` (surface)
+- **Padding de celda:** 8px vertical, 12px horizontal
+- **Acción de fila hover:** fondo `#E4EBF8` (surface-container)
+- **Columna de acciones:** íconos terciarios alineados a la derecha, 24px
 
 ### Chips & Status Indicators
-Used for "Process State" (e.g., Pending, Approved). 
-- **Approved:** Bogotá Red (#92032E) background with white text for high visibility or a softer tint for less critical statuses.
-- **Warning:** Institutional Gold (#FFB300) to indicate items requiring attention.
+
+Usados para estados del flujo de contratos e informes. Forma: `border-radius: 9999px` (full), padding `4px 10px`.
+
+| Estado | Fondo | Texto | Token |
+|---|---|---|---|
+| **APROBADO / VIGENTE** | `#D4F5E0` | `#1B6B3A` | success-container / on-success |
+| **PENDIENTE / EN REVISIÓN** | `#E4EBF8` | `#0A0E5A` | surface-container / primary |
+| **DEVUELTO / ALERTA** | `#FFDEAC` | `#7E5700` | warning-container / warning |
+| **VENCIDO / ERROR** | `#FFDAD6` | `#BA1A1A` | error-container / error |
+| **EN VISTO BUENO** | `#FFE5DC` | `#C93518` | accent-dim tint / accent dark |
+| **LIQUIDADO** | `#D0DBF2` | `#0A0E5A` | surface-container-highest / primary |
 
 ### Cards
-Clean, white backgrounds with a 1px neutral border. Headers within cards should have a subtle bottom border to separate titles from the content body.
+
+Fondo blanco `#FFFFFF`, borde `1px solid #C4C6D3` (outline-variant), `border-radius: 8px` (lg).
+
+- **Header de card:** Montserrat SemiBold 16px color `#0A0E5A`, borde inferior `1px solid #E4EBF8`
+- **Padding interno:** 16px (md)
+- **Card de KPI / métrica:** borde superior 4px Naranja SED `#E8401C` para destacar el dato principal
+- **Card de alerta:** borde izquierdo 4px según color semántico del estado
+
+### Header de Aplicación
+
+Barra superior sobre el contenido principal (a la derecha del sidebar).
+
+- **Fondo:** Blanco `#FFFFFF`
+- **Borde inferior:** `1px solid #C4C6D3`
+- **Alto:** 56px
+- **Contenido:** título de sección (Montserrat Bold 20px, `#0A0E5A`) a la izquierda; ícono de notificaciones + avatar de usuario a la derecha
+- **Ícono de búsqueda global:** `icon-buscar_.png` (Grupo B, gris `#333333`), 20px
