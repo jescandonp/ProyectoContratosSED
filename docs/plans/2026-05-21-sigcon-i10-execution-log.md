@@ -2,7 +2,7 @@
 
 **Incremento:** I10 — Identidad Visual Prensa SED  
 **Inicio:** 2026-05-21  
-**Estado:** 🟡 EN PROGRESO
+**Estado:** ✅ CERRADO
 
 ---
 
@@ -16,7 +16,7 @@
 | T4 | Rediseñar Sidebar | ✅ Completado |
 | T5 | Actualizar Topbar | ✅ Completado |
 | T6 | Actualizar Status Chip | ✅ Completado |
-| T7 | Build final y validación | ⬜ Pendiente |
+| T7 | Build final y validación | ✅ Completado |
 
 ---
 
@@ -71,6 +71,17 @@
 - `success`, `warning` y `danger` migrados a tokens semanticos nuevos
 - Tone `vb` migrado de dorado a naranja suave `#ffe5dc` con texto `#c93518`
 - Build Angular development: sin errores ✅
+
+### T7 — Build final y validación ✅
+- `angular.json` actualizado para incluir `src/assets` en build y test
+- README actualizado: ultimo incremento cerrado I10, proximo incremento I11
+- Build Angular production: exitoso ✅
+- Assets verificados en `dist/sigcon-angular/browser/assets/`
+  - Montserrat: 6 archivos `.woff`
+  - Work Sans: 2 archivos `.ttf`
+  - Iconos: 15 archivos `.png`
+  - Imagenes: `logo-sigcon.png`
+- Pendiente operativo: push a `origin/main`
 
 ---
 
