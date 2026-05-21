@@ -5,7 +5,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 
 interface NavItem {
   label: string;
-  icon: string;
+  iconAsset: string;
   route: string;
 }
 
@@ -14,52 +14,74 @@ interface NavItem {
   standalone: true,
   imports: [RouterLink, RouterLinkActive],
   template: `
-    <aside class="flex h-full w-64 flex-col border-r border-[var(--color-outline-variant)] bg-[var(--color-primary)] text-white">
-      <div class="border-b border-white/20 px-md py-lg">
-        <p class="m-0 text-xs font-bold uppercase tracking-normal text-[var(--color-secondary-container)]">SED Bogota</p>
-        <h1 class="m-0 mt-xs text-lg font-bold">SIGCON</h1>
+    <aside class="flex h-full w-56 flex-col bg-[#0a0e5a] text-white">
+
+      <!-- Franja logo: fondo blanco -->
+      <div class="flex h-[72px] items-center justify-center bg-white px-4">
+        <img
+          src="assets/images/logo-sigcon.png"
+          alt="SIGCON — Una educación que te responde"
+          class="h-11 w-auto object-contain"
+        />
       </div>
 
-      <nav class="flex flex-1 flex-col gap-xs p-sm" aria-label="Navegacion principal">
+      <!-- Navegación principal -->
+      <nav class="flex flex-1 flex-col gap-1 p-2" aria-label="Navegacion principal">
         @for (item of navItems(); track item.route) {
           <a
-            class="flex h-10 items-center gap-sm rounded px-sm text-sm font-semibold text-white/90 no-underline hover:bg-white/10"
-            routerLinkActive="bg-white/15 text-white"
+            class="flex h-10 items-center gap-2 rounded px-2 text-sm font-medium text-white/75 no-underline hover:bg-white/10 hover:text-white transition-colors"
+            routerLinkActive="!bg-[#1a2080] !text-white !border-l-[3px] !border-[#e8401c] !pl-[5px]"
             [routerLink]="item.route"
           >
-            <i class="pi" [class]="item.icon" aria-hidden="true"></i>
+            <img
+              [src]="'assets/icons/' + item.iconAsset"
+              [alt]="item.label"
+              class="h-5 w-5 shrink-0 object-contain brightness-0 invert"
+              aria-hidden="true"
+            />
             <span>{{ item.label }}</span>
           </a>
         }
       </nav>
+
+      <!-- Sección inferior: perfil y salir -->
+      <div class="border-t border-white/15 p-2 flex flex-col gap-1">
+        <a
+          class="flex h-10 items-center gap-2 rounded px-2 text-sm font-medium text-white/75 no-underline hover:bg-white/10 hover:text-white transition-colors"
+          routerLinkActive="!bg-[#1a2080] !text-white !border-l-[3px] !border-[#e8401c] !pl-[5px]"
+          [routerLink]="'/perfil'"
+        >
+          <img src="assets/icons/ico-perfil_.png" alt="Mi Perfil" class="h-5 w-5 shrink-0 object-contain brightness-0 invert" aria-hidden="true" />
+          <span>Mi Perfil</span>
+        </a>
+      </div>
     </aside>
   `
 })
 export class SidebarComponent {
   readonly navItems = computed<NavItem[]>(() => {
     const items: NavItem[] = [
-      { label: 'Perfil', icon: 'pi-user', route: '/perfil' },
-      { label: 'Contratos', icon: 'pi-briefcase', route: '/contratos' }
+      { label: 'Contratos', iconAsset: 'ico-contratos_.png', route: '/contratos' }
     ];
 
     if (this.authService.hasRole('REVISOR')) {
-      items.push({ label: 'Revision', icon: 'pi-check-circle', route: '/revision/informes' });
+      items.push({ label: 'Revision', iconAsset: 'ico-contratos-admin_.png', route: '/revision/informes' });
     }
 
     if (this.authService.hasRole('SUPERVISOR')) {
-      items.push({ label: 'Aprobacion', icon: 'pi-verified', route: '/aprobacion/informes' });
+      items.push({ label: 'Aprobacion', iconAsset: 'ico-contratos-admin_.png', route: '/aprobacion/informes' });
     }
 
     if (this.authService.hasRole('ADMINISTRATIVO')) {
-      items.push({ label: 'Visto Bueno', icon: 'pi-eye', route: '/visto-bueno' });
+      items.push({ label: 'Visto Bueno', iconAsset: 'ico-contratos-admin_.png', route: '/visto-bueno' });
     }
 
     if (this.authService.hasRole('ADMIN')) {
       items.push(
-        { label: 'Administracion', icon: 'pi-th-large', route: '/admin' },
-        { label: 'Contratos admin', icon: 'pi-list-check', route: '/admin/contratos' },
-        { label: 'Usuarios', icon: 'pi-users', route: '/admin/usuarios' },
-        { label: 'Catalogo', icon: 'pi-file', route: '/admin/documentos-catalogo' }
+        { label: 'Administracion', iconAsset: 'ico-admin_.png', route: '/admin' },
+        { label: 'Contratos Admin', iconAsset: 'ico-contratos_.png', route: '/admin/contratos' },
+        { label: 'Usuarios', iconAsset: 'ico-usuarios_.png', route: '/admin/usuarios' },
+        { label: 'Catalogo', iconAsset: 'ico-catalogo_.png', route: '/admin/documentos-catalogo' }
       );
     }
 
