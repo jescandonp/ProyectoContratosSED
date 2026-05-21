@@ -15,7 +15,7 @@
 | T3 | Declarar @font-face en styles.scss | ✅ Completado |
 | T4 | Rediseñar Sidebar | ✅ Completado |
 | T5 | Actualizar Topbar | ✅ Completado |
-| T6 | Actualizar Status Chip | ⬜ Pendiente |
+| T6 | Actualizar Status Chip | ✅ Completado |
 | T7 | Build final y validación | ⬜ Pendiente |
 
 ---
@@ -63,6 +63,13 @@
 - Agregado separador vertical antes del texto de sistema
 - Texto de sección actualizado a `Sistema de Gestion de Contratos - SED`
 - Boton `Salir` mantiene estilo institucional y agrega hover con token de superficie
+- Build Angular development: sin errores ✅
+
+### T6 — Status Chip ✅
+- Shape actualizado de `rounded-lg` a `rounded-full`
+- Padding horizontal ajustado a `px-[10px]` para chip tipo pill
+- `success`, `warning` y `danger` migrados a tokens semanticos nuevos
+- Tone `vb` migrado de dorado a naranja suave `#ffe5dc` con texto `#c93518`
 - Build Angular development: sin errores ✅
 
 ---

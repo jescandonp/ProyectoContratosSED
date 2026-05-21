@@ -4,7 +4,7 @@ import { Component, Input } from '@angular/core';
   selector: 'app-status-chip',
   standalone: true,
   template: `
-    <span class="inline-flex h-7 items-center rounded-lg border px-sm text-xs font-semibold" [class]="toneClass">
+    <span class="inline-flex h-7 items-center rounded-full border px-[10px] text-xs font-semibold" [class]="toneClass">
       {{ label || value }}
     </span>
   `
@@ -17,10 +17,10 @@ export class StatusChipComponent {
   get toneClass() {
     const tones = {
       neutral: 'border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] text-[var(--color-on-surface)]',
-      success: 'border-[var(--color-primary-container)] bg-[var(--color-primary-fixed)] text-[var(--color-primary)]',
-      warning: 'border-[var(--color-secondary-container)] bg-[var(--color-secondary-fixed)] text-[var(--color-secondary)]',
-      danger: 'border-[var(--color-tertiary-container)] bg-[var(--color-tertiary-fixed)] text-[var(--color-tertiary)]',
-      vb: 'border-[#FFB300] bg-[#FFB300] text-[#281900]'
+      success: 'border-[var(--color-success-container)] bg-[var(--color-success-container)] text-[var(--color-success)]',
+      warning: 'border-[var(--color-warning-container)] bg-[var(--color-warning-container)] text-[var(--color-warning)]',
+      danger: 'border-[var(--color-error-container)] bg-[var(--color-error-container)] text-[var(--color-error)]',
+      vb: 'border-[#ffe5dc] bg-[#ffe5dc] text-[#c93518]'
     };
     return tones[this.tone];
   }
