@@ -1,8 +1,8 @@
 # SIGCON - Guia De Pruebas Funcionales
 
-Estado: guia operativa para pruebas manuales I1-I8  
-Fecha: 2026-05-19  
-Rama objetivo: `main` (incluye hasta I8)  
+Estado: guia operativa para pruebas manuales I1-I9  
+Fecha: 2026-05-20  
+Rama objetivo: `main` (incluye hasta I9)  
 Marco: SDD Spec-Anchored por incrementos
 
 ## 1. Objetivo
@@ -16,6 +16,7 @@ Esta guia cubre:
 - Incremento 3: aprobacion final, PDF institucional y notificaciones.
 - Incrementos 4-7: edicion administrativa, PDF institucional, SGSSI, usuario IVA, documentos requeridos, email de aprobacion y busqueda administrativa.
 - Incremento 8: campo `fechaElaboracion` en informes y PDF formato institucional SED 11-IF-023 V1.
+- Incremento 9: rol ADMINISTRATIVO, estado EN_VISTO_BUENO, flujo Visto Bueno con tres acciones (dar VB, escalar a supervisor, devolver al contratista) y toggle de activacion desde admin.
 
 ## 2. Prerrequisitos
 
@@ -47,6 +48,15 @@ sqlplus SED_SIGCON/Sigcon2026Local1@localhost:1521/XEPDB1 @db/05_add_fecha_elabo
 ```
 
 Esta migracion agrega `SGCN_INFORMES.FECHA_ELABORACION`. Si no se ejecuta, el backend arranca con error `Schema-validation: missing column [fecha_elaboracion] in table [sgcn_informes]`.
+
+Para una base existente anterior a I9, ejecutar adicionalmente:
+
+```powershell
+sqlplus SED_SIGCON/Sigcon2026Local1@localhost:1521/XEPDB1 @db/06_sgcn_parametros.sql
+sqlplus SED_SIGCON/Sigcon2026Local1@localhost:1521/XEPDB1 @db/07_observaciones_accion.sql
+```
+
+`06_sgcn_parametros.sql` crea la tabla `SGCN_PARAMETROS` con el registro inicial del parametro `vb.activo=true`. `07_observaciones_accion.sql` agrega la columna `ACCION` a `SGCN_OBSERVACIONES` necesaria para distinguir entre devoluciones y escalaciones. Si no se ejecutan, el backend arranca con errores de schema-validation sobre estas tablas/columnas.
 
 ### 2.2 Backend
 
@@ -99,6 +109,7 @@ La pantalla de login local-dev muestra botones por rol. Las credenciales equival
 | CONTRATISTA | `juan.escandon@educacionbogota.edu.co` | `contratista123` |
 | REVISOR | `revisor1@educacionbogota.edu.co` | `revisor123` |
 | SUPERVISOR | `supervisor1@educacionbogota.edu.co` | `supervisor123` |
+| ADMINISTRATIVO | `administrativo@educacionbogota.edu.co` | `admin123` |
 
 ## 3. Formato De Registro De Evidencia
 
@@ -124,7 +135,7 @@ Observaciones:
 Ejecutar primero una ruta feliz completa:
 
 ```text
-ADMIN -> CONTRATISTA -> REVISOR -> SUPERVISOR -> PDF -> Notificaciones
+ADMIN -> CONTRATISTA -> REVISOR -> SUPERVISOR -> ADMINISTRATIVO -> PDF -> Notificaciones
 ```
 
 Despues ejecutar pruebas negativas y de permisos.
@@ -833,3 +844,146 @@ Prerequisito: tener un informe en estado `APROBADO` con actividades, aportes SGS
 | Seccion 3 sin periodo SGSSI | `fechaInicio` del informe es null | Verificar que el informe tiene periodo definido |
 | NPE al generar PDF de informe historico | `fechaElaboracion` null sin null-check | Verificado y manejado en `InformePdfTemplateService`; si ocurre, reportar como bug |
 | PDF no se regenera al aprobar de nuevo | PDF inmutable por diseno — `pdfRuta` ya existe | Comportamiento correcto; para forzar regeneracion, borrar la ruta en BD (solo en pruebas) |
+
+---
+
+## 17. Incremento 9 — Visto Bueno Administrativo
+
+> Rama: `main` (mergeado directamente)
+> Fecha: 2026-05-20
+> Prerequisites de BD: ejecutar `db/06_sgcn_parametros.sql` y `db/07_observaciones_accion.sql` si el esquema es anterior a I9.
+
+### 17.1 Migraciones de Base de Datos
+
+Verificar que las migraciones I9 fueron ejecutadas antes de arrancar el backend.
+
+| ID | Accion | Esperado |
+|---|---|---|
+| I9-DB-01 | Arrancar backend con migraciones I9 aplicadas | Backend responde `UP`; sin errores de schema-validation en los logs |
+| I9-DB-02 | Arrancar backend SIN ejecutar `06_sgcn_parametros.sql` | Error de arranque: `Schema-validation: missing table [sgcn_parametros]` |
+| I9-DB-03 | Arrancar backend SIN ejecutar `07_observaciones_accion.sql` | Error de arranque: `Schema-validation: missing column [accion] in table [sgcn_observaciones]` |
+| I9-DB-04 | Verificar parametro inicial en BD | `SELECT * FROM SGCN_PARAMETROS WHERE CLAVE = 'vb.activo'` retorna fila con `VALOR = 'true'` |
+
+### 17.2 Toggle de Activacion del Visto Bueno (Admin)
+
+Entrar como `ADMIN`.
+
+| ID | Accion | Datos | Esperado |
+|---|---|---|---|
+| I9-TOG-01 | Navegar a Admin → Dashboard | Rol ADMIN | Seccion "Parametros del sistema" visible con checkbox "Visto Bueno Administrativo" |
+| I9-TOG-02 | Verificar estado inicial del toggle | Parametro `vb.activo=true` en BD | Checkbox marcado |
+| I9-TOG-03 | Desmarcar el checkbox | Clic en checkbox activo | Modal de confirmacion aparece: "¿Desactivar el Visto Bueno?" |
+| I9-TOG-04 | Cancelar en el modal de confirmacion | Clic en "Cancelar" | Modal se cierra; checkbox permanece marcado; sin llamada HTTP |
+| I9-TOG-05 | Confirmar desactivacion | Clic en "Confirmar" | `PUT /api/admin/parametros/vb-activo` con `{ activo: false }`; checkbox queda desmarcado |
+| I9-TOG-06 | Reactivar el VB | Clic en checkbox desmarcado | `PUT /api/admin/parametros/vb-activo` con `{ activo: true }` sin modal; checkbox marcado |
+| I9-TOG-07 | Contratista intenta acceder al toggle | `PUT /api/admin/parametros/vb-activo` directo | 403 Forbidden |
+
+### 17.3 Flujo Completo — Dar Visto Bueno
+
+Prerequisito: tener un informe en estado `EN_REVISION`. Entrar como `SUPERVISOR`.
+
+| ID | Accion | Datos | Esperado |
+|---|---|---|---|
+| I9-VB-01 | Supervisor aprueba informe en EN_REVISION (con VB activo) | Informe en EN_REVISION | Estado pasa a `EN_VISTO_BUENO`; chip del estado muestra "En Visto Bueno" en amarillo |
+| I9-VB-02 | Notificacion al ADMINISTRATIVO | Evento `INFORME_EN_VISTO_BUENO` | ADMINISTRATIVO recibe notificacion in-app |
+| I9-VB-03 | Entrar como ADMINISTRATIVO | Rol ADMINISTRATIVO | Sidebar muestra item "Visto Bueno" con icono de ojo |
+| I9-VB-04 | Navegar a Visto Bueno | Clic en "Visto Bueno" en sidebar | Cola de informes EN_VISTO_BUENO visible; informe aparece en la tabla |
+| I9-VB-05 | Abrir detalle del informe | Clic en el informe de la cola | Pantalla de detalle: datos generales, actividades, observaciones anteriores y botones de accion |
+| I9-VB-06 | Verificar datos generales | Informe EN_VISTO_BUENO | Periodo, estado "En Visto Bueno", contratista y fecha de ultimo envio visibles |
+| I9-VB-07 | Clic en "Dar Visto Bueno" | Sin dialogo | `POST /api/informes/{id}/dar-visto-bueno`; estado pasa a `APROBADO`; redireccion a la cola |
+| I9-VB-08 | Notificacion al CONTRATISTA | Evento `VB_DADO` | CONTRATISTA recibe notificacion in-app |
+| I9-VB-09 | Informe ya no aparece en la cola | Cola del ADMINISTRATIVO | Informe desaparece de la lista |
+| I9-VB-10 | Verificar PDF disponible | Informe APROBADO | PDF descargable para CONTRATISTA, SUPERVISOR y ADMIN |
+
+### 17.4 Flujo — Escalar a Supervisor
+
+Prerequisito: informe en `EN_VISTO_BUENO`. Entrar como `ADMINISTRATIVO`.
+
+| ID | Accion | Datos | Esperado |
+|---|---|---|---|
+| I9-ESC-01 | Clic en "Escalar a Supervisor" | Informe en cola | Modal "Escalar a Supervisor" abre con campo de observacion opcional |
+| I9-ESC-02 | Confirmar sin observacion | Campo vacio | `POST /api/informes/{id}/escalar` sin cuerpo; estado pasa a `EN_REVISION`; redireccion a cola |
+| I9-ESC-03 | Confirmar con observacion | Texto: "Requiere revision adicional" | `POST /api/informes/{id}/escalar` con observacion; estado pasa a `EN_REVISION` |
+| I9-ESC-04 | Notificacion al SUPERVISOR | Evento `VB_ESCALADO` | SUPERVISOR recibe notificacion in-app |
+| I9-ESC-05 | Informe vuelve a cola del supervisor | Entrar como SUPERVISOR | Informe aparece en cola de aprobacion en estado EN_REVISION |
+| I9-ESC-06 | Cancelar escalacion | Clic en "Cancelar" en el modal | Modal se cierra; sin llamada HTTP; informe permanece EN_VISTO_BUENO |
+
+### 17.5 Flujo — Devolver al Contratista
+
+Prerequisito: informe en `EN_VISTO_BUENO`. Entrar como `ADMINISTRATIVO`.
+
+| ID | Accion | Datos | Esperado |
+|---|---|---|---|
+| I9-DEV-01 | Clic en "Devolver al Contratista" | Informe en cola | Modal "Devolver al Contratista" abre con campo de observacion obligatorio (asterisco rojo) |
+| I9-DEV-02 | Confirmar sin observacion | Campo vacio | Error inline: "La observacion es obligatoria para devolver el informe." |
+| I9-DEV-03 | Confirmar con observacion | Texto: "Falta soporte de nomina" | `POST /api/informes/{id}/devolver`; estado pasa a `DEVUELTO`; redireccion a cola |
+| I9-DEV-04 | Notificacion al CONTRATISTA | Evento `VB_DEVUELTO` | CONTRATISTA recibe notificacion in-app con mensaje de devolucion |
+| I9-DEV-05 | Contratista puede editar el informe devuelto | Entrar como CONTRATISTA | Informe en estado DEVUELTO editable; observacion del ADMINISTRATIVO visible |
+| I9-DEV-06 | Contratista reenvia | Informe corregido | Estado pasa a ENVIADO; flujo normal continua |
+
+### 17.6 Flujo con VB Desactivado
+
+Prerequisito: ADMIN desactiva el toggle (I9-TOG-05). Entrar como `SUPERVISOR`.
+
+| ID | Accion | Datos | Esperado |
+|---|---|---|---|
+| I9-OFF-01 | Supervisor aprueba informe EN_REVISION con VB desactivado | Parametro `vb.activo=false` | Estado pasa directamente a `APROBADO` (omite EN_VISTO_BUENO) |
+| I9-OFF-02 | ADMINISTRATIVO abre la cola | Entrar como ADMINISTRATIVO | Cola vacia (ningun informe llega a EN_VISTO_BUENO) |
+| I9-OFF-03 | Reactivar VB | ADMIN activa el toggle de nuevo | Siguiente aprobacion de supervisor vuelve a generar EN_VISTO_BUENO |
+
+### 17.7 Chip de Estado EN_VISTO_BUENO
+
+| ID | Accion | Datos | Esperado |
+|---|---|---|---|
+| I9-CHI-01 | Ver chip en detalle del informe | Informe EN_VISTO_BUENO como CONTRATISTA | Chip color amarillo (`#FFB300`), texto oscuro (`#281900`), texto "En Visto Bueno" |
+| I9-CHI-02 | Ver chip en lista de contratos | Informe EN_VISTO_BUENO | Chip visible con el mismo estilo amarillo |
+| I9-CHI-03 | Informe APROBADO despues de VB | Informe aprobado via dar-visto-bueno | Chip vuelve al estilo verde "Aprobado" |
+
+### 17.8 Control de Acceso por Rol
+
+| ID | Rol | Accion | Esperado |
+|---|---|---|---|
+| I9-ACL-01 | CONTRATISTA | Navegar a `/visto-bueno` | Redireccion a login o pagina de acceso denegado |
+| I9-ACL-02 | REVISOR | Navegar a `/visto-bueno` | Acceso denegado |
+| I9-ACL-03 | SUPERVISOR | Navegar a `/visto-bueno` | Acceso denegado |
+| I9-ACL-04 | ADMIN | Navegar a `/visto-bueno` | Acceso denegado (ADMIN != ADMINISTRATIVO) |
+| I9-ACL-05 | ADMINISTRATIVO | Navegar a `/visto-bueno` | Cola de VB visible |
+| I9-ACL-06 | ADMINISTRATIVO | Intentar dar VB a informe ajeno (no EN_VISTO_BUENO) | 409 o 403 del backend |
+| I9-ACL-07 | ADMINISTRATIVO | Navegar a `/admin` | Acceso denegado |
+| I9-ACL-08 | ADMINISTRATIVO | Navegar a `/aprobacion/informes` | Acceso denegado |
+| I9-ACL-09 | Sin autenticar | `GET /api/informes/cola/visto-bueno` | 401 Unauthorized |
+
+### 17.9 Notificaciones I9
+
+| ID | Evento | Emisor | Destinatario | Esperado |
+|---|---|---|---|---|
+| I9-NOT-01 | Supervisor aprueba → EN_VISTO_BUENO | SUPERVISOR | ADMINISTRATIVO | Notificacion in-app `INFORME_EN_VISTO_BUENO` |
+| I9-NOT-02 | ADMINISTRATIVO da VB → APROBADO | ADMINISTRATIVO | CONTRATISTA | Notificacion in-app `VB_DADO` |
+| I9-NOT-03 | ADMINISTRATIVO escala → EN_REVISION | ADMINISTRATIVO | SUPERVISOR | Notificacion in-app `VB_ESCALADO` |
+| I9-NOT-04 | ADMINISTRATIVO devuelve → DEVUELTO | ADMINISTRATIVO | CONTRATISTA | Notificacion in-app `VB_DEVUELTO` |
+| I9-NOT-05 | Verificar centro de notificaciones | Entrar como ADMINISTRATIVO | Notificaciones recibidas visibles con tipo y descripcion |
+
+### 17.10 Pruebas Negativas I9
+
+| ID | Caso | Esperado |
+|---|---|---|
+| I9-NEG-01 | ADMINISTRATIVO intenta dar VB a informe en estado ENVIADO | `POST /api/informes/{id}/dar-visto-bueno` | 409 TRANSICION_INVALIDA |
+| I9-NEG-02 | ADMINISTRATIVO intenta escalar informe APROBADO | `POST /api/informes/{id}/escalar` | 409 TRANSICION_INVALIDA |
+| I9-NEG-03 | ADMINISTRATIVO devuelve sin observacion via API directa | `POST /api/informes/{id}/devolver` sin cuerpo | 400 OBSERVACION_REQUERIDA |
+| I9-NEG-04 | SUPERVISOR intenta dar VB directamente | `POST /api/informes/{id}/dar-visto-bueno` como SUPERVISOR | 403 ACCESO_DENEGADO |
+| I9-NEG-05 | CONTRATISTA intenta ver la cola de VB | `GET /api/informes/cola/visto-bueno` | 403 Forbidden |
+| I9-NEG-06 | Informe EN_VISTO_BUENO no editable por contratista | Abrir informe EN_VISTO_BUENO como CONTRATISTA | Campos en solo lectura; sin boton "Enviar" |
+| I9-NEG-07 | Backend sin migrar intenta crear EN_VISTO_BUENO | Transicion a EN_VISTO_BUENO sin `07_observaciones_accion.sql` | Error 500 en backend; no transicionar |
+
+### 17.11 Diagnostico de Errores Comunes I9
+
+| Sintoma | Causa probable | Solucion |
+|---------|----------------|----------|
+| `Schema-validation: missing table [sgcn_parametros]` | Migracion I9 no ejecutada | Ejecutar `db/06_sgcn_parametros.sql` |
+| `Schema-validation: missing column [accion]` | Migracion I9 no ejecutada | Ejecutar `db/07_observaciones_accion.sql` |
+| Cola de VB siempre vacia | Parametro `vb.activo=false` | Verificar `SGCN_PARAMETROS` en BD; reactivar desde Admin |
+| 403 al entrar como ADMINISTRATIVO | Rol no configurado en el usuario local-dev | Verificar `dev-session.service.ts` incluye entrada ADMINISTRATIVO |
+| Toggle VB no aparece en admin dashboard | Build Angular desactualizado | Ejecutar `npm start` en sigcon-angular |
+| Chip EN_VISTO_BUENO sin color amarillo | Tono `vb` no registrado en StatusChipComponent | Verificar que `status-chip.component.ts` incluye el tono `vb` |
+| Supervisor sigue generando APROBADO con VB activo | Cache de parametro en backend | Verificar que `ParametroService` lee de BD y no de cache estatica |
+| ADMINISTRATIVO no ve sidebar item "Visto Bueno" | Rol no reconocido en sidebar | Verificar `sidebar.component.ts` incluye bloque `hasRole('ADMINISTRATIVO')` |

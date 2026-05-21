@@ -21,7 +21,21 @@ El proyecto se implementa por incrementos bajo SDD Spec-Anchored. El incremento 
 docs/plans/
 ```
 
-Al 2026-05-11 el ultimo incremento cerrado es I7 en `feat/sigcon-i7`. El cierre tecnico de I7 esta en la rama `feat/sigcon-i7` — confirmar el estado exacto en `docs/plans/2026-05-11-sigcon-i7-execution-log.md` antes de continuar.
+**Ultimo incremento cerrado: I9 — Visto Bueno Administrativo** en rama `main` (2026-05-20).
+
+| Incremento | Descripcion | Estado |
+|-----------|-------------|--------|
+| I1 | Autenticacion, usuarios, contratos, catalogo | Cerrado |
+| I2 | Informes, actividades, soportes, revision | Cerrado |
+| I3 | Aprobacion final, PDF, notificaciones | Cerrado |
+| I4 | Revisor opcional, contrato editable, periodo informe | Cerrado |
+| I5 | Edicion de actividades en BORRADOR | Cerrado |
+| I6 | SGSSI, datos desembolso, PDF institucional | Cerrado |
+| I7 | Usuario IVA, documentos requeridos, email, busqueda | Cerrado |
+| I8 | fechaElaboracion, PDF formato 11-IF-023 V1 | Cerrado |
+| I9 | Visto Bueno Administrativo | Cerrado |
+
+El proximo incremento (I10) esta pendiente de definicion de spec.
 
 ## Estructura
 
@@ -32,15 +46,12 @@ ProyectoContratosSED/
 │   ├── ARCHITECTURE.md
 │   ├── TECNOLOGIAS.md
 │   ├── ARRANQUE.md
+│   ├── GUIA_PRUEBAS_FUNCIONALES.md
 │   ├── specs/
 │   └── plans/
+├── db/
+├── sigcon-backend/
+├── sigcon-angular/
 ├── Prototipo/
-├── Notas_ProyectoContratos/
-└── Spec-Driven Development (SDD)_ A Comprehensive Technical Guide.pdf
+└── Notas_ProyectoContratos/
 ```
-
-Artefactos principales:
-
-- `db/`
-- `sigcon-backend/`
-- `sigcon-angular/`
