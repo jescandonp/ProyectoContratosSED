@@ -21,7 +21,7 @@ El proyecto se implementa por incrementos bajo SDD Spec-Anchored. El incremento 
 docs/plans/
 ```
 
-**Ultimo incremento cerrado: I10 — Identidad Visual Prensa SED** en rama `main` (2026-05-21).
+**Ultimo incremento cerrado: I11 — Correcciones Formato PDF 11-IF-023 V1** en rama `main` (2026-05-22).
 
 | Incremento | Descripcion | Estado |
 |-----------|-------------|--------|
@@ -35,8 +35,7 @@ docs/plans/
 | I8 | fechaElaboracion, PDF formato 11-IF-023 V1 | Cerrado |
 | I9 | Visto Bueno Administrativo | Cerrado |
 | I10 | Identidad Visual Prensa SED | Cerrado |
-
-El proximo incremento (I11) esta pendiente de definicion de spec.
+| I11 | Correcciones Formato PDF 11-IF-023 V1 | Cerrado |
 
 ## Estructura
 
