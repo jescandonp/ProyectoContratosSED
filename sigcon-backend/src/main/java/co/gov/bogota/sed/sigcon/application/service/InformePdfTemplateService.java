@@ -52,6 +52,7 @@ public class InformePdfTemplateService {
     private static final Locale            LOCALE_CO = new Locale("es", "CO");
     private static final String LOGO_WIDTH_PT = "62.08pt";  // 2.19 cm
     private static final String LOGO_HEIGHT_PT = "50.17pt"; // 1.77 cm
+    private static final String CODIGO_DOCUMENTO = "11-IF-023 V1";
 
     private final ActividadInformeRepository   actividadRepository;
     private final SoporteAdjuntoRepository     soporteRepository;
@@ -158,7 +159,7 @@ public class InformePdfTemplateService {
         sb.append("www.educacionbogota.edu.co &nbsp;&nbsp; L&#237;nea 195");
         sb.append("</div>");
         sb.append("<div class=\"footer-right\">");
-        sb.append("11-IF-023 V1 &nbsp; P&#225;g. <span class=\"page-num\"></span> de <span class=\"page-total\"></span>");
+        sb.append(CODIGO_DOCUMENTO).append(" &nbsp; P&#225;g. <span class=\"page-num\"></span> de <span class=\"page-total\"></span>");
         sb.append("</div>");
         sb.append("</div>");
         sb.append("</div>");
