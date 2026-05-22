@@ -152,8 +152,15 @@ public class InformePdfTemplateService {
         appendRunningHeader(sb, informe);
 
         sb.append("<div class=\"running-footer\">");
-        sb.append("Avenida El Dorado N&#176; 66-63 &nbsp; PBX: 3241000 &nbsp; ");
-        sb.append("www.educacionbogota.edu.co &nbsp; L&#237;nea 195");
+        sb.append("<div class=\"footer-inner\">");
+        sb.append("<div class=\"footer-left\">");
+        sb.append("Avenida El Dorado N&#176; 66-63 &nbsp;&nbsp; PBX: 3241000 &nbsp;&nbsp; ");
+        sb.append("www.educacionbogota.edu.co &nbsp;&nbsp; L&#237;nea 195");
+        sb.append("</div>");
+        sb.append("<div class=\"footer-right\">");
+        sb.append("11-IF-023 V1 &nbsp; P&#225;g. <span class=\"page-num\"></span> de <span class=\"page-total\"></span>");
+        sb.append("</div>");
+        sb.append("</div>");
         sb.append("</div>");
 
         appendSeccion1(sb, informe);
@@ -176,8 +183,11 @@ public class InformePdfTemplateService {
         sb.append("@page{margin:90pt 36pt 54pt 36pt;}");
         sb.append("@page{@top-center{content:element(pageHeader)}@bottom-center{content:element(pageFooter)}}");
         sb.append(".running-header{position:running(pageHeader);width:100%;}");
-        sb.append(".running-footer{position:running(pageFooter);width:100%;text-align:center;");
+        sb.append(".running-footer{position:running(pageFooter);width:100%;");
         sb.append("font-size:7.5pt;color:#444;border-top:0.5pt solid #ccc;padding-top:3pt;}");
+        sb.append(".footer-inner{display:table;width:100%;}");
+        sb.append(".footer-left{display:table-cell;text-align:left;width:70%;}");
+        sb.append(".footer-right{display:table-cell;text-align:right;width:30%;font-weight:bold;}");
         sb.append(".page-num:before{content:counter(page);}");
         sb.append(".page-total:before{content:counter(pages);}");
         sb.append("body{font-family:Arial,sans-serif;font-size:9pt;color:#1a1a1a;margin:0;}");
@@ -191,7 +201,6 @@ public class InformePdfTemplateService {
         sb.append(".ph-right{width:26%;text-align:center;vertical-align:top;padding:2pt;border-left:0.8pt solid #000;}");
         sb.append(".ph-right-title{font-weight:bold;font-size:8pt;}");
         sb.append(".ph-right-period{font-size:7.5pt;margin-top:1pt;}");
-        sb.append(".ph-code{text-align:right;font-size:7pt;color:#555;padding:1pt 2pt;border-top:0.5pt solid #aaa;}");
         sb.append(".sec-title{background:#d9d9d9;color:#000;font-weight:bold;font-size:9pt;");
         sb.append("padding:3pt 6pt;margin-top:8pt;margin-bottom:0;text-transform:uppercase;border:0.5pt solid #999;}");
         sb.append("table{width:100%;border-collapse:collapse;font-size:8.5pt;margin-bottom:0;}");
@@ -246,7 +255,9 @@ public class InformePdfTemplateService {
         sb.append("<div class=\"ph-right-title\">PERIODO DEL INFORME</div>");
         sb.append("<div class=\"ph-right-period\">Desde (").append(periodoDesde).append(")</div>");
         sb.append("<div class=\"ph-right-period\">Hasta (").append(periodoHasta).append(")</div>");
-        sb.append("<div class=\"ph-code\">11-IF-023 V1</div>");
+        sb.append("<div class=\"ph-right-period\" style=\"margin-top:3pt;font-weight:bold;\">");
+        sb.append("P&#225;g. <span class=\"page-num\"></span> / <span class=\"page-total\"></span>");
+        sb.append("</div>");
         sb.append("</td>");
 
         sb.append("</tr></tbody></table>");
@@ -280,8 +291,10 @@ public class InformePdfTemplateService {
 
         fila2(sb, "Modificaciones:", esc(notEmpty(c.getModificaciones()) ? c.getModificaciones() : "No se han presentado"), true);
 
-        fila2(sb, "Fecha de Inicio:", c.getFechaInicio().format(DATE_FMT), false);
-        fila2(sb, "Fecha de Terminaci&#243;n:", c.getFechaFin().format(DATE_FMT), true);
+        fila4(sb,
+            "Fecha de Inicio:", c.getFechaInicio().format(DATE_FMT),
+            "Fecha de Terminaci&#243;n:", c.getFechaFin().format(DATE_FMT),
+            false);
 
         fila2(sb, "Dependencia:", esc(safe(c.getDependencia())), false);
 
@@ -334,7 +347,9 @@ public class InformePdfTemplateService {
                 for (SoporteAdjunto s : soportes) {
                     if (s.getTipo() == co.gov.bogota.sed.sigcon.domain.enums.TipoSoporte.URL
                             && notEmpty(s.getReferencia())) {
-                        sb.append("<div><u>").append(esc(s.getNombre())).append("</u></div>");
+                        sb.append("<div><a href=\"").append(esc(s.getReferencia())).append("\"")
+                          .append(" style=\"color:#0a0e5a;text-decoration:underline;\">")
+                          .append(esc(s.getNombre())).append("</a></div>");
                     } else {
                         sb.append("<div>").append(esc(s.getNombre())).append("</div>");
                     }
@@ -504,6 +519,16 @@ public class InformePdfTemplateService {
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
+
+    private static void fila4(StringBuilder sb, String label1, String value1,
+                                String label2, String value2, boolean alt) {
+        sb.append(alt ? "<tr style=\"background:#f7f7f7\">" : "<tr>");
+        sb.append("<td class=\"lbl\" style=\"width:15%\">").append(label1).append("</td>");
+        sb.append("<td class=\"val\" style=\"width:35%\">").append(value1).append("</td>");
+        sb.append("<td class=\"lbl\" style=\"width:15%\">").append(label2).append("</td>");
+        sb.append("<td class=\"val\" style=\"width:35%\">").append(value2).append("</td>");
+        sb.append("</tr>");
+    }
 
     private static void fila2(StringBuilder sb, String label, String value, boolean alt) {
         sb.append(alt ? "<tr style=\"background:#f7f7f7\">" : "<tr>");
