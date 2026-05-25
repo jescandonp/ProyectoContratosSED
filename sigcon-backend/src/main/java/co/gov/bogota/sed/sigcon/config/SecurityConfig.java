@@ -61,7 +61,7 @@ public class SecurityConfig {
                 .antMatchers(HttpMethod.PUT, "/api/contratos/**").hasRole("ADMIN")
                 .antMatchers(HttpMethod.PATCH, "/api/contratos/**").hasRole("ADMIN")
                 .antMatchers(HttpMethod.DELETE, "/api/contratos/**").hasRole("ADMIN")
-                .antMatchers(HttpMethod.GET, "/api/informes/*/pdf").hasAnyRole("CONTRATISTA", "SUPERVISOR", "ADMIN")
+                .antMatchers(HttpMethod.GET, "/api/informes/*/pdf").hasAnyRole("CONTRATISTA", "SUPERVISOR", "ADMIN", "ADMINISTRATIVO")
                 .antMatchers(HttpMethod.GET, "/api/informes/cola/visto-bueno").hasAnyRole("ADMIN", "ADMINISTRATIVO")
                 .antMatchers(HttpMethod.GET, "/api/informes/**").hasAnyRole("CONTRATISTA", "REVISOR", "SUPERVISOR", "ADMIN", "ADMINISTRATIVO")
                 .antMatchers(HttpMethod.POST, "/api/informes/*/aprobar-revision").hasRole("REVISOR")
