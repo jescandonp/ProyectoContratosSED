@@ -4,11 +4,13 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 
 import { SidebarComponent } from './sidebar.component';
+import { AuthContextService } from '../../../core/auth/auth-context.service';
 import { DevSessionService } from '../../../core/auth/dev-session.service';
 
 describe('SidebarComponent', () => {
   let fixture: ComponentFixture<SidebarComponent>;
   let devSession: DevSessionService;
+  let authContext: AuthContextService;
 
   beforeEach(async () => {
     localStorage.clear();
@@ -17,6 +19,7 @@ describe('SidebarComponent', () => {
       providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()]
     }).compileComponents();
     devSession = TestBed.inject(DevSessionService);
+    authContext = TestBed.inject(AuthContextService);
   });
 
   afterEach(() => localStorage.clear());
@@ -56,5 +59,20 @@ describe('SidebarComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Aprobacion');
     expect(fixture.nativeElement.textContent).not.toContain('Revision');
     expect(fixture.nativeElement.textContent).not.toContain('Administracion');
+  });
+
+  it('switches navigation for dual contractor admin users', () => {
+    devSession.loginAsEmail('aecheverry@educacionbogota.gov.co');
+
+    authContext.setActiveRole('CONTRATISTA');
+    fixture = TestBed.createComponent(SidebarComponent);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Contratos');
+    expect(fixture.nativeElement.textContent).not.toContain('Administracion');
+
+    authContext.setActiveRole('ADMIN');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Administracion');
+    expect(fixture.nativeElement.textContent).toContain('Contratos Admin');
   });
 });

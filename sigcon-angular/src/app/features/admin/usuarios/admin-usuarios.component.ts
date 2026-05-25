@@ -78,6 +78,11 @@ import { UsuarioService } from '../../../core/services/usuario.service';
                     <span class="rounded-lg border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] px-sm py-xs text-xs font-bold uppercase text-[var(--color-primary)]">
                       {{ u.rol }}
                     </span>
+                    @if (u.rol === 'CONTRATISTA' && u.esAdmin) {
+                      <span class="ml-xs rounded-lg border border-[var(--color-primary)] bg-white px-sm py-xs text-xs font-bold uppercase text-[var(--color-primary)]">
+                        Admin
+                      </span>
+                    }
                   </td>
                   <td class="px-md py-sm">
                     <span [class]="u.activo ? 'text-[var(--color-primary)] font-semibold' : 'text-[var(--color-outline)]'">
@@ -156,6 +161,12 @@ import { UsuarioService } from '../../../core/services/usuario.service';
                 <input type="checkbox" [(ngModel)]="formUsuario.responsableIva" name="responsableIva" />
                 Responsable de IVA
               </label>
+              @if (formUsuario.rol === 'CONTRATISTA') {
+                <label class="flex items-center gap-sm rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] px-sm py-sm text-sm text-[var(--color-on-surface)]">
+                  <input type="checkbox" [(ngModel)]="formUsuario.esAdmin" name="esAdmin" />
+                  Tambien es Admin
+                </label>
+              }
               @if (errorForm()) {
                 <p class="text-xs text-[var(--color-error)]">{{ errorForm() }}</p>
               }
@@ -193,7 +204,7 @@ export class AdminUsuariosComponent implements OnInit {
 
   filtroRol: RolUsuario | '' = '';
 
-  formUsuario: UsuarioRequest = { email: '', nombre: '', cargo: null, rol: 'CONTRATISTA', responsableIva: false };
+  formUsuario: UsuarioRequest = { email: '', nombre: '', cargo: null, rol: 'CONTRATISTA', responsableIva: false, esAdmin: false };
 
   constructor(private readonly usuarioService: UsuarioService) {}
 
@@ -212,9 +223,9 @@ export class AdminUsuariosComponent implements OnInit {
     this.errorForm.set('');
     this.mensajeExito.set('');
     if (u) {
-      this.formUsuario = { email: u.email, nombre: u.nombre, cargo: u.cargo, rol: u.rol, responsableIva: u.responsableIva === true };
+      this.formUsuario = { email: u.email, nombre: u.nombre, cargo: u.cargo, rol: u.rol, responsableIva: u.responsableIva === true, esAdmin: u.esAdmin === true };
     } else {
-      this.formUsuario = { email: '', nombre: '', cargo: null, rol: 'CONTRATISTA', responsableIva: false };
+      this.formUsuario = { email: '', nombre: '', cargo: null, rol: 'CONTRATISTA', responsableIva: false, esAdmin: false };
     }
     this.mostrarFormulario.set(true);
   }
@@ -225,9 +236,13 @@ export class AdminUsuariosComponent implements OnInit {
     this.guardandoU.set(true);
     this.errorForm.set('');
     const u = this.usuarioEditando();
+    const payload = {
+      ...this.formUsuario,
+      esAdmin: this.formUsuario.rol === 'CONTRATISTA' && this.formUsuario.esAdmin === true
+    };
     const op = u
-      ? this.usuarioService.actualizarUsuario(u.id, this.formUsuario)
-      : this.usuarioService.crearUsuario(this.formUsuario);
+      ? this.usuarioService.actualizarUsuario(u.id, payload)
+      : this.usuarioService.crearUsuario(payload);
     op.subscribe({
       next: () => {
         this.guardandoU.set(false);

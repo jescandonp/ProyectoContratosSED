@@ -61,7 +61,8 @@ describe('AdminUsuariosComponent', () => {
       sgssiSaludEntidad: null,
       sgssiPensionEntidad: null,
       sgssiArlEntidad: null,
-      responsableIva: true
+      responsableIva: true,
+      esAdmin: true
     }));
 
     component.abrirFormulario(null);
@@ -77,6 +78,35 @@ describe('AdminUsuariosComponent', () => {
     expect(usuarioService.crearUsuario).toHaveBeenCalledWith(jasmine.objectContaining({ responsableIva: true }));
   });
 
+  it('sends esAdmin only for contractor users', () => {
+    usuarioService.crearUsuario.and.returnValue(of({
+      id: 9,
+      email: 'dual@sed.gov.co',
+      nombre: 'Contratista Admin',
+      cargo: 'Contratista',
+      rol: 'CONTRATISTA',
+      firmaImagen: null,
+      activo: true,
+      sgssiSaludEntidad: null,
+      sgssiPensionEntidad: null,
+      sgssiArlEntidad: null,
+      responsableIva: false,
+      esAdmin: true
+    }));
+
+    component.abrirFormulario(null);
+    component.formUsuario = {
+      email: 'dual@sed.gov.co',
+      nombre: 'Contratista Admin',
+      cargo: 'Contratista',
+      rol: 'CONTRATISTA',
+      esAdmin: true
+    };
+    component.guardarUsuario();
+
+    expect(usuarioService.crearUsuario).toHaveBeenCalledWith(jasmine.objectContaining({ esAdmin: true }));
+  });
+
   it('shows success message after creating user', () => {
     usuarioService.crearUsuario.and.returnValue(of({
       id: 8,
@@ -89,7 +119,8 @@ describe('AdminUsuariosComponent', () => {
       sgssiSaludEntidad: null,
       sgssiPensionEntidad: null,
       sgssiArlEntidad: null,
-      responsableIva: false
+      responsableIva: false,
+      esAdmin: false
     }));
 
     component.abrirFormulario(null);

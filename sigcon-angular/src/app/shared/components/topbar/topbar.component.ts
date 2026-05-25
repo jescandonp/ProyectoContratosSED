@@ -1,5 +1,7 @@
 import { Component } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 
+import { AuthContextService } from '../../../core/auth/auth-context.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { NotificacionesMenuComponent } from '../../../features/notificaciones/notificaciones-menu/notificaciones-menu.component';
 import { StatusChipComponent } from '../status-chip/status-chip.component';
@@ -7,7 +9,7 @@ import { StatusChipComponent } from '../status-chip/status-chip.component';
 @Component({
   selector: 'app-topbar',
   standalone: true,
-  imports: [StatusChipComponent, NotificacionesMenuComponent],
+  imports: [FormsModule, StatusChipComponent, NotificacionesMenuComponent],
   template: `
     <header class="flex min-h-14 items-center justify-between border-b border-[var(--color-outline-variant)] bg-white px-lg">
       <div class="flex items-center gap-md">
@@ -25,7 +27,23 @@ import { StatusChipComponent } from '../status-chip/status-chip.component';
       @if (authService.currentUser(); as user) {
         <div class="flex items-center gap-sm">
           <app-notificaciones-menu />
-          <app-status-chip [value]="user.rol" [label]="user.rol" tone="success" />
+          @if (authContext.isDualUser(user)) {
+            <select
+              class="h-9 rounded border border-[var(--color-outline-variant)] bg-white px-sm text-sm font-semibold text-[var(--color-on-surface)] outline-none"
+              [ngModel]="authContext.activeRole()"
+              (ngModelChange)="authContext.setActiveRole($event)"
+              aria-label="Rol activo"
+            >
+              @for (option of authContext.roleOptions; track option.value) {
+                <option [ngValue]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          }
+          <app-status-chip
+            [value]="authService.hasRole('ADMIN') ? 'ADMIN' : user.rol"
+            [label]="authService.hasRole('ADMIN') ? 'ADMIN' : user.rol"
+            tone="success"
+          />
           <div class="text-right">
             <p class="m-0 text-sm font-semibold text-[var(--color-on-surface)]">{{ user.nombre }}</p>
             <p class="m-0 text-xs text-[var(--color-on-surface-variant)]">{{ user.email }}</p>
@@ -43,5 +61,5 @@ import { StatusChipComponent } from '../status-chip/status-chip.component';
   `
 })
 export class TopbarComponent {
-  constructor(readonly authService: AuthService) {}
+  constructor(readonly authService: AuthService, readonly authContext: AuthContextService) {}
 }

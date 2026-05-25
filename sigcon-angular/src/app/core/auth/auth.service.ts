@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { RolUsuario, Usuario } from '../models/usuario.model';
 import { UsuarioService } from '../services/usuario.service';
+import { AuthContextService } from './auth-context.service';
 import { DevSessionService } from './dev-session.service';
 
 @Injectable({ providedIn: 'root' })
@@ -21,6 +22,7 @@ export class AuthService {
   constructor(
     private readonly devSession: DevSessionService,
     private readonly usuarioService: UsuarioService,
+    private readonly authContext: AuthContextService,
     private readonly router: Router
   ) {}
 
@@ -49,7 +51,6 @@ export class AuthService {
   }
 
   hasRole(...roles: RolUsuario[]) {
-    const user = this.currentUser();
-    return !!user && roles.includes(user.rol);
+    return this.authContext.hasRole(this.currentUser(), roles);
   }
 }

@@ -9,6 +9,7 @@ export interface DevSession {
   cargo: string;
   rol: RolUsuario;
   password: string;
+  esAdmin?: boolean;
 }
 
 const STORAGE_KEY = 'sigcon.dev.session';
@@ -63,7 +64,8 @@ const EXTRA_DEV_USERS: DevSession[] = [
     nombre: 'Alvaro Echeverry Salcedo',
     cargo: 'Asesor',
     rol: 'CONTRATISTA',
-    password: 'contratista123'
+    password: 'contratista123',
+    esAdmin: true
   }
 ];
 
@@ -113,7 +115,8 @@ export class DevSessionService {
       activo: true,
       sgssiSaludEntidad: null,
       sgssiPensionEntidad: null,
-      sgssiArlEntidad: null
+      sgssiArlEntidad: null,
+      esAdmin: session.esAdmin === true
     };
   }
 

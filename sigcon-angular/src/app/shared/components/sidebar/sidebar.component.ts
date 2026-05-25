@@ -60,9 +60,11 @@ interface NavItem {
 })
 export class SidebarComponent {
   readonly navItems = computed<NavItem[]>(() => {
-    const items: NavItem[] = [
-      { label: 'Contratos', iconAsset: 'ico-contratos_.png', route: '/contratos' }
-    ];
+    const items: NavItem[] = [];
+
+    if (this.authService.hasRole('CONTRATISTA')) {
+      items.push({ label: 'Contratos', iconAsset: 'ico-contratos_.png', route: '/contratos' });
+    }
 
     if (this.authService.hasRole('REVISOR')) {
       items.push({ label: 'Revision', iconAsset: 'ico-contratos-admin_.png', route: '/revision/informes' });

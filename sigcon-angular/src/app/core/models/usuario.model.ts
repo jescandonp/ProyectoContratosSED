@@ -12,6 +12,7 @@ export interface Usuario {
   sgssiPensionEntidad?: string | null;
   sgssiArlEntidad?: string | null;
   responsableIva?: boolean | null;
+  esAdmin?: boolean | null;
 }
 
 export interface UsuarioRequest {
@@ -20,6 +21,7 @@ export interface UsuarioRequest {
   cargo: string | null;
   rol: RolUsuario;
   responsableIva?: boolean;
+  esAdmin?: boolean;
 }
 
 export interface PerfilUpdateRequest {
