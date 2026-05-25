@@ -69,6 +69,7 @@ class UsuarioServiceTest {
     void crearUsuarioPersistsResponsableIvaWhenRequestSetsTrue() {
         UsuarioRequest request = usuarioRequest("responsable@sed.gov.co");
         request.setResponsableIva(true);
+        request.setEsAdmin(true);
         when(usuarioRepository.findByEmailAndActivoTrue("responsable@sed.gov.co")).thenReturn(Optional.empty());
         when(usuarioRepository.save(any(Usuario.class))).thenAnswer(inv -> {
             Usuario usuario = inv.getArgument(0);
@@ -81,7 +82,29 @@ class UsuarioServiceTest {
         ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
         verify(usuarioRepository).save(captor.capture());
         assertThat(captor.getValue().getResponsableIva()).isTrue();
+        assertThat(captor.getValue().getEsAdmin()).isTrue();
         assertThat(result.getResponsableIva()).isTrue();
+        assertThat(result.getEsAdmin()).isTrue();
+    }
+
+    @Test
+    void crearUsuarioClearsEsAdminWhenRoleIsNotContractor() {
+        UsuarioRequest request = usuarioRequest("revisor-admin@sed.gov.co");
+        request.setRol(RolUsuario.REVISOR);
+        request.setEsAdmin(true);
+        when(usuarioRepository.findByEmailAndActivoTrue("revisor-admin@sed.gov.co")).thenReturn(Optional.empty());
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(inv -> {
+            Usuario usuario = inv.getArgument(0);
+            usuario.setId(12L);
+            return usuario;
+        });
+
+        UsuarioDto result = usuarioService.crearUsuario(request);
+
+        ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
+        verify(usuarioRepository).save(captor.capture());
+        assertThat(captor.getValue().getEsAdmin()).isFalse();
+        assertThat(result.getEsAdmin()).isFalse();
     }
 
     private UsuarioRequest usuarioRequest(String email) {

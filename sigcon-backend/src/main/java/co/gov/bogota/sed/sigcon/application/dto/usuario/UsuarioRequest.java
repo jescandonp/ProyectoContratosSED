@@ -25,6 +25,8 @@ public class UsuarioRequest {
 
     private Boolean responsableIva;
 
+    private Boolean esAdmin;
+
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
     public String getNombre() { return nombre; }
@@ -35,4 +37,6 @@ public class UsuarioRequest {
     public void setRol(RolUsuario rol) { this.rol = rol; }
     public Boolean getResponsableIva() { return responsableIva; }
     public void setResponsableIva(Boolean responsableIva) { this.responsableIva = responsableIva; }
+    public Boolean getEsAdmin() { return esAdmin; }
+    public void setEsAdmin(Boolean esAdmin) { this.esAdmin = esAdmin; }
 }

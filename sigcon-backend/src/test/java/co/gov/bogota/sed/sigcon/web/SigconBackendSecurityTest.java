@@ -65,6 +65,7 @@ class SigconBackendSecurityTest {
 
     private static final String ADMIN_EMAIL = "admin@educacionbogota.edu.co";
     private static final String CONTRACTOR_EMAIL = "juan.escandon@educacionbogota.edu.co";
+    private static final String DUAL_CONTRACTOR_EMAIL = "aecheverry@educacionbogota.gov.co";
 
     @Autowired
     private MockMvc mockMvc;
@@ -291,10 +292,32 @@ class SigconBackendSecurityTest {
 
     @Test
     void contratistaNoAdminNoPuedeBuscarGlobalmente() throws Exception {
+        Usuario contractor = usuario(2L, CONTRACTOR_EMAIL, RolUsuario.CONTRATISTA);
+        contractor.setEsAdmin(false);
+        when(usuarioRepository.findByEmailAndActivoTrue(CONTRACTOR_EMAIL)).thenReturn(Optional.of(contractor));
+
         mockMvc.perform(get("/api/admin/busqueda")
                 .param("q", "Ana")
                 .with(httpBasic(CONTRACTOR_EMAIL, "contratista123")))
             .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void contratistaDualAdminPuedeBuscarGlobalmente() throws Exception {
+        Usuario dual = usuario(3L, DUAL_CONTRACTOR_EMAIL, RolUsuario.CONTRATISTA);
+        dual.setEsAdmin(true);
+        when(usuarioRepository.findByEmailAndActivoTrue(DUAL_CONTRACTOR_EMAIL)).thenReturn(Optional.of(dual));
+        when(busquedaAdminService.buscar(any(), any(), any()))
+            .thenReturn(new co.gov.bogota.sed.sigcon.application.dto.busqueda.BusquedaAdminResponse(
+                java.util.Collections.emptyList(),
+                java.util.Collections.emptyList(),
+                java.util.Collections.emptyList()
+            ));
+
+        mockMvc.perform(get("/api/admin/busqueda")
+                .param("q", "Ana")
+                .with(httpBasic(DUAL_CONTRACTOR_EMAIL, "contratista123")))
+            .andExpect(status().isOk());
     }
 
     @Test

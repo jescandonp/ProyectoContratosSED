@@ -14,6 +14,7 @@ public class UsuarioDto {
     private String sgssiPensionEntidad;
     private String sgssiArlEntidad;
     private Boolean responsableIva;
+    private Boolean esAdmin;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -37,4 +38,6 @@ public class UsuarioDto {
     public void setSgssiArlEntidad(String sgssiArlEntidad) { this.sgssiArlEntidad = sgssiArlEntidad; }
     public Boolean getResponsableIva() { return responsableIva; }
     public void setResponsableIva(Boolean responsableIva) { this.responsableIva = responsableIva; }
+    public Boolean getEsAdmin() { return esAdmin; }
+    public void setEsAdmin(Boolean esAdmin) { this.esAdmin = esAdmin; }
 }

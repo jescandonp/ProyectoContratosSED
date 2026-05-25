@@ -16,6 +16,6 @@ class DevSecurityConfigTest {
         assertThat(user.getUsername()).isEqualTo("aecheverry@educacionbogota.gov.co");
         assertThat(user.getAuthorities())
             .extracting("authority")
-            .contains("ROLE_CONTRATISTA");
+            .contains("ROLE_CONTRATISTA", "ROLE_ADMIN");
     }
 }

@@ -109,6 +109,7 @@ public class UsuarioService {
         usuario.setCargo(request.getCargo());
         usuario.setRol(request.getRol());
         usuario.setResponsableIva(Boolean.TRUE.equals(request.getResponsableIva()));
+        usuario.setEsAdmin(request.getRol() == RolUsuario.CONTRATISTA && Boolean.TRUE.equals(request.getEsAdmin()));
     }
 
     private void ensureUniqueEmail(String email, Long currentUserId) {

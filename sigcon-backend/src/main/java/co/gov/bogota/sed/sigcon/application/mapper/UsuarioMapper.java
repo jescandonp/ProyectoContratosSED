@@ -23,6 +23,7 @@ public class UsuarioMapper {
         dto.setSgssiPensionEntidad(usuario.getSgssiPensionEntidad());
         dto.setSgssiArlEntidad(usuario.getSgssiArlEntidad());
         dto.setResponsableIva(usuario.getResponsableIva());
+        dto.setEsAdmin(Boolean.TRUE.equals(usuario.getEsAdmin()));
         return dto;
     }
 }

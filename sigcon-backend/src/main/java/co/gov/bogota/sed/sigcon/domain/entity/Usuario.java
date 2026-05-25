@@ -56,6 +56,9 @@ public class Usuario {
     @Column(name = "RESPONSABLE_IVA", nullable = false)
     private Boolean responsableIva = false;
 
+    @Column(name = "ES_ADMIN", nullable = false)
+    private Boolean esAdmin = false;
+
     @Column(name = "ACTIVO", nullable = false)
     private Boolean activo = true;
 
@@ -148,6 +151,14 @@ public class Usuario {
 
     public void setResponsableIva(Boolean responsableIva) {
         this.responsableIva = responsableIva;
+    }
+
+    public Boolean getEsAdmin() {
+        return esAdmin;
+    }
+
+    public void setEsAdmin(Boolean esAdmin) {
+        this.esAdmin = esAdmin;
     }
 
     public Boolean getActivo() {

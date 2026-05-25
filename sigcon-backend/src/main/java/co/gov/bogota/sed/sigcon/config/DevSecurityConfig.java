@@ -53,12 +53,12 @@ public class DevSecurityConfig {
                 .antMatchers("/actuator/health").permitAll()
                 .antMatchers("/swagger-ui.html", "/api-docs/**", "/swagger-ui/**", "/webjars/**").permitAll()
                 .antMatchers("/api/usuarios/me", "/api/usuarios/me/**").authenticated()
-                .antMatchers("/api/admin/**").hasRole("ADMIN")
+                .antMatchers("/api/admin/**").access("@sigconAuthorization.isAdmin(authentication)")
                 .antMatchers(HttpMethod.GET, "/api/contratos/**").hasAnyRole("CONTRATISTA", "REVISOR", "SUPERVISOR", "ADMIN")
-                .antMatchers(HttpMethod.POST, "/api/contratos/**").hasRole("ADMIN")
-                .antMatchers(HttpMethod.PUT, "/api/contratos/**").hasRole("ADMIN")
-                .antMatchers(HttpMethod.PATCH, "/api/contratos/**").hasRole("ADMIN")
-                .antMatchers(HttpMethod.DELETE, "/api/contratos/**").hasRole("ADMIN")
+                .antMatchers(HttpMethod.POST, "/api/contratos/**").access("@sigconAuthorization.isAdmin(authentication)")
+                .antMatchers(HttpMethod.PUT, "/api/contratos/**").access("@sigconAuthorization.isAdmin(authentication)")
+                .antMatchers(HttpMethod.PATCH, "/api/contratos/**").access("@sigconAuthorization.isAdmin(authentication)")
+                .antMatchers(HttpMethod.DELETE, "/api/contratos/**").access("@sigconAuthorization.isAdmin(authentication)")
                 .antMatchers(HttpMethod.GET, "/api/informes/*/pdf").hasAnyRole("CONTRATISTA", "SUPERVISOR", "ADMIN", "ADMINISTRATIVO")
                 .antMatchers(HttpMethod.GET, "/api/informes/cola/visto-bueno").hasAnyRole("ADMIN", "ADMINISTRATIVO")
                 .antMatchers(HttpMethod.GET, "/api/informes/**").hasAnyRole("CONTRATISTA", "REVISOR", "SUPERVISOR", "ADMIN", "ADMINISTRATIVO")
@@ -74,8 +74,8 @@ public class DevSecurityConfig {
                 .antMatchers("/api/actividades/**").hasRole("CONTRATISTA")
                 .antMatchers("/api/notificaciones/**").authenticated()
                 .antMatchers(HttpMethod.GET, "/api/documentos-catalogo/**").authenticated()
-                .antMatchers("/api/documentos-catalogo/**").hasRole("ADMIN")
-                .antMatchers("/api/usuarios/**").hasRole("ADMIN")
+                .antMatchers("/api/documentos-catalogo/**").access("@sigconAuthorization.isAdmin(authentication)")
+                .antMatchers("/api/usuarios/**").access("@sigconAuthorization.isAdmin(authentication)")
                 .anyRequest().authenticated()
             .and()
             .httpBasic();
@@ -102,7 +102,7 @@ public class DevSecurityConfig {
         return new InMemoryUserDetailsManager(
             User.withUsername("admin@educacionbogota.edu.co").password("{noop}admin123").roles("ADMIN").build(),
             User.withUsername("juan.escandon@educacionbogota.edu.co").password("{noop}contratista123").roles("CONTRATISTA").build(),
-            User.withUsername("aecheverry@educacionbogota.gov.co").password("{noop}contratista123").roles("CONTRATISTA").build(),
+            User.withUsername("aecheverry@educacionbogota.gov.co").password("{noop}contratista123").roles("CONTRATISTA", "ADMIN").build(),
             User.withUsername("revisor1@educacionbogota.edu.co").password("{noop}revisor123").roles("REVISOR").build(),
             User.withUsername("supervisor1@educacionbogota.edu.co").password("{noop}supervisor123").roles("SUPERVISOR").build(),
             // I9: usuario de prueba para el rol ADMINISTRATIVO

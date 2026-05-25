@@ -383,6 +383,17 @@ ALTER TABLE SGCN_USUARIOS ADD (
     RESPONSABLE_IVA NUMBER(1) DEFAULT 0 NOT NULL
 );
 
+-- ============================================================
+-- ===== INCREMENTO 12 — Usuario contratista con modo admin
+-- ============================================================
+
+ALTER TABLE SGCN_USUARIOS ADD (
+    ES_ADMIN NUMBER(1) DEFAULT 0 NOT NULL
+);
+
+ALTER TABLE SGCN_USUARIOS ADD CONSTRAINT CHK_USUARIOS_ES_ADMIN
+CHECK (ES_ADMIN IN (0, 1));
+
 -- ----- Nueva tabla SGCN_DOCS_REQUERIDOS -----
 -- Almacena los archivos requeridos por informe (PDF / EML).
 -- Separada de SGCN_DOCS_ADICIONALES (documentos adicionales libres).

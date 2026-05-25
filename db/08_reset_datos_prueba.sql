@@ -166,48 +166,48 @@ END;
 -- 4) Usuarios base. Las credenciales HTTP Basic viven en DevSecurityConfig:
 --    admin@educacionbogota.edu.co / admin123
 --    juan.escandon@educacionbogota.edu.co / contratista123
---    aecheverry@educacionbogota.gov.co / contratista123
+--    aecheverry@educacionbogota.gov.co / contratista123 (contratista + admin)
 --    revisor1@educacionbogota.edu.co / revisor123
 --    supervisor1@educacionbogota.edu.co / supervisor123
 --    administrativo@educacionbogota.edu.co / admin123
 INSERT INTO SGCN_USUARIOS
     (ID, EMAIL, NOMBRE, CARGO, ROL, ACTIVO, SGSSI_SALUD_ENTIDAD,
-     SGSSI_PENSION_ENTIDAD, SGSSI_ARL_ENTIDAD, RESPONSABLE_IVA, CREATED_BY)
+     SGSSI_PENSION_ENTIDAD, SGSSI_ARL_ENTIDAD, RESPONSABLE_IVA, ES_ADMIN, CREATED_BY)
 VALUES
     (1, 'admin@educacionbogota.edu.co', 'Administrador SIGCON', 'Administrador funcional',
-     'ADMIN', 1, NULL, NULL, NULL, 0, 'reset-datos');
+     'ADMIN', 1, NULL, NULL, NULL, 0, 0, 'reset-datos');
 
 INSERT INTO SGCN_USUARIOS
     (ID, EMAIL, NOMBRE, CARGO, ROL, ACTIVO, SGSSI_SALUD_ENTIDAD,
-     SGSSI_PENSION_ENTIDAD, SGSSI_ARL_ENTIDAD, RESPONSABLE_IVA, CREATED_BY)
+     SGSSI_PENSION_ENTIDAD, SGSSI_ARL_ENTIDAD, RESPONSABLE_IVA, ES_ADMIN, CREATED_BY)
 VALUES
     (2, 'juan.escandon@educacionbogota.edu.co', 'Juan Escandon Perez', 'Contratista OPS',
-     'CONTRATISTA', 1, 'EPS Sanitas', 'Porvenir', 'ARL Sura', 0, 'reset-datos');
+     'CONTRATISTA', 1, 'EPS Sanitas', 'Porvenir', 'ARL Sura', 0, 0, 'reset-datos');
 
 INSERT INTO SGCN_USUARIOS
     (ID, EMAIL, NOMBRE, CARGO, ROL, ACTIVO, SGSSI_SALUD_ENTIDAD,
-     SGSSI_PENSION_ENTIDAD, SGSSI_ARL_ENTIDAD, RESPONSABLE_IVA, CREATED_BY)
+     SGSSI_PENSION_ENTIDAD, SGSSI_ARL_ENTIDAD, RESPONSABLE_IVA, ES_ADMIN, CREATED_BY)
 VALUES
     (3, 'aecheverry@educacionbogota.gov.co', 'Andres Echeverry', 'Contratista OPS IVA',
-     'CONTRATISTA', 1, 'Compensar EPS', 'Proteccion', 'ARL Positiva', 1, 'reset-datos');
+     'CONTRATISTA', 1, 'Compensar EPS', 'Proteccion', 'ARL Positiva', 1, 1, 'reset-datos');
 
 INSERT INTO SGCN_USUARIOS
-    (ID, EMAIL, NOMBRE, CARGO, ROL, ACTIVO, RESPONSABLE_IVA, CREATED_BY)
+    (ID, EMAIL, NOMBRE, CARGO, ROL, ACTIVO, RESPONSABLE_IVA, ES_ADMIN, CREATED_BY)
 VALUES
     (4, 'revisor1@educacionbogota.edu.co', 'Revisor SIGCON', 'Apoyo supervision',
-     'REVISOR', 1, 0, 'reset-datos');
+     'REVISOR', 1, 0, 0, 'reset-datos');
 
 INSERT INTO SGCN_USUARIOS
-    (ID, EMAIL, NOMBRE, CARGO, ROL, ACTIVO, RESPONSABLE_IVA, CREATED_BY)
+    (ID, EMAIL, NOMBRE, CARGO, ROL, ACTIVO, RESPONSABLE_IVA, ES_ADMIN, CREATED_BY)
 VALUES
     (5, 'supervisor1@educacionbogota.edu.co', 'Supervisor SIGCON', 'Supervisor contractual',
-     'SUPERVISOR', 1, 0, 'reset-datos');
+     'SUPERVISOR', 1, 0, 0, 'reset-datos');
 
 INSERT INTO SGCN_USUARIOS
-    (ID, EMAIL, NOMBRE, CARGO, ROL, ACTIVO, RESPONSABLE_IVA, CREATED_BY)
+    (ID, EMAIL, NOMBRE, CARGO, ROL, ACTIVO, RESPONSABLE_IVA, ES_ADMIN, CREATED_BY)
 VALUES
     (6, 'administrativo@educacionbogota.edu.co', 'Administrativo SIGCON', 'Visto bueno administrativo',
-     'ADMINISTRATIVO', 1, 0, 'reset-datos');
+     'ADMINISTRATIVO', 1, 0, 0, 'reset-datos');
 
 -- 5) Contratos base para pruebas.
 INSERT INTO SGCN_CONTRATOS
@@ -373,7 +373,7 @@ UNION ALL SELECT 'SGCN_DOCS_CATALOGO', COUNT(*) FROM SGCN_DOCS_CATALOGO
 UNION ALL SELECT 'SGCN_USUARIOS', COUNT(*) FROM SGCN_USUARIOS;
 
 PROMPT ===== Usuarios disponibles para pruebas local-dev =====
-SELECT EMAIL, ROL, ACTIVO
+SELECT EMAIL, ROL, ES_ADMIN, ACTIVO
   FROM SGCN_USUARIOS
  ORDER BY ID;
 
