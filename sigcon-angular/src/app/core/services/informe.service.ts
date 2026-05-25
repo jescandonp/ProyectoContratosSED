@@ -44,6 +44,10 @@ export class InformeService {
     return this.http.patch<InformeDetalle>(`${this.baseUrl}/${id}`, dto);
   }
 
+  actualizarPorcentajeEjecucion(id: number, porcentajeEjecucion: number) {
+    return this.http.patch<InformeDetalle>(`${this.baseUrl}/${id}/porcentaje-ejecucion`, { porcentajeEjecucion });
+  }
+
   listarColaVistoBueno(page = 0, size = 10) {
     const params = new HttpParams().set('page', String(page)).set('size', String(size));
     return this.http.get<Page<InformeResumen>>(`${this.baseUrl}/cola/visto-bueno`, { params });

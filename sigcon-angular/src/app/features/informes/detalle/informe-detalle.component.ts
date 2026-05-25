@@ -47,6 +47,8 @@ export class InformeDetalleComponent implements OnInit {
   readonly error = signal('');
   readonly guardandoPeriodo = signal(false);
   readonly errorPeriodo = signal('');
+  readonly guardandoPorcentaje = signal(false);
+  readonly errorPorcentaje = signal('');
 
   // I5 — estado de edicion de actividades (solo BORRADOR)
   readonly actividadStates = signal<Map<number, ActividadEditState>>(new Map());
@@ -138,6 +140,37 @@ export class InformeDetalleComponent implements OnInit {
         } else {
           this.errorPeriodo.set('No se pudo guardar el periodo. Verifique las fechas e intente de nuevo.');
         }
+      }
+    });
+  }
+
+  puedeEditarPorcentajeEjecucion(informe: InformeDetalle): boolean {
+    return (informe.estado === 'EN_REVISION' || informe.estado === 'EN_VISTO_BUENO')
+      && (this.authService.hasRole('REVISOR')
+        || this.authService.hasRole('ADMIN')
+        || this.authService.hasRole('ADMINISTRATIVO'));
+  }
+
+  guardarPorcentajeEjecucion(valor: string | number | null): void {
+    const informe = this.informe();
+    if (!informe || valor === null || valor === '') {
+      return;
+    }
+    const porcentaje = Number(valor);
+    if (Number.isNaN(porcentaje) || porcentaje < 0 || porcentaje > 100) {
+      this.errorPorcentaje.set('El porcentaje debe estar entre 0 y 100.');
+      return;
+    }
+    this.guardandoPorcentaje.set(true);
+    this.errorPorcentaje.set('');
+    this.informeService.actualizarPorcentajeEjecucion(informe.id, porcentaje).subscribe({
+      next: (actualizado) => {
+        this.informe.set(actualizado);
+        this.guardandoPorcentaje.set(false);
+      },
+      error: () => {
+        this.guardandoPorcentaje.set(false);
+        this.errorPorcentaje.set('No se pudo guardar el porcentaje de ejecucion.');
       }
     });
   }

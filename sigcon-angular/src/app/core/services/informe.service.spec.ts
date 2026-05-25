@@ -51,6 +51,11 @@ describe('InformeService', () => {
 
     service.aprobarInforme(10).subscribe();
     expect(http.expectOne('/api/informes/10/aprobar').request.method).toBe('POST');
+
+    service.actualizarPorcentajeEjecucion(10, 75.5).subscribe();
+    const porcentajeRequest = http.expectOne('/api/informes/10/porcentaje-ejecucion');
+    expect(porcentajeRequest.request.method).toBe('PATCH');
+    expect(porcentajeRequest.request.body).toEqual({ porcentajeEjecucion: 75.5 });
   });
 
   function informeRequest(): InformeRequest {

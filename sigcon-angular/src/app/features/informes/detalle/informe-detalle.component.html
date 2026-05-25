@@ -455,6 +455,33 @@
 
       <aside class="space-y-lg">
         <div class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg">
+          <h3 class="mb-md text-base font-semibold text-[var(--color-on-surface)]">Ejecucion acumulada</h3>
+          @if (puedeEditarPorcentajeEjecucion(i)) {
+            <label class="block">
+              <span class="mb-xs block text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Porcentaje</span>
+              <input
+                class="h-10 w-full rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface-bright)] px-sm text-sm outline-none focus:border-[var(--color-primary)]"
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                [disabled]="guardandoPorcentaje()"
+                [ngModel]="i.porcentajeEjecucion"
+                (blur)="guardarPorcentajeEjecucion($any($event.target).value)"
+                data-testid="input-porcentaje-ejecucion"
+              />
+            </label>
+            @if (errorPorcentaje()) {
+              <p class="mt-xs text-xs text-[var(--color-error)]">{{ errorPorcentaje() }}</p>
+            }
+          } @else {
+            <p class="m-0 text-2xl font-bold text-[var(--color-on-surface)]">
+              {{ i.porcentajeEjecucion ?? 0 | number:'1.2-2' }} %
+            </p>
+          }
+        </div>
+
+        <div class="rounded-xl border border-[var(--color-outline-variant)] bg-white p-lg">
           <h3 class="mb-md text-base font-semibold text-[var(--color-on-surface)]">Actores</h3>
           <dl class="space-y-md text-sm">
             <div>
