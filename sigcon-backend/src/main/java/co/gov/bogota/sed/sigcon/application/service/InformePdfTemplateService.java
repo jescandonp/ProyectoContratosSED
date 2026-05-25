@@ -8,6 +8,7 @@ import co.gov.bogota.sed.sigcon.domain.entity.Informe;
 import co.gov.bogota.sed.sigcon.domain.entity.SoporteAdjunto;
 import co.gov.bogota.sed.sigcon.domain.entity.Usuario;
 import co.gov.bogota.sed.sigcon.domain.enums.ItemSgssi;
+import co.gov.bogota.sed.sigcon.domain.enums.TipoContrato;
 import co.gov.bogota.sed.sigcon.domain.repository.ActividadInformeRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.AporteSgssiRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.DocumentoAdicionalRepository;
@@ -254,7 +255,9 @@ public class InformePdfTemplateService {
         sb.append("<td class=\"ph-center\">");
         sb.append("<div class=\"ph-center-title\">INFORME DE ACTIVIDADES No. ")
           .append(String.format("%02d", informe.getNumero())).append("</div>");
-        sb.append("<div class=\"ph-center-sub\">CONTRATO DE PRESTACION DE SERVICIOS PROFESIONALES</div>");
+        sb.append("<div class=\"ph-center-sub\">")
+          .append(textoTipoContrato(informe.getContrato().getTipo()))
+          .append("</div>");
         sb.append("<div class=\"ph-center-sub\">").append(numContrato)
           .append(" DEL ").append(anioContrato).append("</div>");
         sb.append("</td>");
@@ -268,6 +271,13 @@ public class InformePdfTemplateService {
 
         sb.append("</tr></tbody></table>");
         sb.append("</div>");
+    }
+
+    private String textoTipoContrato(TipoContrato tipoContrato) {
+        if (tipoContrato == TipoContrato.PRO) {
+            return "CONTRATO DE APOYO A LA GESTION";
+        }
+        return "CONTRATO DE PRESTACION DE SERVICIOS PROFESIONALES";
     }
 
     // ─── Secciones ────────────────────────────────────────────────────────────

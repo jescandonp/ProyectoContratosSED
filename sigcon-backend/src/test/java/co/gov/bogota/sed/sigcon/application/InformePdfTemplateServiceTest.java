@@ -26,6 +26,40 @@ class InformePdfTemplateServiceTest {
 
     @Test
     void htmlMantieneFooterFueraDelFlujoSuperiorYFirmasAcotadas() throws Exception {
+        String html = buildHtml(informe());
+
+        assertThat(html.indexOf("class=\"running-footer\""))
+            .isGreaterThan(html.indexOf("class=\"firma-section\""));
+        assertThat(html.indexOf("P&#225;gina <span class=\"page-num\"></span> de <span class=\"page-total\"></span>"))
+            .isLessThan(html.indexOf("PERIODO DEL INFORME"));
+        assertThat(html).contains("P&#225;gina: <span class=\"page-num\"></span> de <span class=\"page-total\"></span>");
+        assertThat(html).contains("style=\"height:44pt;width:150pt;\"");
+        assertThat(html).contains("class=\"lbl4\"");
+        assertThat(html).contains("Fecha de Terminaci&#243;n:");
+    }
+
+    @Test
+    void htmlContratoTipoOpsMuestraTextoPrestacionServicios() throws Exception {
+        Informe informe = informe();
+        informe.getContrato().setTipo(TipoContrato.OPS);
+
+        String html = buildHtml(informe);
+
+        assertThat(html).contains("CONTRATO DE PRESTACION DE SERVICIOS PROFESIONALES");
+    }
+
+    @Test
+    void htmlContratoTipoProMuestraTextoApoyoGestion() throws Exception {
+        Informe informe = informe();
+        informe.getContrato().setTipo(TipoContrato.PRO);
+
+        String html = buildHtml(informe);
+
+        assertThat(html).contains("CONTRATO DE APOYO A LA GESTION");
+        assertThat(html).doesNotContain("CONTRATO DE PRESTACION DE SERVICIOS PROFESIONALES");
+    }
+
+    private static String buildHtml(Informe informe) throws Exception {
         InformePdfTemplateService service = new InformePdfTemplateService(
             mock(ActividadInformeRepository.class),
             mock(SoporteAdjuntoRepository.class),
@@ -45,9 +79,9 @@ class InformePdfTemplateServiceTest {
         );
         buildHtml.setAccessible(true);
 
-        String html = (String) buildHtml.invoke(
+        return (String) buildHtml.invoke(
             service,
-            informe(),
+            informe,
             Collections.emptyList(),
             Collections.emptyList(),
             Collections.emptyList(),
@@ -55,15 +89,6 @@ class InformePdfTemplateServiceTest {
             new byte[]{1, 2, 3},
             new byte[]{1, 2, 3}
         );
-
-        assertThat(html.indexOf("class=\"running-footer\""))
-            .isGreaterThan(html.indexOf("class=\"firma-section\""));
-        assertThat(html.indexOf("P&#225;gina <span class=\"page-num\"></span> de <span class=\"page-total\"></span>"))
-            .isLessThan(html.indexOf("PERIODO DEL INFORME"));
-        assertThat(html).contains("P&#225;gina: <span class=\"page-num\"></span> de <span class=\"page-total\"></span>");
-        assertThat(html).contains("style=\"height:44pt;width:150pt;\"");
-        assertThat(html).contains("class=\"lbl4\"");
-        assertThat(html).contains("Fecha de Terminaci&#243;n:");
     }
 
     private static Informe informe() {
