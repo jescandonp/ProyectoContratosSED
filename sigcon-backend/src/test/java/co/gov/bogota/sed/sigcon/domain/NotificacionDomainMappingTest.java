@@ -60,10 +60,10 @@ class NotificacionDomainMappingTest {
     }
 
     @Test
-    void tipoEventoEnumCoversFiveValues() {
+    void tipoEventoEnumCoversCurrentValues() {
         TipoEvento[] values = TipoEvento.values();
-        // I3: 5 eventos originales + I9: 4 eventos VB = 9 total
-        assertThat(values).hasSize(9);
+        // I3: 5 eventos originales + I9: 4 eventos VB + I12: carga de informes = 10 total
+        assertThat(values).hasSize(10);
         assertThat(values).contains(
             TipoEvento.INFORME_ENVIADO,
             TipoEvento.REVISION_APROBADA,
@@ -73,7 +73,8 @@ class NotificacionDomainMappingTest {
             TipoEvento.INFORME_EN_VISTO_BUENO,
             TipoEvento.VB_DADO,
             TipoEvento.VB_ESCALADO,
-            TipoEvento.VB_DEVUELTO
+            TipoEvento.VB_DEVUELTO,
+            TipoEvento.CARGA_INFORMES_DESACTIVADA
         );
     }
 

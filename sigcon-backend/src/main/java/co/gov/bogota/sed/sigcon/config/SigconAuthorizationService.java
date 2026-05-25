@@ -3,16 +3,17 @@ package co.gov.bogota.sed.sigcon.config;
 import co.gov.bogota.sed.sigcon.domain.entity.Usuario;
 import co.gov.bogota.sed.sigcon.domain.enums.RolUsuario;
 import co.gov.bogota.sed.sigcon.domain.repository.UsuarioRepository;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 @Component("sigconAuthorization")
 public class SigconAuthorizationService {
 
-    private final UsuarioRepository usuarioRepository;
+    private final ObjectProvider<UsuarioRepository> usuarioRepositoryProvider;
 
-    public SigconAuthorizationService(UsuarioRepository usuarioRepository) {
-        this.usuarioRepository = usuarioRepository;
+    public SigconAuthorizationService(ObjectProvider<UsuarioRepository> usuarioRepositoryProvider) {
+        this.usuarioRepositoryProvider = usuarioRepositoryProvider;
     }
 
     public boolean isAdmin(Authentication authentication) {
@@ -21,6 +22,10 @@ public class SigconAuthorizationService {
         }
         if (authentication.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()))) {
             return true;
+        }
+        UsuarioRepository usuarioRepository = usuarioRepositoryProvider.getIfAvailable();
+        if (usuarioRepository == null) {
+            return false;
         }
         return usuarioRepository.findByEmailAndActivoTrue(authentication.getName())
             .map(this::isDualAdmin)
