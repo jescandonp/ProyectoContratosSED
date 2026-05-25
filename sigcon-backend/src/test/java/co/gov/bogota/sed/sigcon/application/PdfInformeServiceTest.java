@@ -66,6 +66,17 @@ class PdfInformeServiceTest {
     }
 
     @Test
+    void firmaRevisorAsignadoAusenteBloquea() {
+        Contrato contrato = contrato(usuarioConFirma(2L), usuarioConFirma(4L));
+        contrato.setRevisor(usuarioSinFirma(5L));
+        Informe informe = informe(contrato);
+
+        assertThatThrownBy(() -> pdfService.generarYPersistir(informe))
+            .isInstanceOfSatisfying(SigconBusinessException.class, ex ->
+                assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.FIRMA_REQUERIDA));
+    }
+
+    @Test
     void pdfExistenteNoSeRegenera() throws Exception {
         Informe informe = informe(contrato(usuarioConFirma(2L), usuarioConFirma(4L)));
         informe.setPdfRuta("pdfs/1/1/informe-1.pdf");
@@ -102,6 +113,35 @@ class PdfInformeServiceTest {
     }
 
     @Test
+    void generacionConRevisorAsignadoCargaFirmaRevisor() throws Exception {
+        Usuario contratista = usuarioConFirma(2L);
+        Usuario supervisor  = usuarioConFirma(4L);
+        Usuario revisor     = usuarioConFirma(5L, RolUsuario.REVISOR);
+        Contrato contrato = contrato(contratista, supervisor);
+        contrato.setRevisor(revisor);
+        Informe informe = informe(contrato);
+
+        byte[] fakePdf = new byte[]{1, 2, 3, 4, 5};
+        byte[] fakeFirmaBytes = new byte[]{9, 8, 7};
+        byte[] fakeFirmaRevisor = new byte[]{6, 5, 4};
+
+        when(storageService.loadFile(contratista.getFirmaImagen()))
+            .thenReturn(new ByteArrayInputStream(fakeFirmaBytes));
+        when(storageService.loadFile(supervisor.getFirmaImagen()))
+            .thenReturn(new ByteArrayInputStream(fakeFirmaBytes));
+        when(storageService.loadFile(revisor.getFirmaImagen()))
+            .thenReturn(new ByteArrayInputStream(fakeFirmaRevisor));
+        when(templateService.generarPdf(any(), any(), any(), eq(fakeFirmaRevisor))).thenReturn(fakePdf);
+        when(storageService.storeBytes(anyString(), anyString(), eq(fakePdf)))
+            .thenReturn("pdfs/1/1/informe-1.pdf");
+        when(informeRepository.save(any(Informe.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        pdfService.generarYPersistir(informe);
+
+        verify(templateService).generarPdf(eq(informe), eq(fakeFirmaBytes), eq(fakeFirmaBytes), eq(fakeFirmaRevisor));
+    }
+
+    @Test
     void errorEnStorageLanzaPdfGeneracionFallida() throws Exception {
         Usuario contratista = usuarioConFirma(2L);
         Usuario supervisor  = usuarioConFirma(4L);
@@ -124,11 +164,15 @@ class PdfInformeServiceTest {
     // ---- Helpers ----
 
     private static Usuario usuarioConFirma(Long id) {
+        return usuarioConFirma(id, id == 4L ? RolUsuario.SUPERVISOR : RolUsuario.CONTRATISTA);
+    }
+
+    private static Usuario usuarioConFirma(Long id, RolUsuario rol) {
         Usuario u = new Usuario();
         u.setId(id);
         u.setEmail("u" + id + "@educacionbogota.edu.co");
         u.setNombre("Usuario " + id);
-        u.setRol(id == 4L ? RolUsuario.SUPERVISOR : RolUsuario.CONTRATISTA);
+        u.setRol(rol);
         u.setFirmaImagen("firmas/" + id + "/firma.png");
         u.setActivo(true);
         return u;

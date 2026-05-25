@@ -350,6 +350,8 @@ Usuarios disponibles en `db/01_datos_prueba.sql` y en `DevSecurityConfig` / `Dev
 | `supervisor1@educacionbogota.edu.co` | `supervisor123` | `SUPERVISOR` |
 | `administrativo@educacionbogota.edu.co` | `admin123` | `ADMINISTRATIVO` (I9) |
 
+> **I9 Visto Bueno:** `ADMIN` y `ADMINISTRATIVO` pueden abrir `/visto-bueno` y operar la cola de informes en `EN_VISTO_BUENO`. `ADMINISTRATIVO` sigue siendo un rol separado y tambien puede crearse desde Administracion -> Usuarios.
+
 > **IMPORTANTE:** La pantalla de login en local-dev muestra botones de acceso directo por rol. No se requiere ingresar credenciales manualmente.
 
 ## Configuracion WebLogic (produccion — ambiente pruebas SED)

@@ -141,14 +141,14 @@ export const routes: Routes = [
       },
       {
         path: 'visto-bueno',
-        canActivate: [roleGuard(['ADMINISTRATIVO'])],
+        canActivate: [roleGuard(['ADMIN', 'ADMINISTRATIVO'])],
         loadComponent: () =>
           import('./features/visto-bueno/cola-visto-bueno.component').then((m) => m.ColaVistoBuenoComponent),
         title: 'Cola de Visto Bueno — SIGCON'
       },
       {
         path: 'visto-bueno/:id',
-        canActivate: [roleGuard(['ADMINISTRATIVO'])],
+        canActivate: [roleGuard(['ADMIN', 'ADMINISTRATIVO'])],
         loadComponent: () =>
           import('./features/visto-bueno/detalle-visto-bueno.component').then((m) => m.DetalleVistoBuenoComponent),
         title: 'Detalle — Visto Bueno — SIGCON'

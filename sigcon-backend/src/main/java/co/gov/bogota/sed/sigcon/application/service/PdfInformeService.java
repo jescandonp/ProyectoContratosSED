@@ -63,19 +63,12 @@ public class PdfInformeService {
         Usuario contratista = informe.getContrato().getContratista();
         Usuario supervisor  = informe.getContrato().getSupervisor();
 
-        if (contratista == null || contratista.getFirmaImagen() == null) {
-            throw new SigconBusinessException(
-                ErrorCode.FIRMA_REQUERIDA,
-                "El contratista no tiene firma registrada. Debe cargar su firma antes de aprobar el informe.",
-                HttpStatus.UNPROCESSABLE_ENTITY
-            );
-        }
-        if (supervisor == null || supervisor.getFirmaImagen() == null) {
-            throw new SigconBusinessException(
-                ErrorCode.FIRMA_REQUERIDA,
-                "El supervisor no tiene firma registrada. Debe cargar su firma antes de aprobar el informe.",
-                HttpStatus.UNPROCESSABLE_ENTITY
-            );
+        validarFirmaObligatoria(contratista, "El contratista no tiene firma registrada. Debe cargar su firma antes de aprobar el informe.");
+        validarFirmaObligatoria(supervisor, "El supervisor no tiene firma registrada. Debe cargar su firma antes de aprobar el informe.");
+
+        Usuario revisor = informe.getContrato().getRevisor();
+        if (revisor != null) {
+            validarFirmaObligatoria(revisor, "El revisor no tiene firma registrada. Debe cargar su firma antes de aprobar el informe.");
         }
 
         try {
@@ -83,15 +76,9 @@ public class PdfInformeService {
             byte[] firmaContratista = readSignatureBytes(contratista);
             byte[] firmaSupervisor  = readSignatureBytes(supervisor);
 
-            // Firma del revisor es opcional: si no tiene revisor o no tiene firma, se omite del PDF
-            Usuario revisor = informe.getContrato().getRevisor();
             byte[] firmaRevisor = null;
-            if (revisor != null && revisor.getFirmaImagen() != null) {
-                try {
-                    firmaRevisor = readSignatureBytes(revisor);
-                } catch (Exception e) {
-                    log.warn("No se pudo cargar la firma del revisor {}: {}", revisor.getId(), e.getMessage());
-                }
+            if (revisor != null) {
+                firmaRevisor = readSignatureBytes(revisor);
             }
 
             // Generar PDF
@@ -148,6 +135,16 @@ public class PdfInformeService {
         // firmaImagen contiene la ruta relativa almacenada por LocalDocumentStorageService
         try (InputStream is = storageService.loadFile(usuario.getFirmaImagen())) {
             return readAllBytes(is);
+        }
+    }
+
+    private static void validarFirmaObligatoria(Usuario usuario, String mensaje) {
+        if (usuario == null || usuario.getFirmaImagen() == null || usuario.getFirmaImagen().trim().isEmpty()) {
+            throw new SigconBusinessException(
+                ErrorCode.FIRMA_REQUERIDA,
+                mensaje,
+                HttpStatus.UNPROCESSABLE_ENTITY
+            );
         }
     }
 

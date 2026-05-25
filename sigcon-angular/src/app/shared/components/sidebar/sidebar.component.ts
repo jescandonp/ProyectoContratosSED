@@ -72,7 +72,7 @@ export class SidebarComponent {
       items.push({ label: 'Aprobacion', iconAsset: 'ico-contratos-admin_.png', route: '/aprobacion/informes' });
     }
 
-    if (this.authService.hasRole('ADMINISTRATIVO')) {
+    if (this.authService.hasRole('ADMIN') || this.authService.hasRole('ADMINISTRATIVO')) {
       items.push({ label: 'Visto Bueno', iconAsset: 'ico-contratos-admin_.png', route: '/visto-bueno' });
     }
 

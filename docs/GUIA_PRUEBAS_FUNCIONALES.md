@@ -56,7 +56,7 @@ sqlplus SED_SIGCON/Sigcon2026Local1@localhost:1521/XEPDB1 @db/06_sgcn_parametros
 sqlplus SED_SIGCON/Sigcon2026Local1@localhost:1521/XEPDB1 @db/07_observaciones_accion.sql
 ```
 
-`06_sgcn_parametros.sql` crea la tabla `SGCN_PARAMETROS` con el registro inicial del parametro `vb.activo=true`. `07_observaciones_accion.sql` agrega la columna `ACCION` a `SGCN_OBSERVACIONES` necesaria para distinguir entre devoluciones y escalaciones. Si no se ejecutan, el backend arranca con errores de schema-validation sobre estas tablas/columnas.
+`06_sgcn_parametros.sql` crea la tabla `SGCN_PARAMETROS` con el registro inicial del parametro `VB_ACTIVO=S`. `07_observaciones_accion.sql` agrega la columna `ACCION` a `SGCN_OBSERVACIONES` necesaria para distinguir entre devoluciones y escalaciones. Si no se ejecutan, el backend arranca con errores de schema-validation sobre estas tablas/columnas.
 
 ### 2.2 Backend
 
@@ -927,8 +927,8 @@ Prerequisito: ADMIN desactiva el toggle (I9-TOG-05). Entrar como `SUPERVISOR`.
 
 | ID | Accion | Datos | Esperado |
 |---|---|---|---|
-| I9-OFF-01 | Supervisor aprueba informe EN_REVISION con VB desactivado | Parametro `vb.activo=false` | Estado pasa directamente a `APROBADO` (omite EN_VISTO_BUENO) |
-| I9-OFF-02 | ADMINISTRATIVO abre la cola | Entrar como ADMINISTRATIVO | Cola vacia (ningun informe llega a EN_VISTO_BUENO) |
+| I9-OFF-01 | Supervisor aprueba informe EN_REVISION con VB desactivado | Parametro `VB_ACTIVO=N` | Estado pasa directamente a `APROBADO` (omite EN_VISTO_BUENO) |
+| I9-OFF-02 | ADMIN o ADMINISTRATIVO abre la cola | Entrar como ADMIN o ADMINISTRATIVO | Cola vacia (ningun informe llega a EN_VISTO_BUENO) |
 | I9-OFF-03 | Reactivar VB | ADMIN activa el toggle de nuevo | Siguiente aprobacion de supervisor vuelve a generar EN_VISTO_BUENO |
 
 ### 17.7 Chip de Estado EN_VISTO_BUENO
@@ -946,9 +946,9 @@ Prerequisito: ADMIN desactiva el toggle (I9-TOG-05). Entrar como `SUPERVISOR`.
 | I9-ACL-01 | CONTRATISTA | Navegar a `/visto-bueno` | Redireccion a login o pagina de acceso denegado |
 | I9-ACL-02 | REVISOR | Navegar a `/visto-bueno` | Acceso denegado |
 | I9-ACL-03 | SUPERVISOR | Navegar a `/visto-bueno` | Acceso denegado |
-| I9-ACL-04 | ADMIN | Navegar a `/visto-bueno` | Acceso denegado (ADMIN != ADMINISTRATIVO) |
+| I9-ACL-04 | ADMIN | Navegar a `/visto-bueno` | Cola de VB visible |
 | I9-ACL-05 | ADMINISTRATIVO | Navegar a `/visto-bueno` | Cola de VB visible |
-| I9-ACL-06 | ADMINISTRATIVO | Intentar dar VB a informe ajeno (no EN_VISTO_BUENO) | 409 o 403 del backend |
+| I9-ACL-06 | ADMIN o ADMINISTRATIVO | Intentar dar VB a informe ajeno (no EN_VISTO_BUENO) | 409 o 403 del backend |
 | I9-ACL-07 | ADMINISTRATIVO | Navegar a `/admin` | Acceso denegado |
 | I9-ACL-08 | ADMINISTRATIVO | Navegar a `/aprobacion/informes` | Acceso denegado |
 | I9-ACL-09 | Sin autenticar | `GET /api/informes/cola/visto-bueno` | 401 Unauthorized |
@@ -981,9 +981,10 @@ Prerequisito: ADMIN desactiva el toggle (I9-TOG-05). Entrar como `SUPERVISOR`.
 |---------|----------------|----------|
 | `Schema-validation: missing table [sgcn_parametros]` | Migracion I9 no ejecutada | Ejecutar `db/06_sgcn_parametros.sql` |
 | `Schema-validation: missing column [accion]` | Migracion I9 no ejecutada | Ejecutar `db/07_observaciones_accion.sql` |
-| Cola de VB siempre vacia | Parametro `vb.activo=false` | Verificar `SGCN_PARAMETROS` en BD; reactivar desde Admin |
+| Cola de VB siempre vacia | Parametro `VB_ACTIVO=N` o no hay informes en `EN_VISTO_BUENO` | Verificar `SGCN_PARAMETROS` y `SGCN_INFORMES` en BD; reactivar desde Admin |
 | 403 al entrar como ADMINISTRATIVO | Rol no configurado en el usuario local-dev | Verificar `dev-session.service.ts` incluye entrada ADMINISTRATIVO |
+| ADMIN no ve la cola de VB | Build Angular o backend desactualizado | Verificar que rutas, sidebar y endpoints VB permiten `ADMIN` y `ADMINISTRATIVO` |
 | Toggle VB no aparece en admin dashboard | Build Angular desactualizado | Ejecutar `npm start` en sigcon-angular |
 | Chip EN_VISTO_BUENO sin color amarillo | Tono `vb` no registrado en StatusChipComponent | Verificar que `status-chip.component.ts` incluye el tono `vb` |
 | Supervisor sigue generando APROBADO con VB activo | Cache de parametro en backend | Verificar que `ParametroService` lee de BD y no de cache estatica |
-| ADMINISTRATIVO no ve sidebar item "Visto Bueno" | Rol no reconocido en sidebar | Verificar `sidebar.component.ts` incluye bloque `hasRole('ADMINISTRATIVO')` |
+| ADMIN o ADMINISTRATIVO no ve sidebar item "Visto Bueno" | Rol no reconocido en sidebar | Verificar `sidebar.component.ts` incluye ambos roles para `/visto-bueno` |

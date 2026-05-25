@@ -1,8 +1,10 @@
 # SIGCON I11 — Execution Log
 
-**Incremento:** I11 — Correcciones Formato PDF 11-IF-023 V1
+**Incremento:** I11 — Ajustes Formato PDF 11-IF-023 V1
 **Inicio:** 2026-05-22
-**Estado:** ✅ CERRADO
+**Estado:** CERRADO
+**Spec:** `docs/specs/2026-05-22-sigcon-i11-spec.md`
+**Plan:** `docs/plans/2026-05-22-sigcon-i11-plan.md`
 
 ---
 
@@ -10,13 +12,12 @@
 
 | Task | Descripción | Estado |
 |------|-------------|--------|
-| T1 | CSS: clases footer-inner/left/right, eliminar ph-code | ✅ Completado |
-| T2 | Footer: paginación + 11-IF-023 V1 + dirección SED dos columnas | ✅ Completado |
-| T3 | Header: quitar ph-code div, agregar paginación Pág. X / Y | ✅ Completado |
-| T4 | Sección 1: helper fila4(), Fecha Inicio y Terminación en misma fila | ✅ Completado |
-| T5 | Sección 2: Evidencia Verificable con <a href> real para tipo URL | ✅ Completado |
-| T6 | Tests: 213 tests pasan, sin cambios necesarios | ✅ Completado |
-| Refactor | Extraer constante CODIGO_DOCUMENTO = "11-IF-023 V1" | ✅ Completado |
+| T1 | Documentación SDD I11: spec + plan formal | Completado |
+| T2 | Header: paginación `Página X de Y` arriba del periodo | Completado |
+| T3 | Datos del contrato: fila estable para Fecha Inicio / Terminación | Completado |
+| T4 | Footer: código arriba-derecha, paginación centrada, dirección centrada | Completado |
+| T5 | Firmas: validar revisor asignado y normalizar tamaño visual | Completado |
+| T6 | Tests enfocados y actualización de execution log | Completado |
 
 ---
 
@@ -24,22 +25,37 @@
 
 | GAP | Descripción | Commit |
 |-----|-------------|--------|
-| 1 | Header: paginación "Pág. X / Y" en celda derecha | c7156d3 |
-| 2 | "11-IF-023 V1" movido del header al footer | c7156d3 |
-| 3 | Fecha Inicio y Terminación en misma fila (4 columnas) | c7156d3 |
-| 4 | Evidencia Verificable con `<a href>` real para tipo URL | c7156d3 |
-| 5 | Footer: paginación "Pág. X de Y" a la derecha | c7156d3 |
-| 6 | Footer: dirección SED en columna izquierda, formato validado | c7156d3 |
+| 1 | Header: orden corregido — primero `Página X de Y`, luego `PERIODO DEL INFORME`, luego Desde/Hasta | Pendiente commit |
+| 2 | Datos del contrato: fila de fechas no colapsa ni parte la fecha de terminación | Pendiente commit |
+| 3 | Footer: `11-IF-023` / `V1` separado a la derecha, paginación centrada y dirección centrada | Pendiente commit |
+| 4 | Firmas: imágenes con caja visual controlada para evitar firmas gigantes | Pendiente commit |
+| 5 | Firmas: revisor asignado sin firma bloquea generación con `FIRMA_REQUERIDA` | Pendiente commit |
+| 6 | Footer: el running footer se mueve fuera del flujo superior para no aparecer unido al header | Pendiente commit |
 
 ---
 
 ## Archivos modificados
 
+- `docs/specs/2026-05-22-sigcon-i11-spec.md`
+- `docs/plans/2026-05-22-sigcon-i11-plan.md`
 - `sigcon-backend/src/main/java/co/gov/bogota/sed/sigcon/application/service/InformePdfTemplateService.java`
+- `sigcon-backend/src/main/java/co/gov/bogota/sed/sigcon/application/service/PdfInformeService.java`
+- `sigcon-backend/src/test/java/co/gov/bogota/sed/sigcon/application/PdfInformeServiceTest.java`
+- `sigcon-backend/src/test/java/co/gov/bogota/sed/sigcon/application/InformePdfTemplateServiceTest.java`
+- `docs/plans/2026-05-22-sigcon-i11-execution-log.md`
 
 ## Notas
 
-- Todos los cambios son de presentación XHTML/CSS; cero impacto en lógica de negocio
-- Flying Saucer renderiza `<a href>` en PDF como hipervínculo clicable
-- La paginación en header usa formato compacto `X / Y`; en footer usa `X de Y` — diferencia intencional
-- `CODIGO_DOCUMENTO` constante permite cambiar el código de formato en un solo lugar
+- Los cambios visuales siguen concentrados en XHTML/CSS de `InformePdfTemplateService`.
+- La regla de firmas sí toca lógica de generación: si hay revisor asignado, su firma es obligatoria.
+- Contratista y supervisor continúan siendo firmas obligatorias.
+- Revisor no asignado no exige firma ni renderiza bloque de revisor.
+
+## Verificación
+
+| Fecha/hora | Comando | Resultado |
+|------------|---------|-----------|
+| 2026-05-22 18:57 America/Bogota | `mvn test -Dtest=PdfInformeServiceTest` | BUILD SUCCESS — 7 tests, 0 failures, 0 errors |
+| 2026-05-22 18:58 America/Bogota | `mvn test` | BUILD SUCCESS — 222 tests, 0 failures, 0 errors |
+| 2026-05-22 19:24 America/Bogota | `mvn test "-Dtest=PdfInformeServiceTest,InformePdfTemplateServiceTest"` | BUILD SUCCESS — 8 tests, 0 failures, 0 errors |
+| 2026-05-22 19:24 America/Bogota | `mvn test` | BUILD SUCCESS — 223 tests, 0 failures, 0 errors |

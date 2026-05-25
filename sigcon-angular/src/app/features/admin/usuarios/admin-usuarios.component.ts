@@ -43,6 +43,7 @@ import { UsuarioService } from '../../../core/services/usuario.service';
         >
           <option value="">Todos los roles</option>
           <option value="ADMIN">Admin</option>
+          <option value="ADMINISTRATIVO">Administrativo</option>
           <option value="CONTRATISTA">Contratista</option>
           <option value="REVISOR">Revisor</option>
           <option value="SUPERVISOR">Supervisor</option>
@@ -148,6 +149,7 @@ import { UsuarioService } from '../../../core/services/usuario.service';
                   <option value="REVISOR">Revisor</option>
                   <option value="SUPERVISOR">Supervisor</option>
                   <option value="ADMIN">Admin</option>
+                  <option value="ADMINISTRATIVO">Administrativo</option>
                 </select>
               </div>
               <label class="flex items-center gap-sm rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] px-sm py-sm text-sm text-[var(--color-on-surface)]">

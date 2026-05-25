@@ -195,6 +195,46 @@ class InformeServiceTest {
     }
 
     @Test
+    void administrativoListsSharedVistoBuenoQueue() {
+        Usuario administrativo = usuario(6L, RolUsuario.ADMINISTRATIVO);
+        Informe informe = informe(50L, contrato(10L, usuario(2L, RolUsuario.CONTRATISTA), EstadoContrato.EN_EJECUCION), EstadoInforme.EN_VISTO_BUENO);
+        when(currentUserService.getCurrentUser()).thenReturn(administrativo);
+        when(informeRepository.findByEstadoAndActivoTrue(eq(EstadoInforme.EN_VISTO_BUENO), any()))
+            .thenReturn(new PageImpl<>(Collections.singletonList(informe)));
+
+        Page<InformeResumenDto> page = informeService.listarColaVistoBueno(PageRequest.of(0, 10));
+
+        assertThat(page.getContent()).hasSize(1);
+        assertThat(page.getContent().get(0).getEstado()).isEqualTo(EstadoInforme.EN_VISTO_BUENO);
+        verify(informeRepository).findByEstadoAndActivoTrue(eq(EstadoInforme.EN_VISTO_BUENO), any());
+    }
+
+    @Test
+    void adminListsSharedVistoBuenoQueue() {
+        Usuario admin = usuario(1L, RolUsuario.ADMIN);
+        Informe informe = informe(50L, contrato(10L, usuario(2L, RolUsuario.CONTRATISTA), EstadoContrato.EN_EJECUCION), EstadoInforme.EN_VISTO_BUENO);
+        when(currentUserService.getCurrentUser()).thenReturn(admin);
+        when(informeRepository.findByEstadoAndActivoTrue(eq(EstadoInforme.EN_VISTO_BUENO), any()))
+            .thenReturn(new PageImpl<>(Collections.singletonList(informe)));
+
+        Page<InformeResumenDto> page = informeService.listarColaVistoBueno(PageRequest.of(0, 10));
+
+        assertThat(page.getContent()).hasSize(1);
+        assertThat(page.getContent().get(0).getEstado()).isEqualTo(EstadoInforme.EN_VISTO_BUENO);
+        verify(informeRepository).findByEstadoAndActivoTrue(eq(EstadoInforme.EN_VISTO_BUENO), any());
+    }
+
+    @Test
+    void nonAdministrativoCannotListSharedVistoBuenoQueue() {
+        Usuario supervisor = usuario(4L, RolUsuario.SUPERVISOR);
+        when(currentUserService.getCurrentUser()).thenReturn(supervisor);
+
+        assertThatThrownBy(() -> informeService.listarColaVistoBueno(PageRequest.of(0, 10)))
+            .isInstanceOfSatisfying(SigconBusinessException.class, ex ->
+                assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.ACCESO_DENEGADO));
+    }
+
+    @Test
     void detalleExposesPdfMetadataForApprovedInforme() {
         Usuario contratista = usuario(2L, RolUsuario.CONTRATISTA);
         Informe informe = informe(50L, contrato(10L, contratista, EstadoContrato.EN_EJECUCION), EstadoInforme.APROBADO);

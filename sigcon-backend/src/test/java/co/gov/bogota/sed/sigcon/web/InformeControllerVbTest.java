@@ -65,7 +65,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("local-dev")
 class InformeControllerVbTest {
 
-    private static final String ADMIN_EMAIL          = "administrativo@educacionbogota.edu.co";
+    private static final String ADMIN_EMAIL          = "admin@educacionbogota.edu.co";
+    private static final String ADMINISTRATIVO_EMAIL = "administrativo@educacionbogota.edu.co";
     private static final String SUPERVISOR_EMAIL     = "supervisor1@educacionbogota.edu.co";
 
     @Autowired private MockMvc mockMvc;
@@ -114,6 +115,18 @@ class InformeControllerVbTest {
             .thenReturn(new PageImpl<>(Collections.singletonList(resumen)));
 
         mockMvc.perform(get("/api/informes/cola/visto-bueno")
+                .with(httpBasic(ADMINISTRATIVO_EMAIL, "admin123")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content", hasSize(1)));
+    }
+
+    @Test
+    void colaVistoBueno_rolAdmin_retorna200() throws Exception {
+        InformeResumenDto resumen = informeResumen();
+        when(informeService.listarColaVistoBueno(any(Pageable.class)))
+            .thenReturn(new PageImpl<>(Collections.singletonList(resumen)));
+
+        mockMvc.perform(get("/api/informes/cola/visto-bueno")
                 .with(httpBasic(ADMIN_EMAIL, "admin123")))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.content", hasSize(1)));
@@ -125,6 +138,17 @@ class InformeControllerVbTest {
             .thenReturn(informeDetalle());
 
         mockMvc.perform(post("/api/informes/10/dar-visto-bueno")
+                .with(httpBasic(ADMINISTRATIVO_EMAIL, "admin123")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(10));
+    }
+
+    @Test
+    void darVistosBueno_rolAdmin_retorna200() throws Exception {
+        when(informeEstadoService.darVistosBueno(eq(10L), any()))
+            .thenReturn(informeDetalle());
+
+        mockMvc.perform(post("/api/informes/10/dar-visto-bueno")
                 .with(httpBasic(ADMIN_EMAIL, "admin123")))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(10));
@@ -132,6 +156,19 @@ class InformeControllerVbTest {
 
     @Test
     void escalar_retorna200() throws Exception {
+        when(informeEstadoService.escalar(eq(10L), any()))
+            .thenReturn(informeDetalle());
+
+        mockMvc.perform(post("/api/informes/10/escalar")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"texto\":\"Requiere revision del supervisor\"}")
+                .with(httpBasic(ADMINISTRATIVO_EMAIL, "admin123")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(10));
+    }
+
+    @Test
+    void escalar_rolAdmin_retorna200() throws Exception {
         when(informeEstadoService.escalar(eq(10L), any()))
             .thenReturn(informeDetalle());
 

@@ -400,6 +400,13 @@ class SigconBackendSecurityTest {
     }
 
     @Test
+    void admin_puedeAcceder_colaVistoBueno() throws Exception {
+        mockMvc.perform(get("/api/informes/cola/visto-bueno")
+                .with(httpBasic(ADMIN_EMAIL, "admin123")))
+            .andExpect(status().isOk());
+    }
+
+    @Test
     void administrativo_noPuedeAcceder_colaRevision() throws Exception {
         // El rol ADMINISTRATIVO no puede acceder a GET /api/informes sin contratoId
         // (el servicio lanza ACCESO_DENEGADO porque no es CONTRATISTA/REVISOR/SUPERVISOR)

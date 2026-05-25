@@ -140,14 +140,14 @@ public class InformeController {
     }
 
     @PostMapping("/{id}/devolver")
-    @PreAuthorize("hasAnyRole('SUPERVISOR', 'ADMINISTRATIVO')")
+    @PreAuthorize("hasAnyRole('SUPERVISOR', 'ADMIN', 'ADMINISTRATIVO')")
     @Operation(summary = "Devuelve un informe desde supervisión o desde Visto Bueno")
     public InformeDetalleDto devolverInforme(
         @PathVariable Long id,
         @Valid @RequestBody ObservacionRequest request,
         Authentication authentication
     ) {
-        if (hasRole(authentication, "ADMINISTRATIVO")) {
+        if (hasRole(authentication, "ADMIN") || hasRole(authentication, "ADMINISTRATIVO")) {
             return informeEstadoService.devolverDesdeVistoBueno(id, observacion(request));
         }
         return informeEstadoService.devolver(id, authentication.getName(), observacion(request));
@@ -156,14 +156,14 @@ public class InformeController {
     // ── I9: Endpoints Visto Bueno ─────────────────────────────────────────────
 
     @GetMapping("/cola/visto-bueno")
-    @PreAuthorize("hasRole('ADMINISTRATIVO')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATIVO')")
     @Operation(summary = "Cola compartida de informes en Visto Bueno")
     public Page<InformeResumenDto> colaVistoBueno(Pageable pageable) {
         return informeService.listarColaVistoBueno(pageable);
     }
 
     @PostMapping("/{id}/dar-visto-bueno")
-    @PreAuthorize("hasRole('ADMINISTRATIVO')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATIVO')")
     @Operation(summary = "Dar Visto Bueno — mueve el informe a EN_REVISION")
     public InformeDetalleDto darVistosBueno(
         @PathVariable Long id,
@@ -173,7 +173,7 @@ public class InformeController {
     }
 
     @PostMapping("/{id}/escalar")
-    @PreAuthorize("hasRole('ADMINISTRATIVO')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATIVO')")
     @Operation(summary = "Escalar al Supervisor — mueve el informe a EN_REVISION con accion ESCALACION")
     public InformeDetalleDto escalar(
         @PathVariable Long id,

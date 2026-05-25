@@ -267,3 +267,44 @@ aa3f5b1  feat(i9): TipoEvento VB, InformeRepository cola VB, InformeController e
 - `db/06_sgcn_parametros.sql`, `db/07_observaciones_accion.sql` — nuevos
 
 **Advertencia para la proxima sesion:** Hay commits locales no pusheados a `origin/main`. Ejecutar `git push` antes de iniciar nueva sesion para sincronizar.
+
+---
+
+## Ajuste I9 — Admin con capacidad de Visto Bueno (2026-05-22)
+
+**Motivo:** En validacion funcional se confirmo que la cola de `EN_VISTO_BUENO` existe y el backend responde para `ADMINISTRATIVO`, pero el usuario conectado en UI era `ADMIN`. Decision: mantener los roles `ADMIN` y `ADMINISTRATIVO` separados en datos, y permitir que `ADMIN` opere el mismo flujo de Visto Bueno.
+
+**Spec:** `docs/specs/2026-05-22-sigcon-i9-ajuste-admin-administrativo.md`
+
+**Plan:** `docs/plans/2026-05-22-sigcon-i9-ajuste-admin-administrativo-plan.md`
+
+### Checklist del ajuste
+
+- [x] T0 — Diagnostico cerrado y plan aprobado.
+- [x] T1 — Backend: seguridad, servicio y tests para `ADMIN` + `ADMINISTRATIVO`.
+- [x] T2 — Frontend: rutas, sidebar y sesion local-dev.
+- [x] T3 — Frontend Admin Usuarios: exponer rol `ADMINISTRATIVO`.
+- [x] T4 — Documentacion funcional y arranque.
+- [x] T5 — Validacion automatizada focalizada.
+- [x] T6 — Cierre del ajuste.
+
+### 2026-05-22 — T0 Diagnostico y aprobacion
+
+- BD validada: `VB_ACTIVO = S`, informe `100` en `EN_VISTO_BUENO`, `activo = 1`.
+- API validada: `GET /api/informes/cola/visto-bueno?page=0&size=10` retorna `totalElements = 1` con credenciales `administrativo@educacionbogota.edu.co`.
+- DevTools validado: sesion UI con `rol = ADMIN`; fetch manual con Basic de `ADMINISTRATIVO` retorna la cola.
+- Causa funcional: `ADMIN` no tenia acceso UI/API al flujo de Visto Bueno, aunque el informe estaba correctamente en cola.
+
+### 2026-05-22 — T1-T4 Implementacion
+
+- Backend actualizado: `SecurityConfig`, `DevSecurityConfig`, `InformeController` e `InformeService` aceptan `ADMIN` y `ADMINISTRATIVO` para la cola y acciones VB (`dar-visto-bueno`, `escalar`, `devolver` desde VB).
+- Tests backend ampliados: `InformeServiceTest`, `InformeControllerVbTest` y `SigconBackendSecurityTest` cubren acceso de `ADMIN` a la cola VB.
+- Frontend actualizado: rutas `/visto-bueno` y `/visto-bueno/:id`, item de sidebar y sesion local-dev permiten `ADMIN` + `ADMINISTRATIVO`.
+- UI Administracion -> Usuarios actualizada: el selector de rol permite crear/editar usuarios `ADMINISTRATIVO`.
+- Documentacion actualizada: `GUIA_PRUEBAS_FUNCIONALES.md` y `ARRANQUE.md` reflejan que ambos roles pueden operar Visto Bueno y corrigen el parametro real `VB_ACTIVO`.
+
+### 2026-05-22 — T5-T6 Validacion y cierre
+
+- Backend: `mvn test "-Dtest=InformeServiceTest,InformeControllerVbTest,SigconBackendSecurityTest"` ejecutado en `sigcon-backend` con 45 tests, 0 fallos, 0 errores.
+- Frontend: `node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run build` ejecutado en `sigcon-angular` con build exitoso.
+- Cierre funcional: un usuario `ADMIN` puede ver `/visto-bueno` desde el sidebar y consumir los endpoints VB; un usuario `ADMINISTRATIVO` conserva el mismo acceso operativo; los roles siguen separados para administracion general.

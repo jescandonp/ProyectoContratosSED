@@ -108,7 +108,7 @@ public class InformeService {
     @Transactional(readOnly = true)
     public Page<InformeResumenDto> listarColaVistoBueno(Pageable pageable) {
         Usuario usuario = currentUserService.getCurrentUser();
-        if (usuario.getRol() != RolUsuario.ADMINISTRATIVO) {
+        if (usuario.getRol() != RolUsuario.ADMIN && usuario.getRol() != RolUsuario.ADMINISTRATIVO) {
             throw accessDenied();
         }
         return informeRepository
