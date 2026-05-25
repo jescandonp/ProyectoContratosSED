@@ -1,10 +1,10 @@
 import { routes } from './app.routes';
 
 describe('app routes', () => {
-  it('exposes the exact I3 route surface implemented through Task 9', () => {
+  it('exposes the exact route surface implemented through I12', () => {
     const paths = collectUrlPaths(routes);
 
-    expect(paths.length).toBe(21);
+    expect(paths.length).toBe(23);
     expect(paths).toEqual(jasmine.arrayWithExactContents([
       '',
       'login',
@@ -26,6 +26,8 @@ describe('app routes', () => {
       'admin/usuarios',
       'admin/documentos-catalogo',
       'admin/busqueda',
+      'visto-bueno',
+      'visto-bueno/:id',
       '**'
     ]));
   });
