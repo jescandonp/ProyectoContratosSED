@@ -112,6 +112,18 @@ describe('AdminContratoFormComponent', () => {
     expect(contratoService.crearContrato).not.toHaveBeenCalled();
   });
 
+  it('permite guardar contrato tipo PRO desde el formulario admin', () => {
+    component.obligaciones.set([]);
+    component.form.tipo = 'PRO';
+
+    component.guardar();
+
+    expect(contratoService.actualizarContratoAdmin).toHaveBeenCalledWith(
+      1,
+      jasmine.objectContaining({ tipo: 'PRO' })
+    );
+  });
+
   it('muestra error inline de numero duplicado al recibir 409', () => {
     contratoService.actualizarContratoAdmin.and.returnValue(
       throwError(() => ({ error: { error: 'NUMERO_CONTRATO_DUPLICADO', mensaje: 'Ya existe' } }))

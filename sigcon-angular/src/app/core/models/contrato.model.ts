@@ -2,7 +2,7 @@ import type { DocumentoCatalogo } from './documento-catalogo.model';
 import type { Obligacion } from './obligacion.model';
 import type { Usuario } from './usuario.model';
 
-export type TipoContrato = 'OPS';
+export type TipoContrato = 'OPS' | 'PRO';
 export type EstadoContrato = 'EN_EJECUCION' | 'LIQUIDADO' | 'CERRADO';
 
 export interface ContratoResumen {

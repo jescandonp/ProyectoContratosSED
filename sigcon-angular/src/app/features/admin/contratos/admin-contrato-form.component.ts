@@ -56,7 +56,11 @@ interface ObligacionForm { id?: number; descripcion: string; orden: number; }
             </div>
             <div class="space-y-xs">
               <label class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Tipo</label>
-              <input class="input-field" type="text" value="OPS" disabled />
+              <select class="input-field" name="tipo" [(ngModel)]="form.tipo">
+                @for (tipo of tiposContrato; track tipo.value) {
+                  <option [ngValue]="tipo.value">{{ tipo.label }}</option>
+                }
+              </select>
             </div>
             <div class="col-span-2 space-y-xs">
               <label class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Objeto Contractual *</label>
@@ -273,6 +277,10 @@ export class AdminContratoFormComponent implements OnInit {
   readonly revisores = signal<Usuario[]>([]);
   readonly supervisores = signal<Usuario[]>([]);
   readonly obligaciones = signal<ObligacionForm[]>([]);
+  readonly tiposContrato: { label: string; value: TipoContrato }[] = [
+    { label: 'OPS - Contrato de Prestacion de Servicios Profesionales', value: 'OPS' },
+    { label: 'PRO - Contrato de Apoyo a la Gestion', value: 'PRO' }
+  ];
 
   form: ContratoRequest = {
     numero: '',
