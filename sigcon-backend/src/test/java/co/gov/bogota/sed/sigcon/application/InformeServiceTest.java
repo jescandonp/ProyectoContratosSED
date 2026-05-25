@@ -19,6 +19,7 @@ import co.gov.bogota.sed.sigcon.application.service.ActividadInformeService;
 import co.gov.bogota.sed.sigcon.application.service.CurrentUserService;
 import co.gov.bogota.sed.sigcon.application.service.DocumentStorageService;
 import co.gov.bogota.sed.sigcon.application.service.InformeService;
+import co.gov.bogota.sed.sigcon.application.service.ParametroService;
 import co.gov.bogota.sed.sigcon.application.service.SoporteAdjuntoService;
 import co.gov.bogota.sed.sigcon.domain.entity.ActividadInforme;
 import co.gov.bogota.sed.sigcon.domain.entity.Contrato;
@@ -75,6 +76,7 @@ class InformeServiceTest {
     @Mock private ObligacionRepository obligacionRepository;
     @Mock private CurrentUserService currentUserService;
     @Mock private DocumentStorageService documentStorageService;
+    @Mock private ParametroService parametroService;
 
     private InformeService informeService;
     private ActividadInformeService actividadService;
@@ -91,7 +93,7 @@ class InformeServiceTest {
         informeService = new InformeService(
             informeRepository, contratoRepository, actividadRepository, soporteRepository,
             documentoAdicionalRepository, observacionRepository, aporteSgssiRepository,
-            currentUserService, informeMapper
+            currentUserService, informeMapper, parametroService
         );
         actividadService = new ActividadInformeService(
             actividadRepository, obligacionRepository, soporteRepository,
@@ -108,6 +110,7 @@ class InformeServiceTest {
         Usuario contratista = usuario(2L, RolUsuario.CONTRATISTA);
         Contrato contrato = contrato(10L, contratista, EstadoContrato.EN_EJECUCION);
         when(currentUserService.getCurrentUser()).thenReturn(contratista);
+        when(parametroService.isCargaInformesActiva()).thenReturn(true);
         when(contratoRepository.findByIdAndActivoTrue(10L)).thenReturn(Optional.of(contrato));
         when(informeRepository.countByContratoId(10L)).thenReturn(0);
         when(informeRepository.save(any(Informe.class))).thenAnswer(inv -> {
@@ -134,6 +137,7 @@ class InformeServiceTest {
         Usuario contratista = usuario(2L, RolUsuario.CONTRATISTA);
         Contrato contrato = contrato(10L, usuario(99L, RolUsuario.CONTRATISTA), EstadoContrato.EN_EJECUCION);
         when(currentUserService.getCurrentUser()).thenReturn(contratista);
+        when(parametroService.isCargaInformesActiva()).thenReturn(true);
         when(contratoRepository.findByIdAndActivoTrue(10L)).thenReturn(Optional.of(contrato));
 
         assertThatThrownBy(() -> informeService.crearInforme(informeRequest(10L)))
@@ -146,11 +150,25 @@ class InformeServiceTest {
         Usuario contratista = usuario(2L, RolUsuario.CONTRATISTA);
         Contrato contrato = contrato(10L, contratista, EstadoContrato.LIQUIDADO);
         when(currentUserService.getCurrentUser()).thenReturn(contratista);
+        when(parametroService.isCargaInformesActiva()).thenReturn(true);
         when(contratoRepository.findByIdAndActivoTrue(10L)).thenReturn(Optional.of(contrato));
 
         assertThatThrownBy(() -> informeService.crearInforme(informeRequest(10L)))
             .isInstanceOfSatisfying(SigconBusinessException.class, ex ->
                 assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.CONTRATO_NO_ACTIVO));
+    }
+
+    @Test
+    void contractorCannotCreateInformeWhenCargaInformesDisabled() {
+        Usuario contratista = usuario(2L, RolUsuario.CONTRATISTA);
+        when(currentUserService.getCurrentUser()).thenReturn(contratista);
+        when(parametroService.isCargaInformesActiva()).thenReturn(false);
+
+        assertThatThrownBy(() -> informeService.crearInforme(informeRequest(10L)))
+            .isInstanceOfSatisfying(SigconBusinessException.class, ex -> {
+                assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.OPERACION_NO_PERMITIDA);
+                assertThat(ex.getStatus()).isEqualTo(org.springframework.http.HttpStatus.LOCKED);
+            });
     }
 
     @Test

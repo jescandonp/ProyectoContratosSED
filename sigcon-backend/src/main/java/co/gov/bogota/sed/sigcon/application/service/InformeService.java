@@ -51,6 +51,7 @@ public class InformeService {
     private final AporteSgssiRepository aporteSgssiRepository;
     private final CurrentUserService currentUserService;
     private final InformeMapper informeMapper;
+    private final ParametroService parametroService;
 
     public InformeService(
         InformeRepository informeRepository,
@@ -61,7 +62,8 @@ public class InformeService {
         ObservacionRepository observacionRepository,
         AporteSgssiRepository aporteSgssiRepository,
         CurrentUserService currentUserService,
-        InformeMapper informeMapper
+        InformeMapper informeMapper,
+        ParametroService parametroService
     ) {
         this.informeRepository = informeRepository;
         this.contratoRepository = contratoRepository;
@@ -72,6 +74,7 @@ public class InformeService {
         this.aporteSgssiRepository = aporteSgssiRepository;
         this.currentUserService = currentUserService;
         this.informeMapper = informeMapper;
+        this.parametroService = parametroService;
     }
 
     @Transactional(readOnly = true)
@@ -144,6 +147,13 @@ public class InformeService {
 
     public InformeDetalleDto crearInforme(InformeRequest request) {
         Usuario usuario = currentUserService.getCurrentUser();
+        if (!parametroService.isCargaInformesActiva()) {
+            throw new SigconBusinessException(
+                ErrorCode.OPERACION_NO_PERMITIDA,
+                "La creacion de nuevos informes esta temporalmente deshabilitada.",
+                HttpStatus.LOCKED
+            );
+        }
         if (usuario.getRol() != RolUsuario.CONTRATISTA) {
             throw accessDenied();
         }

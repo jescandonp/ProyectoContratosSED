@@ -30,6 +30,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -113,5 +114,45 @@ class ParametroControllerTest {
             .andExpect(jsonPath("$.activo").value(false));
 
         verify(parametroService).setVbActivo(false);
+    }
+
+    @Test
+    void getCargaInformes_rolAdmin_retorna200() throws Exception {
+        when(parametroService.isCargaInformesActiva()).thenReturn(true);
+
+        mockMvc.perform(get("/api/admin/parametros/carga-informes")
+                .with(httpBasic(ADMIN_EMAIL, "admin123")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.activo").value(true));
+    }
+
+    @Test
+    void putCargaInformes_desactivar_notificaBloqueoMasivo() throws Exception {
+        when(parametroService.setCargaInformesActiva(false)).thenReturn(true);
+        when(parametroService.isCargaInformesActiva()).thenReturn(false);
+
+        mockMvc.perform(put("/api/admin/parametros/carga-informes")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"activo\":false}")
+                .with(httpBasic(ADMIN_EMAIL, "admin123")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.activo").value(false));
+
+        verify(notificacionService).notificarBloqueoMasivo();
+    }
+
+    @Test
+    void putCargaInformes_activar_noNotificaBloqueoMasivo() throws Exception {
+        when(parametroService.setCargaInformesActiva(true)).thenReturn(false);
+        when(parametroService.isCargaInformesActiva()).thenReturn(true);
+
+        mockMvc.perform(put("/api/admin/parametros/carga-informes")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"activo\":true}")
+                .with(httpBasic(ADMIN_EMAIL, "admin123")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.activo").value(true));
+
+        verify(notificacionService, never()).notificarBloqueoMasivo();
     }
 }

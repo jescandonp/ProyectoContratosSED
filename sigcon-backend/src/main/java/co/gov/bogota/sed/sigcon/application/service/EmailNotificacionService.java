@@ -150,6 +150,7 @@ public class EmailNotificacionService {
             case REVISION_DEVUELTA:  return "SIGCON — Informe devuelto por revisión";
             case INFORME_APROBADO:   return "SIGCON — Informe aprobado";
             case INFORME_DEVUELTO:   return "SIGCON — Informe devuelto por supervisor";
+            case CARGA_INFORMES_DESACTIVADA: return "SIGCON — Carga de informes deshabilitada";
             default:                 return "SIGCON — Notificación de informe";
         }
     }

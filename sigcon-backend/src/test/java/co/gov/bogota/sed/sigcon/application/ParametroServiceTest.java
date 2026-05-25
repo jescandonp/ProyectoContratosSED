@@ -78,6 +78,36 @@ class ParametroServiceTest {
         verify(informeRepository, never()).migrarEnVistoBuenoAEnRevision();
     }
 
+    @Test
+    void isCargaInformesActiva_cuandoParametroNoExiste_retornaTrue() {
+        when(parametroRepository.findById("CARGA_INFORMES_ACTIVA")).thenReturn(Optional.empty());
+
+        assertThat(service.isCargaInformesActiva()).isTrue();
+    }
+
+    @Test
+    void isCargaInformesActiva_cuandoParametroFalse_retornaFalse() {
+        SgcnParametro parametro = new SgcnParametro();
+        parametro.setClave("CARGA_INFORMES_ACTIVA");
+        parametro.setValor("false");
+        when(parametroRepository.findById("CARGA_INFORMES_ACTIVA")).thenReturn(Optional.of(parametro));
+
+        assertThat(service.isCargaInformesActiva()).isFalse();
+    }
+
+    @Test
+    void setCargaInformesActiva_desactivar_retornaEstadoAnteriorYGuardaFalse() {
+        when(parametroRepository.findById("CARGA_INFORMES_ACTIVA")).thenReturn(Optional.empty());
+
+        boolean anterior = service.setCargaInformesActiva(false);
+
+        ArgumentCaptor<SgcnParametro> captor = ArgumentCaptor.forClass(SgcnParametro.class);
+        verify(parametroRepository).save(captor.capture());
+        assertThat(anterior).isTrue();
+        assertThat(captor.getValue().getClave()).isEqualTo("CARGA_INFORMES_ACTIVA");
+        assertThat(captor.getValue().getValor()).isEqualTo("false");
+    }
+
     private static SgcnParametro parametro(String valor) {
         SgcnParametro parametro = new SgcnParametro();
         parametro.setClave("VB_ACTIVO");

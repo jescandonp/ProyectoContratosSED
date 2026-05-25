@@ -4,6 +4,7 @@ import co.gov.bogota.sed.sigcon.application.dto.notificacion.NotificacionDto;
 import co.gov.bogota.sed.sigcon.application.dto.notificacion.NotificacionesCountDto;
 import co.gov.bogota.sed.sigcon.application.mapper.NotificacionMapper;
 import co.gov.bogota.sed.sigcon.application.service.CurrentUserService;
+import co.gov.bogota.sed.sigcon.application.service.EmailNotificacionService;
 import co.gov.bogota.sed.sigcon.application.service.NotificacionService;
 import co.gov.bogota.sed.sigcon.domain.entity.Contrato;
 import co.gov.bogota.sed.sigcon.domain.entity.Informe;
@@ -12,6 +13,7 @@ import co.gov.bogota.sed.sigcon.domain.entity.Usuario;
 import co.gov.bogota.sed.sigcon.domain.enums.RolUsuario;
 import co.gov.bogota.sed.sigcon.domain.enums.TipoEvento;
 import co.gov.bogota.sed.sigcon.domain.repository.NotificacionRepository;
+import co.gov.bogota.sed.sigcon.domain.repository.UsuarioRepository;
 import co.gov.bogota.sed.sigcon.web.exception.ErrorCode;
 import co.gov.bogota.sed.sigcon.web.exception.SigconBusinessException;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Method;
 import java.util.Collections;
+import java.util.Arrays;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -42,13 +45,16 @@ class NotificacionServiceTest {
 
     @Mock private NotificacionRepository notificacionRepository;
     @Mock private CurrentUserService currentUserService;
+    @Mock private UsuarioRepository usuarioRepository;
+    @Mock private EmailNotificacionService emailNotificacionService;
 
     private NotificacionService notificacionService;
 
     @BeforeEach
     void setUp() {
         notificacionService = new NotificacionService(
-            notificacionRepository, new NotificacionMapper(), currentUserService
+            notificacionRepository, new NotificacionMapper(), currentUserService,
+            usuarioRepository, emailNotificacionService
         );
     }
 
@@ -129,6 +135,20 @@ class NotificacionServiceTest {
 
         assertThat(page.getContent()).hasSize(1);
         assertThat(page.getContent().get(0).getId()).isEqualTo(10L);
+    }
+
+    @Test
+    void notificarBloqueoMasivo_creaNotificacionYCorreoParaUsuariosActivos() {
+        Usuario uno = usuario(1L, RolUsuario.ADMIN);
+        Usuario dos = usuario(2L, RolUsuario.CONTRATISTA);
+        when(usuarioRepository.findByActivoTrue()).thenReturn(Arrays.asList(uno, dos));
+        when(notificacionRepository.save(any(Notificacion.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        notificacionService.notificarBloqueoMasivo();
+
+        verify(notificacionRepository, org.mockito.Mockito.times(2)).save(any(Notificacion.class));
+        verify(emailNotificacionService).enviar(eq(uno), eq(TipoEvento.CARGA_INFORMES_DESACTIVADA), eq(null), any());
+        verify(emailNotificacionService).enviar(eq(dos), eq(TipoEvento.CARGA_INFORMES_DESACTIVADA), eq(null), any());
     }
 
     private static Usuario usuario(Long id, RolUsuario rol) {

@@ -1,6 +1,8 @@
 package co.gov.bogota.sed.sigcon.web.controller;
 
+import co.gov.bogota.sed.sigcon.application.dto.parametro.CargaInformesRequest;
 import co.gov.bogota.sed.sigcon.application.dto.parametro.ParametroVbDto;
+import co.gov.bogota.sed.sigcon.application.service.NotificacionService;
 import co.gov.bogota.sed.sigcon.application.service.ParametroService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -12,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.Valid;
+
 /**
  * I9: Gestión de parámetros del sistema.
  * Solo accesible por el rol ADMIN.
@@ -22,9 +26,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class ParametroController {
 
     private final ParametroService parametroService;
+    private final NotificacionService notificacionService;
 
-    public ParametroController(ParametroService parametroService) {
+    public ParametroController(ParametroService parametroService, NotificacionService notificacionService) {
         this.parametroService = parametroService;
+        this.notificacionService = notificacionService;
     }
 
     @GetMapping
@@ -44,6 +50,28 @@ public class ParametroController {
         parametroService.setVbActivo(request.isActivo());
         ParametroVbDto response = new ParametroVbDto();
         response.setActivo(parametroService.isVbActivo());
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/carga-informes")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Obtiene el estado del control de carga de informes")
+    public ResponseEntity<ParametroVbDto> getCargaInformes() {
+        ParametroVbDto dto = new ParametroVbDto();
+        dto.setActivo(parametroService.isCargaInformesActiva());
+        return ResponseEntity.ok(dto);
+    }
+
+    @PutMapping("/carga-informes")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Activa o desactiva la carga de nuevos informes por contratistas")
+    public ResponseEntity<ParametroVbDto> putCargaInformes(@Valid @RequestBody CargaInformesRequest request) {
+        boolean anterior = parametroService.setCargaInformesActiva(request.getActivo());
+        if (anterior && !request.getActivo()) {
+            notificacionService.notificarBloqueoMasivo();
+        }
+        ParametroVbDto response = new ParametroVbDto();
+        response.setActivo(parametroService.isCargaInformesActiva());
         return ResponseEntity.ok(response);
     }
 }

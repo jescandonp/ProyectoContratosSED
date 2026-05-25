@@ -36,5 +36,8 @@ public enum TipoEvento {
     VB_ESCALADO,
 
     /** Actor ADMINISTRATIVO devuelve el informe; notifica al Contratista. */
-    VB_DEVUELTO
+    VB_DEVUELTO,
+
+    /** Admin desactiva la carga de nuevos informes; notificacion masiva. */
+    CARGA_INFORMES_DESACTIVADA
 }

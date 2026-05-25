@@ -11,11 +11,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class ParametroService {
 
     public static final String VB_ACTIVO = "VB_ACTIVO";
+    public static final String CARGA_INFORMES_ACTIVA = "CARGA_INFORMES_ACTIVA";
 
     private static final String VALOR_SI = "S";
     private static final String VALOR_NO = "N";
     private static final String DESCRIPCION_VB =
         "Visto Bueno Administrativo activo en el flujo de informes";
+    private static final String DESCRIPCION_CARGA_INFORMES =
+        "Habilita la creacion de nuevos informes por contratistas";
 
     private final SgcnParametroRepository parametroRepository;
     private final InformeRepository informeRepository;
@@ -49,10 +52,36 @@ public class ParametroService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public boolean isCargaInformesActiva() {
+        return parametroRepository.findById(CARGA_INFORMES_ACTIVA)
+            .map(SgcnParametro::getValor)
+            .map(Boolean::parseBoolean)
+            .orElse(true);
+    }
+
+    public boolean setCargaInformesActiva(boolean activo) {
+        boolean anterior = isCargaInformesActiva();
+        SgcnParametro parametro = parametroRepository.findById(CARGA_INFORMES_ACTIVA)
+            .orElseGet(this::nuevoParametroCargaInformes);
+
+        parametro.setValor(Boolean.toString(activo));
+        parametro.setDescripcion(DESCRIPCION_CARGA_INFORMES);
+        parametroRepository.save(parametro);
+        return anterior;
+    }
+
     private SgcnParametro nuevoParametroVb() {
         SgcnParametro parametro = new SgcnParametro();
         parametro.setClave(VB_ACTIVO);
         parametro.setDescripcion(DESCRIPCION_VB);
+        return parametro;
+    }
+
+    private SgcnParametro nuevoParametroCargaInformes() {
+        SgcnParametro parametro = new SgcnParametro();
+        parametro.setClave(CARGA_INFORMES_ACTIVA);
+        parametro.setDescripcion(DESCRIPCION_CARGA_INFORMES);
         return parametro;
     }
 }

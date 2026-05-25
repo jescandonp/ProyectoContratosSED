@@ -309,6 +309,21 @@ WHEN NOT MATCHED THEN
     INSERT (CLAVE, VALOR, DESCRIPCION)
     VALUES (src.CLAVE, src.VALOR, src.DESCRIPCION);
 
+MERGE INTO SGCN_PARAMETROS p
+USING (
+    SELECT
+        'CARGA_INFORMES_ACTIVA' AS CLAVE,
+        'true' AS VALOR,
+        'Habilita la creacion de nuevos informes por contratistas' AS DESCRIPCION
+    FROM DUAL
+) src
+ON (p.CLAVE = src.CLAVE)
+WHEN MATCHED THEN
+    UPDATE SET p.VALOR = src.VALOR, p.DESCRIPCION = src.DESCRIPCION
+WHEN NOT MATCHED THEN
+    INSERT (CLAVE, VALOR, DESCRIPCION)
+    VALUES (src.CLAVE, src.VALOR, src.DESCRIPCION);
+
 -- 9) Validaciones finales de integridad minima.
 DECLARE
     v_usuarios NUMBER;

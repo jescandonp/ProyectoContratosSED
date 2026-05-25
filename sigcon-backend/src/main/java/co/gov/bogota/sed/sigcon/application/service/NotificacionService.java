@@ -8,6 +8,7 @@ import co.gov.bogota.sed.sigcon.domain.entity.Notificacion;
 import co.gov.bogota.sed.sigcon.domain.entity.Usuario;
 import co.gov.bogota.sed.sigcon.domain.enums.TipoEvento;
 import co.gov.bogota.sed.sigcon.domain.repository.NotificacionRepository;
+import co.gov.bogota.sed.sigcon.domain.repository.UsuarioRepository;
 import co.gov.bogota.sed.sigcon.web.exception.ErrorCode;
 import co.gov.bogota.sed.sigcon.web.exception.SigconBusinessException;
 import org.springframework.data.domain.Page;
@@ -28,13 +29,19 @@ public class NotificacionService {
     private final NotificacionRepository notificacionRepository;
     private final NotificacionMapper notificacionMapper;
     private final CurrentUserService currentUserService;
+    private final UsuarioRepository usuarioRepository;
+    private final EmailNotificacionService emailNotificacionService;
 
     public NotificacionService(NotificacionRepository notificacionRepository,
                                NotificacionMapper notificacionMapper,
-                               CurrentUserService currentUserService) {
+                               CurrentUserService currentUserService,
+                               UsuarioRepository usuarioRepository,
+                               EmailNotificacionService emailNotificacionService) {
         this.notificacionRepository = notificacionRepository;
         this.notificacionMapper = notificacionMapper;
         this.currentUserService = currentUserService;
+        this.usuarioRepository = usuarioRepository;
+        this.emailNotificacionService = emailNotificacionService;
     }
 
     /**
@@ -78,6 +85,14 @@ public class NotificacionService {
         return notificacionMapper.toDto(notificacionRepository.save(n));
     }
 
+    public void notificarBloqueoMasivo() {
+        String mensaje = "La carga de nuevos informes ha sido temporalmente deshabilitada por el administrador del sistema.";
+        usuarioRepository.findByActivoTrue().forEach(usuario -> {
+            crear(usuario, TipoEvento.CARGA_INFORMES_DESACTIVADA, null, mensaje);
+            emailNotificacionService.enviar(usuario, TipoEvento.CARGA_INFORMES_DESACTIVADA, null, mensaje);
+        });
+    }
+
     public void marcarTodasLeidas() {
         Usuario usuario = currentUserService.getCurrentUser();
         notificacionRepository.findByUsuarioOrderByFechaDesc(usuario, Pageable.unpaged())
@@ -96,6 +111,7 @@ public class NotificacionService {
             case REVISION_DEVUELTA:  return "Informe devuelto por revisión";
             case INFORME_APROBADO:   return "Informe aprobado";
             case INFORME_DEVUELTO:   return "Informe devuelto por supervisor";
+            case CARGA_INFORMES_DESACTIVADA: return "Carga de informes deshabilitada";
             default:                 return evento.name();
         }
     }

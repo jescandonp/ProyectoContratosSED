@@ -19,6 +19,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     List<Usuario> findByRolAndActivoTrue(RolUsuario rol);
 
+    List<Usuario> findByActivoTrue();
+
     Page<Usuario> findByActivoTrue(Pageable pageable);
 
     /**
