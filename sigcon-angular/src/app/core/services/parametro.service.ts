@@ -5,6 +5,10 @@ export interface ParametroVb {
   activo: boolean;
 }
 
+export interface ParametroCargaInformes {
+  activo: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ParametroService {
   private readonly baseUrl = '/api/admin/parametros';
@@ -17,5 +21,13 @@ export class ParametroService {
 
   setVbActivo(activo: boolean) {
     return this.http.put<ParametroVb>(`${this.baseUrl}/vb-activo`, { activo });
+  }
+
+  obtenerCargaInformes() {
+    return this.http.get<ParametroCargaInformes>(`${this.baseUrl}/carga-informes`);
+  }
+
+  setCargaInformesActiva(activo: boolean) {
+    return this.http.put<ParametroCargaInformes>(`${this.baseUrl}/carga-informes`, { activo });
   }
 }

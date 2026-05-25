@@ -412,9 +412,13 @@ export class InformeFormComponent implements OnInit {
         this.guardando.set(false);
         void this.router.navigate(['/informes', informe.id]);
       },
-      error: () => {
+      error: (err) => {
         this.guardando.set(false);
-        this.error.set('No se pudo guardar el informe. Revise los datos e intente nuevamente.');
+        if (err?.status === 423) {
+          this.error.set('La carga de nuevos informes está temporalmente deshabilitada por el administrador.');
+        } else {
+          this.error.set('No se pudo guardar el informe. Revise los datos e intente nuevamente.');
+        }
       }
     });
   }

@@ -128,6 +128,36 @@ import { ParametroService } from '../../../core/services/parametro.service';
             {{ vbActivo() ? 'Activo — los informes revisados pasan por el visto bueno' : 'Inactivo — los informes van directamente al Supervisor' }}
           </span>
         </div>
+
+        <div class="mt-lg border-t border-[var(--color-outline-variant)] pt-md">
+          @if (errorCargaInformes()) {
+            <div class="mb-md rounded border border-[var(--color-error-container)] bg-[var(--color-error-container)] px-md py-sm text-sm text-[var(--color-on-error-container)]">
+              {{ errorCargaInformes() }}
+            </div>
+          }
+
+          @if (mensajeCargaInformes()) {
+            <div class="mb-md rounded border border-[var(--color-primary-container)] bg-[var(--color-primary-container)] px-md py-sm text-sm text-[var(--color-on-primary-container)]">
+              {{ mensajeCargaInformes() }}
+            </div>
+          }
+
+          <div class="flex items-center gap-md">
+            <label class="flex cursor-pointer items-center gap-sm select-none">
+              <input
+                type="checkbox"
+                class="h-5 w-5 cursor-pointer accent-[var(--color-primary)]"
+                [ngModel]="cargaInformesActiva()"
+                (ngModelChange)="onToggleCargaInformes($event)"
+                [disabled]="cargandoCargaInformes()"
+              />
+              <span class="text-sm font-semibold text-[var(--color-on-surface)]">Carga de nuevos informes</span>
+            </label>
+            <span class="text-xs text-[var(--color-on-surface-variant)]">
+              {{ cargaInformesActiva() ? 'Activa — los contratistas pueden crear informes' : 'Desactivada — creación bloqueada temporalmente' }}
+            </span>
+          </div>
+        </div>
       </section>
 
       <!-- Diálogo confirmación desactivar VB -->
@@ -158,6 +188,34 @@ import { ParametroService } from '../../../core/services/parametro.service';
           </div>
         </div>
       }
+
+      @if (dialogoDesactivarCarga()) {
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-on-surface)]/40">
+          <div class="w-full max-w-lg rounded-xl bg-white p-lg shadow-xl">
+            <h2 class="m-0 text-lg font-bold text-[var(--color-on-surface)]">Desactivar carga de informes</h2>
+            <p class="mt-sm text-sm text-[var(--color-on-surface-variant)]">
+              Los contratistas no podrán crear nuevos informes y se enviará una notificación a todos los usuarios activos. ¿Desea continuar?
+            </p>
+            <div class="mt-md flex justify-end gap-sm">
+              <button
+                class="rounded border border-[var(--color-outline-variant)] px-md py-sm text-sm font-semibold text-[var(--color-on-surface)]"
+                type="button"
+                (click)="cancelarDesactivarCarga()"
+              >
+                Cancelar
+              </button>
+              <button
+                class="rounded bg-[var(--color-primary)] px-md py-sm text-sm font-semibold text-white disabled:opacity-50"
+                type="button"
+                [disabled]="cargandoCargaInformes()"
+                (click)="confirmarDesactivarCarga()"
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      }
     </div>
   `
 })
@@ -167,6 +225,11 @@ export class AdminDashboardComponent implements OnInit {
   readonly errorVb = signal('');
   readonly mensajeVb = signal('');
   readonly dialogoDesactivar = signal(false);
+  readonly cargaInformesActiva = signal(true);
+  readonly cargandoCargaInformes = signal(false);
+  readonly errorCargaInformes = signal('');
+  readonly mensajeCargaInformes = signal('');
+  readonly dialogoDesactivarCarga = signal(false);
 
   constructor(private readonly parametroService: ParametroService) {}
 
@@ -174,6 +237,10 @@ export class AdminDashboardComponent implements OnInit {
     this.parametroService.obtenerVb().subscribe({
       next: (p) => this.vbActivo.set(p.activo),
       error: () => this.errorVb.set('No se pudo cargar el estado del parámetro VB.')
+    });
+    this.parametroService.obtenerCargaInformes().subscribe({
+      next: (p) => this.cargaInformesActiva.set(p.activo),
+      error: () => this.errorCargaInformes.set('No se pudo cargar el estado de carga de informes.')
     });
   }
 
@@ -194,6 +261,23 @@ export class AdminDashboardComponent implements OnInit {
     this.aplicarVb(false);
   }
 
+  onToggleCargaInformes(valor: boolean) {
+    if (!valor) {
+      this.dialogoDesactivarCarga.set(true);
+    } else {
+      this.aplicarCargaInformes(true);
+    }
+  }
+
+  cancelarDesactivarCarga() {
+    this.dialogoDesactivarCarga.set(false);
+  }
+
+  confirmarDesactivarCarga() {
+    this.dialogoDesactivarCarga.set(false);
+    this.aplicarCargaInformes(false);
+  }
+
   private aplicarVb(activo: boolean) {
     this.cargandoVb.set(true);
     this.errorVb.set('');
@@ -207,6 +291,25 @@ export class AdminDashboardComponent implements OnInit {
       error: () => {
         this.cargandoVb.set(false);
         this.errorVb.set('No se pudo actualizar el parámetro. Intente de nuevo.');
+      }
+    });
+  }
+
+  private aplicarCargaInformes(activo: boolean) {
+    this.cargandoCargaInformes.set(true);
+    this.errorCargaInformes.set('');
+    this.mensajeCargaInformes.set('');
+    this.parametroService.setCargaInformesActiva(activo).subscribe({
+      next: (p) => {
+        this.cargaInformesActiva.set(p.activo);
+        this.cargandoCargaInformes.set(false);
+        this.mensajeCargaInformes.set(activo
+          ? 'Carga de informes activada.'
+          : 'Carga de informes desactivada. Se notificó a los usuarios activos.');
+      },
+      error: () => {
+        this.cargandoCargaInformes.set(false);
+        this.errorCargaInformes.set('No se pudo actualizar el control de carga de informes.');
       }
     });
   }
