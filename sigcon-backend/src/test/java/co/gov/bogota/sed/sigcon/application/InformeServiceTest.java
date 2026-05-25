@@ -5,6 +5,7 @@ import co.gov.bogota.sed.sigcon.application.dto.informe.InformeDetalleDto;
 import co.gov.bogota.sed.sigcon.application.dto.informe.InformeResumenDto;
 import co.gov.bogota.sed.sigcon.application.dto.informe.ActividadInformeRequest;
 import co.gov.bogota.sed.sigcon.application.dto.informe.InformeUpdateDto;
+import co.gov.bogota.sed.sigcon.application.dto.informe.PorcentajeEjecucionRequest;
 import co.gov.bogota.sed.sigcon.application.dto.informe.SoporteAdjuntoDto;
 import co.gov.bogota.sed.sigcon.application.dto.informe.SoporteUrlRequest;
 import co.gov.bogota.sed.sigcon.application.mapper.ActividadInformeMapper;
@@ -370,6 +371,60 @@ class InformeServiceTest {
     }
 
     @Test
+    void actualizarPorcentajeEjecucionEnRevisionActualizaValor() {
+        Informe informe = informe(50L, contrato(10L, usuario(2L, RolUsuario.CONTRATISTA), EstadoContrato.EN_EJECUCION), EstadoInforme.EN_REVISION);
+        when(informeRepository.findByIdAndActivoTrue(50L)).thenReturn(Optional.of(informe));
+        when(informeRepository.save(any(Informe.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(actividadRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.emptyList());
+        when(documentoAdicionalRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.emptyList());
+        when(observacionRepository.findByInformeIdAndActivoTrueOrderByFechaAsc(50L)).thenReturn(Collections.emptyList());
+        when(aporteSgssiRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.emptyList());
+
+        InformeDetalleDto result = informeService.actualizarPorcentajeEjecucion(50L, porcentajeRequest("75.50"));
+
+        assertThat(result.getPorcentajeEjecucion()).isEqualByComparingTo("75.50");
+        verify(informeRepository).save(informe);
+    }
+
+    @Test
+    void actualizarPorcentajeEjecucionEnVistoBuenoActualizaValor() {
+        Informe informe = informe(50L, contrato(10L, usuario(2L, RolUsuario.CONTRATISTA), EstadoContrato.EN_EJECUCION), EstadoInforme.EN_VISTO_BUENO);
+        when(informeRepository.findByIdAndActivoTrue(50L)).thenReturn(Optional.of(informe));
+        when(informeRepository.save(any(Informe.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(actividadRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.emptyList());
+        when(documentoAdicionalRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.emptyList());
+        when(observacionRepository.findByInformeIdAndActivoTrueOrderByFechaAsc(50L)).thenReturn(Collections.emptyList());
+        when(aporteSgssiRepository.findByInformeIdAndActivoTrue(50L)).thenReturn(Collections.emptyList());
+
+        InformeDetalleDto result = informeService.actualizarPorcentajeEjecucion(50L, porcentajeRequest("90.00"));
+
+        assertThat(result.getPorcentajeEjecucion()).isEqualByComparingTo("90.00");
+        verify(informeRepository).save(informe);
+    }
+
+    @Test
+    void actualizarPorcentajeEjecucionBorradorFalla() {
+        Informe informe = informe(50L, contrato(10L, usuario(2L, RolUsuario.CONTRATISTA), EstadoContrato.EN_EJECUCION), EstadoInforme.BORRADOR);
+        when(informeRepository.findByIdAndActivoTrue(50L)).thenReturn(Optional.of(informe));
+
+        assertThatThrownBy(() -> informeService.actualizarPorcentajeEjecucion(50L, porcentajeRequest("40.00")))
+            .isInstanceOfSatisfying(SigconBusinessException.class, ex -> {
+                assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.OPERACION_NO_PERMITIDA);
+                assertThat(ex.getStatus()).isEqualTo(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY);
+            });
+    }
+
+    @Test
+    void actualizarPorcentajeEjecucionAprobadoFalla() {
+        Informe informe = informe(50L, contrato(10L, usuario(2L, RolUsuario.CONTRATISTA), EstadoContrato.EN_EJECUCION), EstadoInforme.APROBADO);
+        when(informeRepository.findByIdAndActivoTrue(50L)).thenReturn(Optional.of(informe));
+
+        assertThatThrownBy(() -> informeService.actualizarPorcentajeEjecucion(50L, porcentajeRequest("40.00")))
+            .isInstanceOfSatisfying(SigconBusinessException.class, ex ->
+                assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.OPERACION_NO_PERMITIDA));
+    }
+
+    @Test
     void actualizarInformeContratistaIncorrectoFalla() {
         Usuario contratistaPropietario = usuario(2L, RolUsuario.CONTRATISTA);
         Usuario contratistaOtro = usuario(99L, RolUsuario.CONTRATISTA);
@@ -450,5 +505,11 @@ class InformeServiceTest {
         dto.setFechaInicio(inicio);
         dto.setFechaFin(fin);
         return dto;
+    }
+
+    private static PorcentajeEjecucionRequest porcentajeRequest(String valor) {
+        PorcentajeEjecucionRequest request = new PorcentajeEjecucionRequest();
+        request.setPorcentajeEjecucion(new BigDecimal(valor));
+        return request;
     }
 }

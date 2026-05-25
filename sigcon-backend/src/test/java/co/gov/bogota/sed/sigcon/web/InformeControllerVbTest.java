@@ -43,6 +43,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -178,6 +179,28 @@ class InformeControllerVbTest {
                 .with(httpBasic(ADMIN_EMAIL, "admin123")))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(10));
+    }
+
+    @Test
+    void patchPorcentajeEjecucion_rolRevisor_retorna200() throws Exception {
+        when(informeService.actualizarPorcentajeEjecucion(eq(10L), any()))
+            .thenReturn(informeDetalle());
+
+        mockMvc.perform(patch("/api/informes/10/porcentaje-ejecucion")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"porcentajeEjecucion\":75.50}")
+                .with(httpBasic("revisor1@educacionbogota.edu.co", "revisor123")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(10));
+    }
+
+    @Test
+    void patchPorcentajeEjecucion_rolContratista_retorna403() throws Exception {
+        mockMvc.perform(patch("/api/informes/10/porcentaje-ejecucion")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"porcentajeEjecucion\":75.50}")
+                .with(httpBasic("juan.escandon@educacionbogota.edu.co", "contratista123")))
+            .andExpect(status().isForbidden());
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────

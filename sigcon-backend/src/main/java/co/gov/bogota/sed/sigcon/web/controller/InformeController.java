@@ -5,6 +5,7 @@ import co.gov.bogota.sed.sigcon.application.dto.informe.InformeRequest;
 import co.gov.bogota.sed.sigcon.application.dto.informe.InformeResumenDto;
 import co.gov.bogota.sed.sigcon.application.dto.informe.InformeUpdateDto;
 import co.gov.bogota.sed.sigcon.application.dto.informe.ObservacionRequest;
+import co.gov.bogota.sed.sigcon.application.dto.informe.PorcentajeEjecucionRequest;
 import co.gov.bogota.sed.sigcon.application.service.InformeEstadoService;
 import co.gov.bogota.sed.sigcon.application.service.InformeService;
 import co.gov.bogota.sed.sigcon.web.exception.ErrorCode;
@@ -101,6 +102,16 @@ public class InformeController {
                    + "El control de propietario y estado se realiza en el servicio.")
     public InformeDetalleDto actualizarPeriodo(@PathVariable Long id, @Valid @RequestBody InformeUpdateDto dto) {
         return informeService.actualizar(id, dto);
+    }
+
+    @PatchMapping("/{id}/porcentaje-ejecucion")
+    @PreAuthorize("hasAnyRole('REVISOR', 'ADMIN', 'ADMINISTRATIVO')")
+    @Operation(summary = "Actualiza el porcentaje de ejecucion acumulada")
+    public InformeDetalleDto actualizarPorcentajeEjecucion(
+        @PathVariable Long id,
+        @Valid @RequestBody PorcentajeEjecucionRequest request
+    ) {
+        return informeService.actualizarPorcentajeEjecucion(id, request);
     }
 
     @PostMapping("/{id}/enviar")

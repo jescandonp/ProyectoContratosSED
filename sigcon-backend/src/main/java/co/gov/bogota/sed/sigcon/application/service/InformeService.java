@@ -4,6 +4,7 @@ import co.gov.bogota.sed.sigcon.application.dto.informe.InformeDetalleDto;
 import co.gov.bogota.sed.sigcon.application.dto.informe.InformeRequest;
 import co.gov.bogota.sed.sigcon.application.dto.informe.InformeResumenDto;
 import co.gov.bogota.sed.sigcon.application.dto.informe.InformeUpdateDto;
+import co.gov.bogota.sed.sigcon.application.dto.informe.PorcentajeEjecucionRequest;
 import co.gov.bogota.sed.sigcon.application.mapper.InformeMapper;
 import co.gov.bogota.sed.sigcon.domain.entity.ActividadInforme;
 import co.gov.bogota.sed.sigcon.domain.entity.AporteSgssi;
@@ -219,6 +220,21 @@ public class InformeService {
         if (dto.getFechaElaboracion() != null) {
             informe.setFechaElaboracion(dto.getFechaElaboracion());
         }
+        informeRepository.save(informe);
+        return buildDetalle(informe);
+    }
+
+    public InformeDetalleDto actualizarPorcentajeEjecucion(Long id, PorcentajeEjecucionRequest request) {
+        Informe informe = findActiveInforme(id);
+        if (informe.getEstado() != EstadoInforme.EN_REVISION
+            && informe.getEstado() != EstadoInforme.EN_VISTO_BUENO) {
+            throw new SigconBusinessException(
+                ErrorCode.OPERACION_NO_PERMITIDA,
+                "Solo se puede actualizar el porcentaje de ejecucion en estado EN_REVISION o EN_VISTO_BUENO",
+                HttpStatus.UNPROCESSABLE_ENTITY
+            );
+        }
+        informe.setPorcentajeEjecucion(request.getPorcentajeEjecucion());
         informeRepository.save(informe);
         return buildDetalle(informe);
     }
