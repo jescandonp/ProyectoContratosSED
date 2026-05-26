@@ -16,15 +16,15 @@
   --color-outline-variant: #c4c6d3;
 
   /* Primario — Azul marino SED */
-  --color-primary: #0a0e5a;
+  --color-primary: #00005f;
   --color-on-primary: #ffffff;
   --color-primary-container: #1a2080;
   --color-on-primary-container: #9eaaff;
   --color-inverse-primary: #b8c0ff;
-  --color-surface-tint: #0a0e5a;
+  --color-surface-tint: #00005f;
 
   /* Acento — Naranja SED */
-  --color-accent: #e8401c;
+  --color-accent: #f95000;
   --color-on-accent: #ffffff;
   --color-accent-container: #ff6d45;
   --color-accent-dim: #ff8a6a;
@@ -52,6 +52,14 @@
   --color-on-background: #0b1c30;
   --color-surface-variant: #d0dbf2;
 
+  /* Paleta ampliada brand SED */
+  --color-orange-mid: #ff803d;
+  --color-orange-light: #ffac87;
+  --color-neutral-mid: #dddddd;
+  --color-alt-blue: #54a2e6;
+  --color-alt-yellow: #f9e04b;
+  --color-alt-cyan: #64d9d5;
+
   /* Tipografía */
   --font-family-heading: 'Montserrat', sans-serif;
   --font-family: 'Work Sans', sans-serif;
@@ -77,8 +85,8 @@
   /* PrimeNG overrides */
   --p-primary-color: var(--color-accent);
   --p-primary-contrast-color: var(--color-on-accent);
-  --p-primary-hover-color: #c93518;
-  --p-primary-active-color: #c93518;
+  --p-primary-hover-color: #d94700;
+  --p-primary-active-color: #d94700;
   --p-content-border-radius: var(--radius-default);
   --p-surface-0: var(--color-surface-container-lowest);
   --p-surface-50: var(--color-surface);
