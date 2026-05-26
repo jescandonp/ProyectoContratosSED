@@ -14,23 +14,17 @@ interface NavItem {
   standalone: true,
   imports: [RouterLink, RouterLinkActive],
   template: `
-    <aside class="flex h-full w-56 flex-col bg-[#0a0e5a] text-white">
+    <aside class="flex h-full w-56 flex-col bg-[#00005f] text-white">
 
-      <!-- Franja logo: fondo blanco -->
-      <div class="flex h-[72px] items-center justify-center bg-white px-4">
-        <img
-          src="assets/images/logo-sigcon.png"
-          alt="SIGCON — Una educación que te responde"
-          class="h-11 w-auto object-contain"
-        />
-      </div>
+      <!-- Espaciador superior -->
+      <div class="pt-4"></div>
 
       <!-- Navegación principal -->
       <nav class="flex flex-1 flex-col gap-1 p-2" aria-label="Navegacion principal">
         @for (item of navItems(); track item.route) {
           <a
             class="flex h-10 items-center gap-2 rounded px-2 text-sm font-medium text-white/75 no-underline hover:bg-white/10 hover:text-white transition-colors"
-            routerLinkActive="!bg-[#1a2080] !text-white !border-l-[3px] !border-[#e8401c] !pl-[5px]"
+            routerLinkActive="!bg-[#1a2080] !text-white !border-l-[3px] !border-[#f95000] !pl-[5px]"
             [routerLink]="item.route"
           >
             <img
@@ -48,7 +42,7 @@ interface NavItem {
       <div class="border-t border-white/15 p-2 flex flex-col gap-1">
         <a
           class="flex h-10 items-center gap-2 rounded px-2 text-sm font-medium text-white/75 no-underline hover:bg-white/10 hover:text-white transition-colors"
-          routerLinkActive="!bg-[#1a2080] !text-white !border-l-[3px] !border-[#e8401c] !pl-[5px]"
+          routerLinkActive="!bg-[#1a2080] !text-white !border-l-[3px] !border-[#f95000] !pl-[5px]"
           [routerLink]="'/perfil'"
         >
           <img src="assets/icons/ico-perfil_.png" alt="Mi Perfil" class="h-5 w-5 shrink-0 object-contain brightness-0 invert" aria-hidden="true" />
