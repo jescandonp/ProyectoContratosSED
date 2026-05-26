@@ -1,4 +1,5 @@
 import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
@@ -11,7 +12,7 @@ import { FooterInstitucionalComponent } from '../../shared/components/footer/foo
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ToastModule, GovcoBarComponent, FooterInstitucionalComponent],
+  imports: [CommonModule, ToastModule, GovcoBarComponent, FooterInstitucionalComponent],
   providers: [MessageService],
   template: `
     <p-toast></p-toast>
@@ -33,7 +34,7 @@ import { FooterInstitucionalComponent } from '../../shared/components/footer/foo
       </header>
 
       <!-- Main content with background image -->
-      <main class="login-main">
+      <main class="login-main" [ngStyle]="backgroundImageStyle">
         <div class="login-card">
           <!-- Card header -->
           <div class="card-header">
@@ -128,7 +129,6 @@ import { FooterInstitucionalComponent } from '../../shared/components/footer/foo
       align-items: center;
       justify-content: center;
       padding: 24px;
-      background-image: url('assets/images/ima-fondo.png');
       background-size: cover;
       background-position: center;
       background-attachment: fixed;
@@ -271,6 +271,10 @@ import { FooterInstitucionalComponent } from '../../shared/components/footer/foo
 })
 export class LoginComponent {
   readonly version = '1.0.3';
+
+  readonly backgroundImageStyle = {
+    backgroundImage: 'url(assets/images/ima-fondo.png)'
+  };
 
   readonly devUsers: { rol: RolUsuario; label: string; email: string; useEmail?: boolean }[] = [
     { rol: 'ADMIN', label: 'Admin', email: 'admin@educacionbogota.edu.co' },
