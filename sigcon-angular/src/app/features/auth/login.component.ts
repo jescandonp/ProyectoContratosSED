@@ -1,107 +1,277 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { MessageService } from 'primeng/api';
+import { ToastModule } from 'primeng/toast';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { RolUsuario } from '../../core/models/usuario.model';
+import { GovcoBarComponent } from '../../shared/components/govco-bar/govco-bar.component';
+import { FooterInstitucionalComponent } from '../../shared/components/footer/footer-institucional.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
+  imports: [ToastModule, GovcoBarComponent, FooterInstitucionalComponent],
+  providers: [MessageService],
   template: `
-    <div class="relative min-h-screen overflow-hidden bg-[var(--color-background)] flex flex-col font-[Public_Sans,sans-serif]">
-      <!-- Background decorators -->
-      <div class="pointer-events-none absolute inset-0 opacity-[0.03]"
-           style="background-image: radial-gradient(#002869 0.5px, transparent 0.5px), radial-gradient(#002869 0.5px, #f8f9ff 0.5px); background-size: 20px 20px; background-position: 0 0, 10px 10px;"></div>
-      <div class="pointer-events-none absolute right-0 top-0 h-1/3 w-1/3 -translate-y-1/2 translate-x-1/2 rounded-full bg-[var(--color-primary)]/5 blur-3xl"></div>
-      <div class="pointer-events-none absolute bottom-0 left-0 h-1/4 w-1/4 translate-y-1/2 -translate-x-1/2 rounded-full bg-[var(--color-secondary)]/5 blur-3xl"></div>
+    <p-toast></p-toast>
+    <div class="login-page">
+      <app-govco-bar />
 
-      <!-- Main -->
-      <main class="relative z-10 flex flex-1 items-center justify-center p-md">
-        <div class="flex w-full max-w-[480px] flex-col overflow-hidden rounded-xl border border-[var(--color-outline-variant)] bg-white shadow-lg">
+      <!-- Header with brand logo -->
+      <header class="login-header">
+        <div class="brand-left">
+          <img
+            src="assets/images/logo-head-sigcon.png"
+            alt="SIGCON"
+            class="brand-logo"
+          />
+        </div>
+        <div class="inst-logos-placeholder">
+          <!-- logos SED/Alcaldía/Bogotá — pendiente comunicaciones -->
+        </div>
+      </header>
 
-          <!-- Header -->
-          <div class="flex flex-col items-center space-y-md border-b border-[var(--color-surface-container)] p-xl text-center">
-            <div class="mb-sm flex h-16 w-16 items-center justify-center rounded-xl bg-[var(--color-primary)]">
-              <span class="text-3xl font-black text-white">S</span>
-            </div>
-            <div>
-              <h1 class="text-h2 font-h2 tracking-tight text-[var(--color-primary)]">SIGCON</h1>
-              <p class="text-label-bold font-label-bold uppercase tracking-[0.15em] text-[var(--color-on-surface-variant)]">
-                Sistema de Gestión de Contratos
-              </p>
-            </div>
+      <!-- Main content with background image -->
+      <main class="login-main">
+        <div class="login-card">
+          <!-- Card header -->
+          <div class="card-header">
+            <h2>BIENVENIDO</h2>
+            <p class="subtitle">Acceda a la plataforma utilizando sus credenciales institucionales.</p>
           </div>
 
-          <!-- Body -->
-          <div class="space-y-lg bg-[var(--color-surface-container-lowest)] p-xl">
-            <p class="px-sm text-center text-body-md font-body-md text-[var(--color-on-surface-variant)]">
-              Acceda a la plataforma utilizando sus credenciales institucionales de la Secretaría de Educación del Distrito.
-            </p>
-
-            <!-- SSO button (placeholder for weblogic profile) -->
+          <!-- Card body -->
+          <div class="card-body">
+            <!-- SSO Button -->
             <button
-              class="flex w-full items-center justify-center gap-md rounded-xl bg-[var(--color-primary)] px-lg py-md text-body-lg font-body-lg font-semibold text-white shadow-md transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
+              class="btn-sso"
               type="button"
             >
-              <svg class="h-5 w-5" viewBox="0 0 23 23" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg class="office-icon" viewBox="0 0 23 23" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect x="1" y="1" width="10" height="10" fill="#f25022"/>
                 <rect x="12" y="1" width="10" height="10" fill="#7fba00"/>
                 <rect x="1" y="12" width="10" height="10" fill="#00a4ef"/>
                 <rect x="12" y="12" width="10" height="10" fill="#ffb900"/>
               </svg>
-              <span>Iniciar sesión con Office 365</span>
+              <span>Iniciar con office 365</span>
             </button>
 
-            <!-- Divider -->
-            <div class="relative flex items-center py-md">
-              <div class="flex-grow border-t border-[var(--color-outline-variant)]"></div>
-              <span class="mx-md flex-shrink text-label-bold font-label-bold uppercase tracking-wider text-[var(--color-outline)]">
-                Acceso local (desarrollo)
-              </span>
-              <div class="flex-grow border-t border-[var(--color-outline-variant)]"></div>
-            </div>
-
-            <!-- Dev login buttons -->
-            <div class="grid grid-cols-2 gap-sm">
+            <!-- Dev Grid -->
+            <div class="dev-grid">
               @for (user of devUsers; track user.email) {
                 <button
-                  class="flex flex-col items-center gap-xs rounded-lg border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] px-md py-sm text-left transition-all hover:border-[var(--color-primary)] hover:bg-[var(--color-surface-container)]"
+                  class="dev-btn"
                   type="button"
                   (click)="loginDev(user)"
                 >
-                  <span class="text-body-sm font-semibold text-[var(--color-primary)]">{{ user.label }}</span>
-                  <span class="text-[11px] text-[var(--color-outline)]">{{ user.email }}</span>
+                  <span class="dev-label">{{ user.label }}</span>
+                  <span class="dev-email">{{ user.email }}</span>
                 </button>
               }
             </div>
 
-            <!-- Help -->
-            <div class="flex items-center justify-center gap-xs rounded-full bg-[var(--color-surface-container-low)] px-md py-sm text-[var(--color-on-surface-variant)]">
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
-              </svg>
-              <p class="text-body-sm font-body-sm">¿Problemas para ingresar? Contacte a Mesa de Ayuda.</p>
-            </div>
+            <!-- Forgot password link -->
+            <a href="#" class="forgot-link" (click)="onForgotPassword($event)">
+              Olvide la contraseña
+            </a>
           </div>
 
-          <!-- Bottom accent -->
-          <div class="h-1.5 w-full bg-gradient-to-r from-[var(--color-primary)] via-[var(--color-tertiary-container)] to-[var(--color-secondary-container)]"></div>
+          <!-- Version badge -->
+          <span class="version-badge">VS {{ version }}</span>
         </div>
       </main>
 
-      <!-- Footer -->
-      <footer class="relative z-10 w-full border-t border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] p-lg">
-        <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-md md:flex-row">
-          <div class="flex flex-col items-center space-y-xs md:items-start">
-            <span class="text-label-bold font-label-bold uppercase text-[var(--color-primary)]">Secretaría de Educación del Distrito</span>
-            <p class="text-body-sm font-body-sm text-[var(--color-on-surface-variant)]">© 2026 Bogotá D.C. — Todos los derechos reservados.</p>
-          </div>
-        </div>
-      </footer>
+      <app-footer-institucional />
     </div>
-  `
+  `,
+  styles: [`
+    .login-page {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      font-family: var(--font-family);
+    }
+
+    .login-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 32px;
+      background: linear-gradient(135deg, #00005f 0%, #1a2080 100%);
+      z-index: 10;
+      position: relative;
+    }
+
+    .brand-left {
+      display: flex;
+      align-items: center;
+    }
+
+    .brand-logo {
+      height: 44px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .inst-logos-placeholder {
+      opacity: 0;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .login-main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background-image: url('assets/images/ima-fondo.png');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      position: relative;
+    }
+
+    .login-main::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(0, 0, 95, 0.55), rgba(0, 0, 95, 0.55));
+      z-index: 1;
+    }
+
+    .login-card {
+      position: relative;
+      z-index: 2;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      max-width: 420px;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 24px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .card-header h2 {
+      font-family: var(--font-family-heading);
+      font-size: 20px;
+      font-weight: bold;
+      margin: 0 0 8px 0;
+      color: #00005f;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #666;
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    .card-body {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .btn-sso {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background-color: #f95000;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      font-family: var(--font-family);
+    }
+
+    .btn-sso:hover {
+      background-color: #d94700;
+    }
+
+    .office-icon {
+      width: 20px;
+      height: 20px;
+    }
+
+    .dev-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .dev-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 12px 8px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      background: #f9f9f9;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: var(--font-family);
+    }
+
+    .dev-btn:hover {
+      border-color: #f95000;
+      background: #fffaf7;
+    }
+
+    .dev-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #f95000;
+    }
+
+    .dev-email {
+      font-size: 10px;
+      color: #999;
+      text-align: center;
+      word-break: break-word;
+    }
+
+    .forgot-link {
+      text-align: center;
+      font-size: 13px;
+      color: #f95000;
+      text-decoration: none;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .forgot-link:hover {
+      color: #d94700;
+      text-decoration: underline;
+    }
+
+    .version-badge {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      font-size: 11px;
+      color: #999;
+      font-family: var(--font-family);
+    }
+  `]
 })
 export class LoginComponent {
+  readonly version = '1.0.3';
+
   readonly devUsers: { rol: RolUsuario; label: string; email: string; useEmail?: boolean }[] = [
     { rol: 'ADMIN', label: 'Admin', email: 'admin@educacionbogota.edu.co' },
     { rol: 'CONTRATISTA', label: 'Contratista', email: 'juan.escandon@...' },
@@ -110,10 +280,9 @@ export class LoginComponent {
     { rol: 'SUPERVISOR', label: 'Supervisor', email: 'supervisor1@...' }
   ];
 
-  constructor(
-    private readonly authService: AuthService,
-    private readonly router: Router
-  ) {}
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly messageService = inject(MessageService);
 
   loginDev(user: { rol: RolUsuario; email: string; useEmail?: boolean }) {
     if (user.useEmail) {
@@ -126,5 +295,14 @@ export class LoginComponent {
     } else {
       void this.router.navigate(['/contratos']);
     }
+  }
+
+  onForgotPassword(event: Event): void {
+    event.preventDefault();
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Recuperación de Contraseña',
+      detail: 'Para recuperar su contraseña, contacte a Mesa de Ayuda.'
+    });
   }
 }
