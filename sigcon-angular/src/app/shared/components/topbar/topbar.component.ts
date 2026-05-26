@@ -14,7 +14,7 @@ import { StatusChipComponent } from '../status-chip/status-chip.component';
     <header class="flex min-h-14 items-center justify-between border-b border-[var(--color-outline-variant)] bg-white px-lg">
       <div class="flex items-center gap-md">
         <img
-          src="assets/images/logo-sigcon.png"
+          src="assets/images/logo-head-sigcon.png"
           alt="SIGCON"
           class="h-8 w-auto object-contain"
         />
@@ -22,6 +22,9 @@ import { StatusChipComponent } from '../status-chip/status-chip.component';
         <p class="m-0 text-sm font-medium text-[var(--color-on-surface-variant)]">
           Sistema de Gestion de Contratos - SED
         </p>
+        <div class="inst-logos-placeholder flex items-center gap-2 opacity-0 pointer-events-none">
+          <!-- logos SED/Alcaldía/Bogotá — pendiente entrega comunicaciones -->
+        </div>
       </div>
 
       @if (authService.currentUser(); as user) {
