@@ -21,7 +21,7 @@ El proyecto se implementa por incrementos bajo SDD Spec-Anchored. El incremento 
 docs/plans/
 ```
 
-**Ultimo incremento cerrado: I11 — Correcciones Formato PDF 11-IF-023 V1** en rama `main` (2026-05-22).
+**Ultimo incremento cerrado: I13 — Identidad Visual Institucional SIGCON** en rama `main` (2026-05-26).
 
 | Incremento | Descripcion | Estado |
 |-----------|-------------|--------|
@@ -36,6 +36,8 @@ docs/plans/
 | I9 | Visto Bueno Administrativo | Cerrado |
 | I10 | Identidad Visual Prensa SED | Cerrado |
 | I11 | Correcciones Formato PDF 11-IF-023 V1 | Cerrado |
+| I12 | Doble perfil CONTRATISTA+ADMIN, % ejecucion editable, bloqueo carga informes, tipo contrato PRO | Cerrado |
+| I13 | Identidad Visual Institucional SIGCON (GovcoBar, footer, tokens SED, login rediseno) | Cerrado |
 
 ## Estructura
 
