@@ -236,11 +236,14 @@ public class InformeService {
 
     public InformeDetalleDto actualizarPorcentajeEjecucion(Long id, PorcentajeEjecucionRequest request) {
         Informe informe = findActiveInforme(id);
-        if (informe.getEstado() != EstadoInforme.EN_REVISION
-            && informe.getEstado() != EstadoInforme.EN_VISTO_BUENO) {
+        EstadoInforme estado = informe.getEstado();
+        if (estado != EstadoInforme.BORRADOR
+                && estado != EstadoInforme.ENVIADO
+                && estado != EstadoInforme.EN_REVISION
+                && estado != EstadoInforme.EN_VISTO_BUENO) {
             throw new SigconBusinessException(
                 ErrorCode.OPERACION_NO_PERMITIDA,
-                "Solo se puede actualizar el porcentaje de ejecucion en estado EN_REVISION o EN_VISTO_BUENO",
+                "El porcentaje de ejecucion no puede modificarse en el estado actual del informe.",
                 HttpStatus.UNPROCESSABLE_ENTITY
             );
         }

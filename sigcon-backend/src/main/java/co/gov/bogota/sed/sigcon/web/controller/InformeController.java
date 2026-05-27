@@ -8,6 +8,7 @@ import co.gov.bogota.sed.sigcon.application.dto.informe.ObservacionRequest;
 import co.gov.bogota.sed.sigcon.application.dto.informe.PorcentajeEjecucionRequest;
 import co.gov.bogota.sed.sigcon.application.service.InformeEstadoService;
 import co.gov.bogota.sed.sigcon.application.service.InformeService;
+import co.gov.bogota.sed.sigcon.domain.enums.EstadoInforme;
 import co.gov.bogota.sed.sigcon.web.exception.ErrorCode;
 import co.gov.bogota.sed.sigcon.web.exception.SigconBusinessException;
 import io.swagger.v3.oas.annotations.Operation;
@@ -105,12 +106,14 @@ public class InformeController {
     }
 
     @PatchMapping("/{id}/porcentaje-ejecucion")
-    @PreAuthorize("hasAnyRole('REVISOR', 'ADMIN', 'ADMINISTRATIVO')")
+    @PreAuthorize("hasAnyRole('CONTRATISTA', 'REVISOR', 'ADMIN', 'ADMINISTRATIVO')")
     @Operation(summary = "Actualiza el porcentaje de ejecucion acumulada")
     public InformeDetalleDto actualizarPorcentajeEjecucion(
         @PathVariable Long id,
-        @Valid @RequestBody PorcentajeEjecucionRequest request
+        @Valid @RequestBody PorcentajeEjecucionRequest request,
+        Authentication authentication
     ) {
+        validarRolEstadoPorcentaje(authentication, informeService.findActiveInforme(id).getEstado());
         return informeService.actualizarPorcentajeEjecucion(id, request);
     }
 
@@ -195,6 +198,31 @@ public class InformeController {
 
     private static String observacion(ObservacionRequest request) {
         return request == null ? null : request.getTexto();
+    }
+
+    private void validarRolEstadoPorcentaje(Authentication auth, EstadoInforme estado) {
+        boolean ok = false;
+        if (estado == EstadoInforme.BORRADOR && hasRole(auth, "CONTRATISTA")) {
+            ok = true;
+        }
+        if (estado == EstadoInforme.ENVIADO && hasRole(auth, "REVISOR")) {
+            ok = true;
+        }
+        if (estado == EstadoInforme.EN_REVISION
+                && (hasRole(auth, "REVISOR") || hasRole(auth, "ADMIN") || hasRole(auth, "ADMINISTRATIVO"))) {
+            ok = true;
+        }
+        if (estado == EstadoInforme.EN_VISTO_BUENO
+                && (hasRole(auth, "ADMIN") || hasRole(auth, "ADMINISTRATIVO"))) {
+            ok = true;
+        }
+        if (!ok) {
+            throw new SigconBusinessException(
+                ErrorCode.ACCESO_DENEGADO,
+                "Su rol no puede modificar el porcentaje en el estado actual del informe.",
+                HttpStatus.FORBIDDEN
+            );
+        }
     }
 
     private static boolean hasRole(Authentication authentication, String role) {
