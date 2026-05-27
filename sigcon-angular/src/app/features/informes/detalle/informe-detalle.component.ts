@@ -75,6 +75,12 @@ export class InformeDetalleComponent implements OnInit {
   readonly procesandoSupervisor = signal(false);
   readonly errorSupervisor = signal('');
 
+  // I14 — Acciones Visto Bueno (ADMIN / ADMINISTRATIVO)
+  readonly dialogoVB = signal<'DAR_VB' | 'ESCALAR' | 'DEVOLVER' | null>(null);
+  readonly observacionVB = signal('');
+  readonly procesandoVB = signal(false);
+  readonly errorVB = signal('');
+
   periodoFechaInicio = '';
   periodoFechaFin = '';
 
@@ -408,6 +414,55 @@ export class InformeDetalleComponent implements OnInit {
 
   puedeAprobarSupervisor(informe: InformeDetalle): boolean {
     return this.authService.hasRole('SUPERVISOR') && informe.estado === 'EN_REVISION';
+  }
+
+  puedeActuarVB(informe: InformeDetalle): boolean {
+    return informe.estado === 'EN_VISTO_BUENO'
+      && (this.authService.hasRole('ADMIN') || this.authService.hasRole('ADMINISTRATIVO'));
+  }
+
+  abrirDialogoVB(accion: 'DAR_VB' | 'ESCALAR' | 'DEVOLVER'): void {
+    this.observacionVB.set('');
+    this.errorVB.set('');
+    this.dialogoVB.set(accion);
+  }
+
+  cerrarDialogoVB(): void {
+    this.dialogoVB.set(null);
+  }
+
+  confirmarAccionVB(): void {
+    const informe = this.informe();
+    if (!informe) return;
+    const accion = this.dialogoVB();
+    if (!accion) return;
+    const obs = this.observacionVB().trim();
+
+    if ((accion === 'ESCALAR' || accion === 'DEVOLVER') && !obs) {
+      this.errorVB.set('La observacion es obligatoria para esta accion.');
+      return;
+    }
+
+    this.procesandoVB.set(true);
+    this.errorVB.set('');
+
+    const peticion$ = accion === 'DAR_VB'
+      ? this.informeService.darVistosBueno(informe.id, obs || undefined)
+      : accion === 'ESCALAR'
+        ? this.informeService.escalar(informe.id, obs)
+        : this.observacionService.devolverInforme(informe.id, { texto: obs });
+
+    peticion$.subscribe({
+      next: (actualizado) => {
+        this.informe.set(actualizado);
+        this.procesandoVB.set(false);
+        this.dialogoVB.set(null);
+      },
+      error: () => {
+        this.procesandoVB.set(false);
+        this.errorVB.set('No se pudo completar la accion. Intente de nuevo.');
+      }
+    });
   }
 
   aprobarSupervisor(): void {
