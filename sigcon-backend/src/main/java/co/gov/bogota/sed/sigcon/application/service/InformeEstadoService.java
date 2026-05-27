@@ -255,7 +255,7 @@ public class InformeEstadoService {
         assertState(informe, EstadoInforme.EN_VISTO_BUENO);
         observacionService.registrarConAccion(
             informe, RolObservacion.ADMINISTRATIVO, observacionRecomendada, "ESCALACION");
-        informe.setEstado(EstadoInforme.EN_REVISION);
+        informe.setEstado(EstadoInforme.ENVIADO);
         InformeDetalleDto detalle = saveAndBuildDetalle(informe);
         eventoInformeService.publicar(TipoEvento.VB_ESCALADO, informe, observacionRecomendada);
         return detalle;

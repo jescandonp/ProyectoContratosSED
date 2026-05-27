@@ -21,6 +21,7 @@ import co.gov.bogota.sed.sigcon.application.service.ParametroService;
 import co.gov.bogota.sed.sigcon.application.service.PdfInformeService;
 import co.gov.bogota.sed.sigcon.application.service.SoporteAdjuntoService;
 import co.gov.bogota.sed.sigcon.application.service.UsuarioService;
+import co.gov.bogota.sed.sigcon.domain.entity.Informe;
 import co.gov.bogota.sed.sigcon.domain.enums.EstadoInforme;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -183,6 +184,7 @@ class InformeControllerVbTest {
 
     @Test
     void patchPorcentajeEjecucion_rolRevisor_retorna200() throws Exception {
+        when(informeService.findActiveInforme(10L)).thenReturn(informe(EstadoInforme.ENVIADO));
         when(informeService.actualizarPorcentajeEjecucion(eq(10L), any()))
             .thenReturn(informeDetalle());
 
@@ -196,6 +198,8 @@ class InformeControllerVbTest {
 
     @Test
     void patchPorcentajeEjecucion_rolContratista_retorna403() throws Exception {
+        when(informeService.findActiveInforme(10L)).thenReturn(informe(EstadoInforme.ENVIADO));
+
         mockMvc.perform(patch("/api/informes/10/porcentaje-ejecucion")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"porcentajeEjecucion\":75.50}")
@@ -227,5 +231,12 @@ class InformeControllerVbTest {
         dto.setFechaFin(LocalDate.of(2026, 2, 28));
         dto.setEstado(EstadoInforme.EN_REVISION);
         return dto;
+    }
+
+    private static Informe informe(EstadoInforme estado) {
+        Informe informe = new Informe();
+        informe.setId(10L);
+        informe.setEstado(estado);
+        return informe;
     }
 }

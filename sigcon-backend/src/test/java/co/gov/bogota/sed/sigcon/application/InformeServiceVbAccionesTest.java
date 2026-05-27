@@ -103,14 +103,14 @@ class InformeServiceVbAccionesTest {
         when(informeService.findActiveInforme(50L)).thenReturn(informe);
         ArgumentCaptor<String> accionCaptor = ArgumentCaptor.forClass(String.class);
         when(observacionService.registrarConAccion(
-                eq(informe), eq(RolObservacion.ADMINISTRATIVO), eq("Escalo al supervisor"), accionCaptor.capture()))
+                eq(informe), eq(RolObservacion.ADMINISTRATIVO), eq("Escalo al revisor"), accionCaptor.capture()))
             .thenReturn(new Observacion());
         when(informeRepository.save(any(Informe.class))).thenAnswer(inv -> inv.getArgument(0));
         when(informeService.buildDetalle(informe)).thenReturn(new InformeDetalleDto());
 
-        service.escalar(50L, "Escalo al supervisor");
+        service.escalar(50L, "Escalo al revisor");
 
-        assertThat(informe.getEstado()).isEqualTo(EstadoInforme.EN_REVISION);
+        assertThat(informe.getEstado()).isEqualTo(EstadoInforme.ENVIADO);
         assertThat(accionCaptor.getValue()).isEqualTo("ESCALACION");
     }
 
