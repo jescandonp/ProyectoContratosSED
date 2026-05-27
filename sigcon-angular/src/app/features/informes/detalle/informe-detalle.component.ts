@@ -145,10 +145,15 @@ export class InformeDetalleComponent implements OnInit {
   }
 
   puedeEditarPorcentajeEjecucion(informe: InformeDetalle): boolean {
-    return (informe.estado === 'EN_REVISION' || informe.estado === 'EN_VISTO_BUENO')
-      && (this.authService.hasRole('REVISOR')
-        || this.authService.hasRole('ADMIN')
-        || this.authService.hasRole('ADMINISTRATIVO'));
+    const e = informe.estado;
+    if (e === 'BORRADOR') return this.authService.hasRole('CONTRATISTA');
+    if (e === 'ENVIADO') return this.authService.hasRole('REVISOR');
+    if (e === 'EN_REVISION') return this.authService.hasRole('REVISOR')
+      || this.authService.hasRole('ADMIN')
+      || this.authService.hasRole('ADMINISTRATIVO');
+    if (e === 'EN_VISTO_BUENO') return this.authService.hasRole('ADMIN')
+      || this.authService.hasRole('ADMINISTRATIVO');
+    return false;
   }
 
   guardarPorcentajeEjecucion(valor: string | number | null): void {
