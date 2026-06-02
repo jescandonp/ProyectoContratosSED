@@ -52,6 +52,7 @@ public class DevSecurityConfig {
             .authorizeRequests()
                 .antMatchers("/actuator/health").permitAll()
                 .antMatchers("/swagger-ui.html", "/api-docs/**", "/swagger-ui/**", "/webjars/**").permitAll()
+                .antMatchers("/api/dev/**").permitAll()
                 .antMatchers("/api/usuarios/me", "/api/usuarios/me/**").authenticated()
                 .antMatchers("/api/admin/**").access("@sigconAuthorization.isAdmin(authentication)")
                 .antMatchers(HttpMethod.GET, "/api/contratos/**").hasAnyRole("CONTRATISTA", "REVISOR", "SUPERVISOR", "ADMIN")

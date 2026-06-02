@@ -90,6 +90,7 @@ public class InformePdfTemplateService {
 
     /**
      * Genera los bytes del PDF institucional SED para el informe indicado.
+     * Carga actividades, documentos y aportes desde el repositorio.
      *
      * @param informe          informe APROBADO con contrato, contratista y supervisor cargados
      * @param firmaContratista bytes de la imagen de firma del contratista
@@ -102,9 +103,26 @@ public class InformePdfTemplateService {
                              byte[] firmaRevisor)
             throws IOException, DocumentException, ParserConfigurationException, SAXException {
 
-        List<ActividadInforme>  actividades = actividadRepository.findByInformeIdAndActivoTrue(informe.getId());
-        List<DocumentoAdicional> documentos = documentoAdicionalRepository.findByInformeIdAndActivoTrue(informe.getId());
-        List<AporteSgssi>        aportes    = aporteSgssiRepository.findByInformeIdAndActivoTrue(informe.getId());
+        List<ActividadInforme>   actividades = actividadRepository.findByInformeIdAndActivoTrue(informe.getId());
+        List<DocumentoAdicional> documentos  = documentoAdicionalRepository.findByInformeIdAndActivoTrue(informe.getId());
+        List<AporteSgssi>        aportes     = aporteSgssiRepository.findByInformeIdAndActivoTrue(informe.getId());
+
+        return generarPdf(informe, actividades, documentos, aportes,
+                firmaContratista, firmaSupervisor, firmaRevisor);
+    }
+
+    /**
+     * Genera los bytes del PDF con las listas de contenido ya construidas (sin acceso al DB).
+     * Util para previsualizacion en desarrollo y testing.
+     */
+    public byte[] generarPdf(Informe informe,
+                             List<ActividadInforme>   actividades,
+                             List<DocumentoAdicional> documentos,
+                             List<AporteSgssi>        aportes,
+                             byte[] firmaContratista,
+                             byte[] firmaSupervisor,
+                             byte[] firmaRevisor)
+            throws IOException, DocumentException, ParserConfigurationException, SAXException {
 
         String html = buildHtml(informe, actividades, documentos, aportes,
                 firmaContratista, firmaSupervisor, firmaRevisor);
