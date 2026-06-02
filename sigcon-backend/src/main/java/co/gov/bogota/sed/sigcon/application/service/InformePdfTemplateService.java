@@ -207,7 +207,7 @@ public class InformePdfTemplateService {
         sb.append("@page{@top-center{content:element(pageHeader)}@bottom-center{content:element(pageFooter)}}");
         sb.append(".running-header{position:running(pageHeader);width:100%;}");
         sb.append(".running-footer{position:running(pageFooter);width:100%;");
-        sb.append("font-size:7.5pt;color:#666;padding-top:6pt;position:relative;height:36pt;}");
+        sb.append("font-size:7.5pt;color:#666;padding-top:6pt;height:36pt;}");
         sb.append(".footer-code{position:absolute;right:0;top:0;text-align:center;line-height:8pt;}");
         sb.append(".footer-page{text-align:center;margin-top:9pt;}");
         sb.append(".footer-address{text-align:center;margin-top:8pt;white-space:nowrap;}");
@@ -224,14 +224,14 @@ public class InformePdfTemplateService {
         sb.append(".ph-right{width:26%;text-align:center;vertical-align:top;padding:2pt;border-left:0.8pt solid #000;}");
         sb.append(".ph-right-title{font-weight:bold;font-size:8pt;}");
         sb.append(".ph-right-period{font-size:7.5pt;margin-top:1pt;}");
-        sb.append(".data-table{table-layout:fixed;}");
+        sb.append(".data-table{}");
         sb.append(".sec-title{background:#d9d9d9;color:#000;font-weight:bold;font-size:9pt;");
         sb.append("padding:3pt 6pt;margin-top:8pt;margin-bottom:0;text-transform:uppercase;border:0.5pt solid #999;}");
         sb.append("table{width:100%;border-collapse:collapse;font-size:8.5pt;margin-bottom:0;}");
         sb.append("th{background:#000;color:#fff;padding:3pt 5pt;text-align:left;font-size:8pt;font-weight:bold;border:0.5pt solid #555;}");
         sb.append("td{padding:3pt 5pt;border:0.5pt solid #999;vertical-align:top;}");
-        sb.append(".lbl{font-weight:bold;width:30%;background:#f0f0f0;}");
-        sb.append(".val{width:70%;}");
+        sb.append(".lbl{font-weight:bold;width:22%;background:#f0f0f0;}");
+        sb.append(".val{}");
         sb.append(".lbl4{font-weight:bold;background:#f0f0f0;white-space:nowrap;}");
         sb.append(".val4{white-space:nowrap;}");
         sb.append(".bullet-list{margin:0;padding:0 0 0 10pt;list-style-type:disc;}");
@@ -570,7 +570,7 @@ public class InformePdfTemplateService {
     private static void fila2(StringBuilder sb, String label, String value, boolean alt) {
         sb.append(alt ? "<tr style=\"background:#f7f7f7\">" : "<tr>");
         sb.append("<td class=\"lbl\">").append(label).append("</td>");
-        sb.append("<td class=\"val\">").append(value).append("</td>");
+        sb.append("<td class=\"val\" colspan=\"3\">").append(value).append("</td>");
         sb.append("</tr>");
     }
 
