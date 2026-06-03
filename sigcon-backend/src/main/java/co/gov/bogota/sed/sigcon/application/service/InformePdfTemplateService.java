@@ -171,6 +171,9 @@ public class InformePdfTemplateService {
         sb.append("</head><body>");
 
         appendRunningHeader(sb, informe);
+        // El running-footer debe declararse antes del primer contenido del flujo,
+        // de lo contrario Flying Saucer solo lo activa desde la pagina donde aparece.
+        appendRunningFooter(sb);
 
         appendSeccion1(sb, informe);
         appendSeccion2(sb, actividades);
@@ -180,8 +183,6 @@ public class InformePdfTemplateService {
 
         appendFirmas(sb, informe, contratista, supervisor, revisor,
                      firmaContratista, firmaSupervisor, firmaRevisor);
-
-        appendRunningFooter(sb);
 
         sb.append("</body></html>");
         return sb.toString();

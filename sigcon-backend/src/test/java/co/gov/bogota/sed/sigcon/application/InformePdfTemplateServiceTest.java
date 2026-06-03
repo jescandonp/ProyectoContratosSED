@@ -28,8 +28,13 @@ class InformePdfTemplateServiceTest {
     void htmlMantieneFooterFueraDelFlujoSuperiorYFirmasAcotadas() throws Exception {
         String html = buildHtml(informe());
 
+        // El running-footer debe declararse despues del running-header pero ANTES
+        // del primer sec-title del flujo, para que Flying Saucer lo extraiga como
+        // @bottom-center desde la pagina 1 (si se declara despues solo aparece
+        // a partir de la pagina donde fisicamente esta en el flujo).
         assertThat(html.indexOf("class=\"running-footer\""))
-            .isGreaterThan(html.indexOf("class=\"firma-section\""));
+            .isGreaterThan(html.indexOf("class=\"running-header\""))
+            .isLessThan(html.indexOf("class=\"sec-title\""));
         assertThat(html.indexOf("P&#225;gina <span class=\"page-num\"></span> de <span class=\"page-total\"></span>"))
             .isLessThan(html.indexOf("PERIODO DEL INFORME"));
         assertThat(html).contains("P&#225;gina: <span class=\"page-num\"></span> de <span class=\"page-total\"></span>");
