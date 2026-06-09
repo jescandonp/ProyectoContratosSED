@@ -12,12 +12,14 @@ import co.gov.bogota.sed.sigcon.domain.repository.ActividadInformeRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.AporteSgssiRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.DocumentoAdicionalRepository;
 import co.gov.bogota.sed.sigcon.domain.repository.SoporteAdjuntoRepository;
+import co.gov.bogota.sed.sigcon.domain.entity.AporteSgssi;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -41,6 +43,14 @@ class InformePdfTemplateServiceTest {
         assertThat(html).contains("style=\"height:44pt;width:150pt;\"");
         assertThat(html).contains("class=\"lbl4\"");
         assertThat(html).contains("Fecha de Terminaci&#243;n:");
+        // F2: celdas del header con borde completo
+        assertThat(html).contains(".ph-logo{width:14%;text-align:center;padding:2pt;border:0.8pt solid #000");
+        // F3: titulo INFORME DE ACTIVIDADES en 14pt
+        assertThat(html).contains("font-size:14pt");
+        // F4: th con fondo #C0C0C0
+        assertThat(html).contains("background:#C0C0C0");
+        // F5: dia en letras + numero (fechaElaboracion=2025-02-04 → "cuatro (4)")
+        assertThat(html).contains("cuatro (4)");
     }
 
     @Test
@@ -62,6 +72,46 @@ class InformePdfTemplateServiceTest {
 
         assertThat(html).contains("CONTRATO DE APOYO A LA GESTION");
         assertThat(html).doesNotContain("CONTRATO DE PRESTACION DE SERVICIOS PROFESIONALES");
+    }
+
+    @Test
+    void seccion3NoDobleEscapeEntidadesHtmlEnItemSgssi() throws Exception {
+        Informe informe = informe();
+
+        AporteSgssi aporte = new AporteSgssi();
+        aporte.setId(1L);
+        aporte.setItem(co.gov.bogota.sed.sigcon.domain.enums.ItemSgssi.PENSION);
+        aporte.setEntidad("Colpensiones");
+        aporte.setValorAportado(BigDecimal.valueOf(500000));
+        aporte.setFechaPago(LocalDate.of(2025, 1, 10));
+        aporte.setActivo(true);
+
+        InformePdfTemplateService service = new InformePdfTemplateService(
+            mock(ActividadInformeRepository.class),
+            mock(SoporteAdjuntoRepository.class),
+            mock(DocumentoAdicionalRepository.class),
+            mock(AporteSgssiRepository.class)
+        );
+
+        Method buildHtml = InformePdfTemplateService.class.getDeclaredMethod(
+            "buildHtml",
+            Informe.class, java.util.List.class, java.util.List.class,
+            java.util.List.class, byte[].class, byte[].class, byte[].class
+        );
+        buildHtml.setAccessible(true);
+
+        String html = (String) buildHtml.invoke(
+            service, informe,
+            Collections.emptyList(),
+            Collections.emptyList(),
+            List.of(aporte),
+            new byte[]{1, 2, 3}, new byte[]{1, 2, 3}, new byte[]{1, 2, 3}
+        );
+
+        // La entidad HTML debe aparecer intacta (válida para el parser XHTML)
+        assertThat(html).contains("PENSI&#211;N");
+        // No debe aparecer el doble escape que produce texto literal en el PDF
+        assertThat(html).doesNotContain("PENSI&amp;#211;N");
     }
 
     private static String buildHtml(Informe informe) throws Exception {

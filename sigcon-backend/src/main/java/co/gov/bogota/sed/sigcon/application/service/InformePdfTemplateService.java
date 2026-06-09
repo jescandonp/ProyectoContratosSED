@@ -138,6 +138,7 @@ public class InformePdfTemplateService {
         Document xmlDoc = builder.parse(new InputSource(new StringReader(html)));
 
         ITextRenderer renderer = new ITextRenderer();
+        registrarFuenteArial(renderer);
         renderer.setDocument(xmlDoc, null);
         renderer.layout();
 
@@ -216,20 +217,20 @@ public class InformePdfTemplateService {
         sb.append(".page-total:before{content:counter(pages);}");
         sb.append("body{font-family:Arial,sans-serif;font-size:9pt;color:#1a1a1a;margin:0;}");
         sb.append(".ph-wrap{border:0.8pt solid #000;width:100%;border-collapse:collapse;font-size:8pt;}");
-        sb.append(".ph-logo{width:14%;text-align:center;padding:2pt;border-right:0.8pt solid #000;vertical-align:middle;}");
+        sb.append(".ph-logo{width:14%;text-align:center;padding:2pt;border:0.8pt solid #000;vertical-align:middle;}");
         sb.append(".ph-logo img{width:").append(LOGO_WIDTH_PT).append(";height:")
           .append(LOGO_HEIGHT_PT).append(";}");
-        sb.append(".ph-center{width:60%;text-align:center;vertical-align:top;padding:2pt 4pt;}");
-        sb.append(".ph-center-title{font-weight:bold;font-size:9.5pt;}");
+        sb.append(".ph-center{width:60%;text-align:center;vertical-align:top;padding:2pt 4pt;border:0.8pt solid #000;}");
+        sb.append(".ph-center-title{font-weight:bold;font-size:14pt;}");
         sb.append(".ph-center-sub{font-size:7.5pt;margin-top:1pt;}");
-        sb.append(".ph-right{width:26%;text-align:center;vertical-align:top;padding:2pt;border-left:0.8pt solid #000;}");
+        sb.append(".ph-right{width:26%;text-align:center;vertical-align:top;padding:2pt;border:0.8pt solid #000;}");
         sb.append(".ph-right-title{font-weight:bold;font-size:8pt;}");
         sb.append(".ph-right-period{font-size:7.5pt;margin-top:1pt;}");
         sb.append(".data-table{}");
         sb.append(".sec-title{background:#d9d9d9;color:#000;font-weight:bold;font-size:9pt;");
         sb.append("padding:3pt 6pt;margin-top:8pt;margin-bottom:0;text-transform:uppercase;border:0.5pt solid #999;}");
         sb.append("table{width:100%;border-collapse:collapse;font-size:8.5pt;margin-bottom:0;}");
-        sb.append("th{background:#000;color:#fff;padding:3pt 5pt;text-align:left;font-size:8pt;font-weight:bold;border:0.5pt solid #555;}");
+        sb.append("th{background:#C0C0C0;color:#000;padding:3pt 5pt;text-align:left;font-size:8pt;font-weight:bold;border:0.5pt solid #999;}");
         sb.append("td{padding:3pt 5pt;border:0.5pt solid #999;vertical-align:top;}");
         sb.append(".lbl{font-weight:bold;width:22%;background:#f0f0f0;}");
         sb.append(".val{}");
@@ -415,7 +416,7 @@ public class InformePdfTemplateService {
         boolean alt = false;
         for (AporteSgssi aporte : aportes) {
             sb.append(alt ? "<tr style=\"background:#f7f7f7\">" : "<tr>");
-            sb.append("<td><b>").append(esc(labelSgssi(aporte.getItem()))).append("</b></td>");
+            sb.append("<td><b>").append(labelSgssi(aporte.getItem())).append("</b></td>");
             sb.append("<td>").append(periodoStr).append("</td>");
             sb.append("<td>").append(aporte.getFechaPago() != null ? aporte.getFechaPago().format(DATE_FMT) : "").append("</td>");
             sb.append("<td>").append(formatPesos(aporte.getValorAportado())).append("</td>");
@@ -556,6 +557,36 @@ public class InformePdfTemplateService {
         sb.append("</td>");
     }
 
+    // ─── Font registration ────────────────────────────────────────────────────
+
+    /**
+     * Registra Arial (o Liberation Sans como fallback libre) en el ITextRenderer.
+     * Flying Saucer solo conoce las 14 fuentes base PDF por defecto; sin este registro
+     * el CSS font-family:Arial cae en Helvetica. Se prueban rutas candidatas en orden.
+     */
+    private void registrarFuenteArial(ITextRenderer renderer) {
+        String[] candidatos = {
+            "C:/Windows/Fonts/arial.ttf",
+            "C:/Windows/Fonts/Arial.ttf",
+            "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"
+        };
+        for (String ruta : candidatos) {
+            if (new java.io.File(ruta).exists()) {
+                try {
+                    renderer.getFontResolver().addFont(
+                        ruta,
+                        com.lowagie.text.pdf.BaseFont.IDENTITY_H,
+                        com.lowagie.text.pdf.BaseFont.EMBEDDED);
+                    log.debug("Fuente Arial registrada desde: {}", ruta);
+                    return;
+                } catch (Exception e) {
+                    log.warn("No se pudo registrar fuente desde {}: {}", ruta, e.getMessage());
+                }
+            }
+        }
+        log.warn("Arial no encontrada en rutas candidatas; el PDF usara la fuente sans-serif por defecto.");
+    }
+
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
     private static void fila4(StringBuilder sb, String label1, String value1,
@@ -575,8 +606,44 @@ public class InformePdfTemplateService {
         sb.append("</tr>");
     }
 
+    private static final String[] DIAS_EN_LETRAS = {
+        "",                    //  0 — sin uso
+        "uno",                 //  1
+        "dos",                 //  2
+        "tres",                //  3
+        "cuatro",              //  4
+        "cinco",               //  5
+        "seis",                //  6
+        "siete",               //  7
+        "ocho",                //  8
+        "nueve",               //  9
+        "diez",                // 10
+        "once",                // 11
+        "doce",                // 12
+        "trece",               // 13
+        "catorce",             // 14
+        "quince",              // 15
+        "diecis&#233;is",      // 16 — dieciséis
+        "diecisiete",          // 17
+        "dieciocho",           // 18
+        "diecinueve",          // 19
+        "veinte",              // 20
+        "veintiuno",           // 21
+        "veintid&#243;s",      // 22 — veintidós
+        "veintitr&#233;s",     // 23 — veintitrés
+        "veinticuatro",        // 24
+        "veinticinco",         // 25
+        "veintis&#233;is",     // 26 — veintiséis
+        "veintisiete",         // 27
+        "veintiocho",          // 28
+        "veintinueve",         // 29
+        "treinta",             // 30
+        "treinta y uno"        // 31
+    };
+
     private static String nombreDia(LocalDate fecha) {
-        return String.valueOf(fecha.getDayOfMonth());
+        int dia = fecha.getDayOfMonth();
+        return DIAS_EN_LETRAS[dia] + " (" + dia + ")";
     }
 
     private static String labelSgssi(ItemSgssi item) {
