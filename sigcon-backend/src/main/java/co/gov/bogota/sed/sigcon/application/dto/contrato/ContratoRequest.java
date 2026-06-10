@@ -37,6 +37,8 @@ public class ContratoRequest {
     @Size(max = 2000)
     private String modificaciones;
 
+    private String plazo;
+
     public String getNumero() { return numero; }
     public void setNumero(String numero) { this.numero = numero; }
     public String getObjeto() { return objeto; }
@@ -61,4 +63,6 @@ public class ContratoRequest {
     public void setFormaPago(String formaPago) { this.formaPago = formaPago; }
     public String getModificaciones() { return modificaciones; }
     public void setModificaciones(String modificaciones) { this.modificaciones = modificaciones; }
+    public String getPlazo() { return plazo; }
+    public void setPlazo(String plazo) { this.plazo = plazo; }
 }

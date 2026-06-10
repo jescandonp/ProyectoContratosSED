@@ -78,6 +78,12 @@ public class Contrato {
     @Column(name = "MODIFICACIONES", length = 2000)
     private String modificaciones;
 
+    @Column(name = "BLOQUEADO_CARGA_INFORME", nullable = false)
+    private Boolean bloqueadoCargaInforme = false;
+
+    @Column(name = "PLAZO", columnDefinition = "CLOB")
+    private String plazo;
+
     @Column(name = "ACTIVO", nullable = false)
     private Boolean activo = true;
 
@@ -234,5 +240,21 @@ public class Contrato {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public Boolean getBloqueadoCargaInforme() {
+        return bloqueadoCargaInforme;
+    }
+
+    public void setBloqueadoCargaInforme(Boolean bloqueadoCargaInforme) {
+        this.bloqueadoCargaInforme = bloqueadoCargaInforme;
+    }
+
+    public String getPlazo() {
+        return plazo;
+    }
+
+    public void setPlazo(String plazo) {
+        this.plazo = plazo;
     }
 }
