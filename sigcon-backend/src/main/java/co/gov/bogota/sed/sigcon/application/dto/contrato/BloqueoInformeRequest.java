@@ -6,6 +6,8 @@ public class BloqueoInformeRequest {
     @NotNull
     private Boolean bloqueado;
 
+    public BloqueoInformeRequest() {}
+
     public Boolean getBloqueado() { return bloqueado; }
     public void setBloqueado(Boolean bloqueado) { this.bloqueado = bloqueado; }
 }
