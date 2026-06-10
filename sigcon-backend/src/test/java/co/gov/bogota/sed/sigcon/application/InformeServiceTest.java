@@ -560,4 +560,20 @@ class InformeServiceTest {
         request.setPorcentajeEjecucion(new BigDecimal(valor));
         return request;
     }
+
+    @Test
+    void contractorCannotCreateInformeOnBlockedContract() {
+        Usuario contratista = usuario(2L, RolUsuario.CONTRATISTA);
+        Contrato contrato = contrato(10L, contratista, EstadoContrato.EN_EJECUCION);
+        contrato.setBloqueadoCargaInforme(true);
+        when(currentUserService.getCurrentUser()).thenReturn(contratista);
+        when(parametroService.isCargaInformesActiva()).thenReturn(true);
+        when(contratoRepository.findByIdAndActivoTrue(10L)).thenReturn(Optional.of(contrato));
+
+        assertThatThrownBy(() -> informeService.crearInforme(informeRequest(10L)))
+            .isInstanceOfSatisfying(SigconBusinessException.class, ex -> {
+                assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.INFORME_CARGA_BLOQUEADA);
+                assertThat(ex.getStatus().value()).isEqualTo(403);
+            });
+    }
 }

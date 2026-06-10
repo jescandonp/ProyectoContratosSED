@@ -161,6 +161,13 @@ public class InformeService {
         if (!isAssigned(contrato.getContratista(), usuario.getId())) {
             throw accessDenied();
         }
+        if (Boolean.TRUE.equals(contrato.getBloqueadoCargaInforme())) {
+            throw new SigconBusinessException(
+                ErrorCode.INFORME_CARGA_BLOQUEADA,
+                "La carga de informes para este contrato está bloqueada por el administrador.",
+                HttpStatus.FORBIDDEN
+            );
+        }
         if (contrato.getEstado() != EstadoContrato.EN_EJECUCION) {
             throw new SigconBusinessException(
                 ErrorCode.CONTRATO_NO_ACTIVO,
