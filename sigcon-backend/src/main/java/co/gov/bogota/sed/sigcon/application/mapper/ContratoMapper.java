@@ -50,6 +50,8 @@ public class ContratoMapper {
         dto.setDependencia(contrato.getDependencia());
         dto.setFormaPago(contrato.getFormaPago());
         dto.setModificaciones(contrato.getModificaciones());
+        dto.setBloqueadoCargaInforme(contrato.getBloqueadoCargaInforme() != null && contrato.getBloqueadoCargaInforme());
+        dto.setPlazo(contrato.getPlazo());
         return dto;
     }
 

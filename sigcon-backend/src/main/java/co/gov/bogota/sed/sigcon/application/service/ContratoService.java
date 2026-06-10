@@ -124,6 +124,17 @@ public class ContratoService {
         contratoRepository.save(contrato);
     }
 
+    public ContratoDetalleDto actualizarBloqueoInforme(Long id, Boolean bloqueado) {
+        Contrato contrato = findActiveContrato(id);
+        contrato.setBloqueadoCargaInforme(bloqueado);
+        Contrato saved = contratoRepository.save(contrato);
+        return contratoMapper.toDetalleDto(
+            saved,
+            obligacionRepository.findByContratoIdAndActivoTrueOrderByOrdenAsc(saved.getId()),
+            java.util.Collections.emptyList()
+        );
+    }
+
     private Contrato findActiveContrato(Long id) {
         return contratoRepository.findByIdAndActivoTrue(id)
             .orElseThrow(() -> new SigconBusinessException(
@@ -155,6 +166,7 @@ public class ContratoService {
         contrato.setDependencia(request.getDependencia());
         contrato.setFormaPago(request.getFormaPago());
         contrato.setModificaciones(request.getModificaciones());
+        contrato.setPlazo(request.getPlazo());
         contrato.setActivo(true);
     }
 

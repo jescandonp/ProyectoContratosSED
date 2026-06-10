@@ -310,6 +310,52 @@ class ContratoServiceTest {
         return contrato;
     }
 
+    @Test
+    void actualizarBloqueoInformeActivaFlag() {
+        Contrato contrato = contratoExistente(10L);
+        contrato.setBloqueadoCargaInforme(false);
+        when(contratoRepository.findByIdAndActivoTrue(10L)).thenReturn(Optional.of(contrato));
+        when(contratoRepository.save(any(Contrato.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(obligacionRepository.findByContratoIdAndActivoTrueOrderByOrdenAsc(10L))
+            .thenReturn(Collections.emptyList());
+
+        co.gov.bogota.sed.sigcon.application.dto.contrato.ContratoDetalleDto result =
+            contratoService.actualizarBloqueoInforme(10L, true);
+
+        assertThat(result.getBloqueadoCargaInforme()).isTrue();
+        verify(contratoRepository).save(contrato);
+    }
+
+    @Test
+    void actualizarBloqueoInformeDesactivaFlag() {
+        Contrato contrato = contratoExistente(10L);
+        contrato.setBloqueadoCargaInforme(true);
+        when(contratoRepository.findByIdAndActivoTrue(10L)).thenReturn(Optional.of(contrato));
+        when(contratoRepository.save(any(Contrato.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(obligacionRepository.findByContratoIdAndActivoTrueOrderByOrdenAsc(10L))
+            .thenReturn(Collections.emptyList());
+
+        co.gov.bogota.sed.sigcon.application.dto.contrato.ContratoDetalleDto result =
+            contratoService.actualizarBloqueoInforme(10L, false);
+
+        assertThat(result.getBloqueadoCargaInforme()).isFalse();
+        verify(contratoRepository).save(contrato);
+    }
+
+    private static Contrato contratoExistente(Long id) {
+        Contrato c = new Contrato();
+        c.setId(id);
+        c.setNumero("OPS-2026-" + id);
+        c.setObjeto("Objeto de prueba");
+        c.setTipo(co.gov.bogota.sed.sigcon.domain.enums.TipoContrato.OPS);
+        c.setValorTotal(java.math.BigDecimal.valueOf(1000));
+        c.setFechaInicio(java.time.LocalDate.of(2026, 1, 1));
+        c.setFechaFin(java.time.LocalDate.of(2026, 12, 31));
+        c.setEstado(EstadoContrato.EN_EJECUCION);
+        c.setActivo(true);
+        return c;
+    }
+
     private static ContratoRequest contratoRequest(String numero) {
         ContratoRequest request = new ContratoRequest();
         request.setNumero(numero);
