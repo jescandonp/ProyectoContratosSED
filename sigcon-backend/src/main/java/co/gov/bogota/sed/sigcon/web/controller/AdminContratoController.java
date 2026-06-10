@@ -1,5 +1,6 @@
 package co.gov.bogota.sed.sigcon.web.controller;
 
+import co.gov.bogota.sed.sigcon.application.dto.contrato.BloqueoInformeRequest;
 import co.gov.bogota.sed.sigcon.application.dto.contrato.ContratoDetalleDto;
 import co.gov.bogota.sed.sigcon.application.dto.contrato.ContratoRequest;
 import co.gov.bogota.sed.sigcon.application.service.ContratoService;
@@ -8,6 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -38,5 +40,14 @@ public class AdminContratoController {
             @PathVariable Long id,
             @Valid @RequestBody ContratoRequest request) {
         return ResponseEntity.ok(contratoService.actualizarContrato(id, request));
+    }
+
+    @Operation(summary = "Actualizar bloqueo de carga de informes",
+               description = "Permite al ADMIN bloquear o desbloquear la carga de nuevos informes en un contrato específico.")
+    @PatchMapping("/{id}/bloqueo-informe")
+    public ResponseEntity<ContratoDetalleDto> actualizarBloqueoInforme(
+            @PathVariable Long id,
+            @Valid @RequestBody BloqueoInformeRequest request) {
+        return ResponseEntity.ok(contratoService.actualizarBloqueoInforme(id, request.getBloqueado()));
     }
 }
