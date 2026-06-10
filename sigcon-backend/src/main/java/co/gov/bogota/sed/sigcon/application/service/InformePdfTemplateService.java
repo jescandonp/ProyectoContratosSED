@@ -319,11 +319,16 @@ public class InformePdfTemplateService {
 
         fila2(sb, "Forma de Pago:", esc(safe(c.getFormaPago())), true);
 
-        String plazo = "El plazo del contrato ser&#225; hasta el " + c.getFechaFin().format(DATE_FMT)
-            + " y a partir de la suscripci&#243;n del acta de inicio, previo cumplimiento de los"
-            + " requisitos de perfeccionamiento y ejecuci&#243;n. En todo caso, la fecha de Inicio"
-            + " no podr&#225; ser anterior al " + c.getFechaInicio().format(DATE_FMT) + ".";
-        fila2(sb, "Plazo:", plazo, false);
+        String plazoTexto;
+        if (notEmpty(c.getPlazo())) {
+            plazoTexto = esc(c.getPlazo());
+        } else {
+            plazoTexto = "El plazo del contrato ser&#225; hasta el " + c.getFechaFin().format(DATE_FMT)
+                + " y a partir de la suscripci&#243;n del acta de inicio, previo cumplimiento de los"
+                + " requisitos de perfeccionamiento y ejecuci&#243;n. En todo caso, la fecha de Inicio"
+                + " no podr&#225; ser anterior al " + c.getFechaInicio().format(DATE_FMT) + ".";
+        }
+        fila2(sb, "Plazo:", plazoTexto, false);
 
         fila2(sb, "Modificaciones:", esc(notEmpty(c.getModificaciones()) ? c.getModificaciones() : "No se han presentado"), true);
 

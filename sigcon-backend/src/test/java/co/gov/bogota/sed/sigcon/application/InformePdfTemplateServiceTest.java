@@ -179,6 +179,65 @@ class InformePdfTemplateServiceTest {
         return i;
     }
 
+    @Test
+    void seccion1UsaPlazoCustomSiExiste() throws Exception {
+        Informe informe = informe();
+        informe.getContrato().setPlazo("El plazo del contrato es de seis (6) meses contados desde la suscripción del acta de inicio.");
+
+        InformePdfTemplateService service = new InformePdfTemplateService(
+            mock(ActividadInformeRepository.class),
+            mock(SoporteAdjuntoRepository.class),
+            mock(DocumentoAdicionalRepository.class),
+            mock(AporteSgssiRepository.class)
+        );
+
+        java.lang.reflect.Method buildHtml = InformePdfTemplateService.class.getDeclaredMethod(
+            "buildHtml",
+            Informe.class, java.util.List.class, java.util.List.class,
+            java.util.List.class, byte[].class, byte[].class, byte[].class
+        );
+        buildHtml.setAccessible(true);
+
+        String html = (String) buildHtml.invoke(
+            service, informe,
+            Collections.emptyList(), Collections.emptyList(), Collections.emptyList(),
+            new byte[]{1}, new byte[]{1}, new byte[]{1}
+        );
+
+        assertThat(html).contains("El plazo del contrato es de seis (6) meses");
+        // No debe aparecer el texto hardcodeado cuando hay plazo personalizado
+        assertThat(html).doesNotContain("ser&#225; hasta el");
+    }
+
+    @Test
+    void seccion1UsaFallbackSiPlazoNulo() throws Exception {
+        Informe informe = informe();
+        informe.getContrato().setPlazo(null);
+
+        InformePdfTemplateService service = new InformePdfTemplateService(
+            mock(ActividadInformeRepository.class),
+            mock(SoporteAdjuntoRepository.class),
+            mock(DocumentoAdicionalRepository.class),
+            mock(AporteSgssiRepository.class)
+        );
+
+        java.lang.reflect.Method buildHtml = InformePdfTemplateService.class.getDeclaredMethod(
+            "buildHtml",
+            Informe.class, java.util.List.class, java.util.List.class,
+            java.util.List.class, byte[].class, byte[].class, byte[].class
+        );
+        buildHtml.setAccessible(true);
+
+        String html = (String) buildHtml.invoke(
+            service, informe,
+            Collections.emptyList(), Collections.emptyList(), Collections.emptyList(),
+            new byte[]{1}, new byte[]{1}, new byte[]{1}
+        );
+
+        // Texto hardcodeado aparece como fallback
+        assertThat(html).contains("ser&#225; hasta el");
+    }
+
     private static Usuario usuario(Long id, RolUsuario rol, String nombre, String cargo) {
         Usuario u = new Usuario();
         u.setId(id);
