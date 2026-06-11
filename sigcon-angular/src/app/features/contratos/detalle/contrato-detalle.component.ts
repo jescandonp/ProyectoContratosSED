@@ -65,6 +65,12 @@ import { StatusChipComponent } from '../../../shared/components/status-chip/stat
                   <dt class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Fecha Fin</dt>
                   <dd class="mt-xs text-[var(--color-on-surface)]">{{ c.fechaFin }}</dd>
                 </div>
+                @if (c.plazo) {
+                  <div class="col-span-2">
+                    <dt class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Plazo</dt>
+                    <dd class="mt-xs text-[var(--color-on-surface)]">{{ c.plazo }}</dd>
+                  </div>
+                }
               </dl>
             </div>
 
@@ -97,7 +103,7 @@ import { StatusChipComponent } from '../../../shared/components/status-chip/stat
                   <span class="h-5 w-1 rounded-full bg-[var(--color-primary)]"></span>
                   <h3 class="m-0 text-base font-semibold text-[var(--color-on-surface)]">Historial de Informes</h3>
                 </div>
-                @if (contrato()?.estado === 'EN_EJECUCION') {
+                @if (contrato()?.estado === 'EN_EJECUCION' && !contrato()?.bloqueadoCargaInforme) {
                   <a
                     class="rounded bg-[var(--color-primary)] px-md py-xs text-sm font-semibold text-white no-underline"
                     [routerLink]="['/contratos', contrato()!.id, 'informes', 'nuevo']"
