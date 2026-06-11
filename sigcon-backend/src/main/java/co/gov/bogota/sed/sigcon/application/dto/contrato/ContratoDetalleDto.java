@@ -16,7 +16,6 @@ public class ContratoDetalleDto extends ContratoResumenDto {
     private String dependencia;
     private String formaPago;
     private String modificaciones;
-    private Boolean bloqueadoCargaInforme = false;
     private String plazo;
 
     public UsuarioDto getContratista() { return contratista; }
@@ -35,8 +34,6 @@ public class ContratoDetalleDto extends ContratoResumenDto {
     public void setFormaPago(String formaPago) { this.formaPago = formaPago; }
     public String getModificaciones() { return modificaciones; }
     public void setModificaciones(String modificaciones) { this.modificaciones = modificaciones; }
-    public Boolean getBloqueadoCargaInforme() { return bloqueadoCargaInforme; }
-    public void setBloqueadoCargaInforme(Boolean bloqueadoCargaInforme) { this.bloqueadoCargaInforme = bloqueadoCargaInforme; }
     public String getPlazo() { return plazo; }
     public void setPlazo(String plazo) { this.plazo = plazo; }
 }
