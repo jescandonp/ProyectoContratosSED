@@ -174,6 +174,16 @@ interface ObligacionForm { id?: number; descripcion: string; orden: number; }
                 name="modificaciones"
               ></textarea>
             </div>
+            <div class="space-y-xs">
+              <label class="text-xs font-bold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Plazo</label>
+              <textarea
+                class="w-full rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface-bright)] px-sm py-xs text-sm outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]"
+                rows="3"
+                placeholder="Si se deja vacío, se usará el texto estándar basado en fechas del contrato."
+                [(ngModel)]="form.plazo"
+                name="plazo"
+              ></textarea>
+            </div>
           </div>
         </div>
 
@@ -295,6 +305,7 @@ export class AdminContratoFormComponent implements OnInit {
     dependencia: null,
     formaPago: null,
     modificaciones: null,
+    plazo: null,
   };
 
   private contratoId: number | null = null;
@@ -327,6 +338,7 @@ export class AdminContratoFormComponent implements OnInit {
           dependencia: c.dependencia ?? null,
           formaPago: c.formaPago ?? null,
           modificaciones: c.modificaciones ?? null,
+          plazo: c.plazo ?? null,
         };
         this.obligaciones.set(c.obligaciones.map((o: Obligacion) => ({ id: o.id, descripcion: o.descripcion, orden: o.orden })));
         this.originalObligacionIds = new Set(c.obligaciones.map((o: Obligacion) => o.id));
