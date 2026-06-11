@@ -92,6 +92,14 @@ import { StatusChipComponent } from '../../../shared/components/status-chip/stat
                         (click)="editar(c.id)"
                       >Editar</button>
                       <button
+                        class="rounded border px-sm py-xs text-xs font-semibold"
+                        [class]="c.bloqueadoCargaInforme
+                          ? 'border-[var(--color-error-container)] bg-[var(--color-error-container)] text-[var(--color-error)] hover:opacity-80'
+                          : 'border-[var(--color-outline-variant)] bg-white text-[var(--color-on-surface-variant)] hover:bg-[var(--color-surface-container-low)]'"
+                        type="button"
+                        (click)="toggleBloqueo(c)"
+                      >{{ c.bloqueadoCargaInforme ? 'Desbloquear' : 'Bloquear' }}</button>
+                      <button
                         class="rounded border border-[var(--color-error-container)] bg-white px-sm py-xs text-xs font-semibold text-[var(--color-error)] hover:bg-[var(--color-error-container)]"
                         type="button"
                         (click)="eliminar(c)"
@@ -172,6 +180,18 @@ export class AdminContratosComponent implements OnInit {
   cambiarPagina(num: number) { this.paginaActual.set(num); this.cargar(); }
   nuevo() { void this.router.navigate(['/admin/contratos/nuevo']); }
   editar(id: number) { void this.router.navigate(['/admin/contratos', id, 'editar']); }
+
+  toggleBloqueo(c: ContratoResumen) {
+    this.contratoService.actualizarBloqueoInforme(c.id, !c.bloqueadoCargaInforme).subscribe({
+      next: (detalle) => {
+        const content = this.pagina()!.content.map((item) =>
+          item.id === c.id ? { ...item, bloqueadoCargaInforme: detalle.bloqueadoCargaInforme } : item
+        );
+        this.pagina.set({ ...this.pagina()!, content });
+      },
+      error: () => this.error.set('No se pudo actualizar el bloqueo. Intente de nuevo.')
+    });
+  }
 
   eliminar(c: ContratoResumen) {
     if (!confirm(`¿Eliminar el contrato ${c.numero}? Esta acción es irreversible.`)) return;

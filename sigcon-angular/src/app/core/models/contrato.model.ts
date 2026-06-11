@@ -16,6 +16,7 @@ export interface ContratoResumen {
   valorTotal: number;
   contratistaNombre: string | null;
   supervisorNombre: string | null;
+  bloqueadoCargaInforme: boolean;
 }
 
 export interface ContratoDetalle extends ContratoResumen {

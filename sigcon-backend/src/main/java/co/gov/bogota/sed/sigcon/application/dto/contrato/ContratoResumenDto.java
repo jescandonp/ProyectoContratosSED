@@ -17,6 +17,7 @@ public class ContratoResumenDto {
     private BigDecimal valorTotal;
     private String contratistaNombre;
     private String supervisorNombre;
+    private boolean bloqueadoCargaInforme;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -38,4 +39,6 @@ public class ContratoResumenDto {
     public void setContratistaNombre(String contratistaNombre) { this.contratistaNombre = contratistaNombre; }
     public String getSupervisorNombre() { return supervisorNombre; }
     public void setSupervisorNombre(String supervisorNombre) { this.supervisorNombre = supervisorNombre; }
+    public boolean isBloqueadoCargaInforme() { return bloqueadoCargaInforme; }
+    public void setBloqueadoCargaInforme(boolean bloqueadoCargaInforme) { this.bloqueadoCargaInforme = bloqueadoCargaInforme; }
 }

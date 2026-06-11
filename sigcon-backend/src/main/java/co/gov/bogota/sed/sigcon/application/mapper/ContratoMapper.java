@@ -70,5 +70,6 @@ public class ContratoMapper {
         if (contrato.getSupervisor() != null) {
             dto.setSupervisorNombre(contrato.getSupervisor().getNombre());
         }
+        dto.setBloqueadoCargaInforme(Boolean.TRUE.equals(contrato.getBloqueadoCargaInforme()));
     }
 }
