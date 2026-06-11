@@ -21,7 +21,7 @@ El proyecto se implementa por incrementos bajo SDD Spec-Anchored. El incremento 
 docs/plans/
 ```
 
-**Ultimo incremento cerrado: I15 — Correcciones Formato PDF 11-IF-023 V1** en rama `main` (2026-06-09).
+**Ultimo incremento cerrado: I16 — Bloqueo Individual de Informes y Campo Plazo** en rama `main` (2026-06-10).
 
 | Incremento | Descripcion | Estado |
 |-----------|-------------|--------|
@@ -40,6 +40,7 @@ docs/plans/
 | I13 | Identidad Visual Institucional SIGCON (GovcoBar, footer, tokens SED, login rediseno) | Cerrado |
 | I14 | Correcciones funcionales: % Ejecucion y Vista Visto Bueno | Cerrado |
 | I15 | Correcciones Formato PDF 11-IF-023 V1 (ronda 2): fuente Arial, bordes, tipografia, colores th, firma con letras, encoding | Cerrado |
+| I16 | Bloqueo individual de carga de informes por contrato (ADMIN), campo Plazo libre en contrato (PDF Seccion 1) | Cerrado |
 
 ## Estructura
 
