@@ -1,5 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
 
 import { ContratoDetalle, ContratoRequest, ContratoResumen, EstadoContrato } from '../models/contrato.model';
 import { Page } from '../models/page.model';
@@ -43,6 +44,13 @@ export class ContratoService {
 
   eliminarContrato(id: number) {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
+
+  actualizarBloqueoInforme(id: number, bloqueado: boolean): Observable<ContratoDetalle> {
+    return this.http.patch<ContratoDetalle>(
+      `/api/admin/contratos/${id}/bloqueo-informe`,
+      { bloqueado }
+    );
   }
 
   private toHttpParams(params: ListarContratosParams) {

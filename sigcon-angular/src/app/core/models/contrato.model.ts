@@ -27,6 +27,8 @@ export interface ContratoDetalle extends ContratoResumen {
   dependencia?: string | null;
   formaPago?: string | null;
   modificaciones?: string | null;
+  bloqueadoCargaInforme: boolean;
+  plazo?: string | null;
 }
 
 export interface ContratoRequest {
@@ -42,6 +44,7 @@ export interface ContratoRequest {
   dependencia?: string | null;
   formaPago?: string | null;
   modificaciones?: string | null;
+  plazo?: string | null;
 }
 
 export interface EstadoContratoRequest {
